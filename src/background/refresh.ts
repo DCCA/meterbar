@@ -2,6 +2,7 @@ import type { ProviderCardState, ProviderId, UsageSnapshot } from '../shared/typ
 import { getCard, putCard } from '../storage/usageStore';
 import { recordPoint } from '../storage/historyStore';
 import { claudeAdapter, claudeOrgsUrl, claudeUsageUrl, pickClaudeOrgUuid } from '../providers/claude/claudeAdapter';
+import { chatgptAdapter, chatgptSessionUrl, chatgptAccountsUrl, chatgptUsageUrl, pickChatgptAccountId } from '../providers/chatgpt/chatgptAdapter';
 
 /** Persist parsed snapshots as the provider's latest card and append history. */
 export async function storeSnapshots(provider: ProviderId, label: string, snapshots: UsageSnapshot[]): Promise<void> {
@@ -48,6 +49,37 @@ export async function refreshClaude(): Promise<void> {
     if (!usageRes.ok) return storeStatus(provider, label, 'stale', `HTTP ${usageRes.status}`);
 
     await storeSnapshots(provider, label, claudeAdapter.parse(await usageRes.json()));
+  } catch {
+    await storeStatus(provider, label, 'stale', 'Fetch failed.');
+  }
+}
+
+/**
+ * Background refresh for ChatGPT/Codex. Mints a Bearer access token from the session
+ * cookie (`/api/auth/session`), resolves the account id, then reads `wham/usage`. The
+ * token and account id are used only for the requests and never stored. All network
+ * I/O and HTTP->status mapping live here; the adapter contributes only pure helpers.
+ */
+export async function refreshChatgpt(): Promise<void> {
+  const { provider, label } = chatgptAdapter;
+  try {
+    const sessionRes = await fetch(chatgptSessionUrl(), SESSION_FETCH);
+    if (isAuthFailure(sessionRes)) return storeStatus(provider, label, 'not_connected', 'Not logged in.');
+    if (!sessionRes.ok) return storeStatus(provider, label, 'stale', `HTTP ${sessionRes.status}`);
+    const token = ((await sessionRes.json()) as { accessToken?: string })?.accessToken;
+    if (!token) return storeStatus(provider, label, 'not_connected', 'Not logged in.');
+
+    const authInit: RequestInit = { credentials: 'include', headers: { accept: 'application/json', authorization: `Bearer ${token}` } };
+    const acctRes = await fetch(chatgptAccountsUrl(), authInit);
+    const accountId = acctRes.ok ? pickChatgptAccountId(await acctRes.json()) : null;
+
+    const usageHeaders: Record<string, string> = { accept: 'application/json', authorization: `Bearer ${token}` };
+    if (accountId) usageHeaders['ChatGPT-Account-Id'] = accountId;
+    const usageRes = await fetch(chatgptUsageUrl(), { credentials: 'include', headers: usageHeaders });
+    if (isAuthFailure(usageRes)) return storeStatus(provider, label, 'not_connected', 'Not logged in.');
+    if (!usageRes.ok) return storeStatus(provider, label, 'stale', `HTTP ${usageRes.status}`);
+
+    await storeSnapshots(provider, label, chatgptAdapter.parse(await usageRes.json()));
   } catch {
     await storeStatus(provider, label, 'stale', 'Fetch failed.');
   }
