@@ -1,9 +1,13 @@
 import { loadSettings, saveSettings, type Settings } from '../storage/usageStore';
 import { readAllHistory } from '../storage/historyStore';
 import { historyToCsv, historyToJson } from '../shared/exporters';
+import { BADGE_TARGETS, type BadgeTargetId } from '../shared/badgeTarget';
 import type { ExtensionMessage } from '../shared/messages';
 
-const TOGGLES: Array<[id: string, key: keyof Settings]> = [
+// Only the boolean settings drive the toggle switches.
+type BoolSettingKey = { [K in keyof Settings]: Settings[K] extends boolean ? K : never }[keyof Settings];
+
+const TOGGLES: Array<[id: string, key: BoolSettingKey]> = [
   ['notifications', 'notificationsEnabled'],
   ['claude', 'claudeEnabled'],
   ['chatgpt', 'chatgptEnabled'],
@@ -28,11 +32,21 @@ function download(filename: string, text: string, type: string): void {
   URL.revokeObjectURL(url);
 }
 
+function badgeSelect(): HTMLSelectElement | null {
+  return document.querySelector<HTMLSelectElement>('#badge-target');
+}
+
 async function render(): Promise<void> {
   const settings = await loadSettings();
   for (const [id, key] of TOGGLES) {
     const el = document.querySelector<HTMLInputElement>(`#${id}`);
     if (el) el.checked = settings[key];
+  }
+
+  const select = badgeSelect();
+  if (select) {
+    select.innerHTML = BADGE_TARGETS.map((t) => `<option value="${t.id}">${t.label}</option>`).join('');
+    select.value = settings.badgeTarget;
   }
 }
 
@@ -44,6 +58,12 @@ async function wire(): Promise<void> {
       void chrome.runtime.sendMessage({ type: 'usage:refresh' } as ExtensionMessage);
     });
   }
+
+  badgeSelect()?.addEventListener('change', async (event) => {
+    const current = await loadSettings();
+    await saveSettings({ ...current, badgeTarget: (event.target as HTMLSelectElement).value as BadgeTargetId });
+    void chrome.runtime.sendMessage({ type: 'usage:refresh' } as ExtensionMessage);
+  });
 
   const date = new Date().toISOString().slice(0, 10);
   document.querySelector('#export-json')?.addEventListener('click', async () => {

@@ -25,7 +25,7 @@ function isEnabled(provider: ProviderId, settings: Settings): boolean {
 async function recompute(): Promise<void> {
   const settings = await loadSettings();
   const cards = aggregateCards(await getAllCards(), settings);
-  const badge = calculateBadgeState(flattenSnapshots(cards));
+  const badge = calculateBadgeState(flattenSnapshots(cards), settings.badgeTarget);
   await chrome.action.setBadgeText({ text: badge.text });
   await chrome.action.setBadgeBackgroundColor({ color: badge.color });
   await renderIcon(iconBars(cards));
