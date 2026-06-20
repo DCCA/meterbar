@@ -1,12 +1,12 @@
 import { calculateBadgeState } from './badge';
 import { aggregateCards, flattenSnapshots } from './aggregate';
-import { refreshClaude, refreshChatgpt, storeSnapshots } from './refresh';
+import { refreshClaude, refreshChatgpt, storeSnapshots, storeStatus } from './refresh';
 import { evaluateAndNotify } from './alerts';
 import { claudeAdapter } from '../providers/claude/claudeAdapter';
 import { chatgptAdapter } from '../providers/chatgpt/chatgptAdapter';
 import { geminiAdapter } from '../providers/gemini/geminiAdapter';
 import { getAllCards, loadSettings, type Settings } from '../storage/usageStore';
-import { isUsageReport, type ExtensionMessage } from '../shared/messages';
+import { isUsageReport, isStatusReport, type ExtensionMessage } from '../shared/messages';
 import type { ProviderId } from '../shared/types';
 
 const ADAPTERS = [claudeAdapter, chatgptAdapter, geminiAdapter];
@@ -49,6 +49,11 @@ chrome.runtime.onMessage.addListener((msg: ExtensionMessage, _sender, sendRespon
   if (isUsageReport(msg)) {
     const adapter = ADAPTERS_BY_ID[msg.provider];
     if (adapter) void storeSnapshots(msg.provider, adapter.label, adapter.parse(msg.raw)).then(recompute);
+    return false;
+  }
+  if (isStatusReport(msg)) {
+    const adapter = ADAPTERS_BY_ID[msg.provider];
+    void storeStatus(msg.provider, adapter?.label ?? msg.provider, msg.status, msg.message).then(recompute);
     return false;
   }
   if (msg.type === 'usage:refresh') { void refreshAll().then(() => sendResponse({ ok: true })); return true; }
