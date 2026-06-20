@@ -5,7 +5,7 @@
 **Visibility:** Private  
 **Date:** 2026-06-20  
 **Owner:** DCCA  
-**Status:** Draft v0.1
+**Status:** Reviewed v0.1 — approved for MVP planning
 
 ---
 
