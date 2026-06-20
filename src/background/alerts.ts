@@ -53,6 +53,6 @@ export async function evaluateAndNotify(cards: ProviderCardState[]): Promise<voi
       ? `${f.window.replace('_', ' ')} window replenished.`
       : `${f.window.replace('_', ' ')} is at ${f.usedPercent}%.`;
     chrome.notifications.create(`${f.provider}:${f.window}:${f.kind}:${f.threshold ?? 'r'}`,
-      { type: 'basic', iconUrl: 'assets/icon128.png', title, message });
+      { type: 'basic', iconUrl: chrome.runtime.getURL('assets/icon128.png'), title, message });
   }
 }
