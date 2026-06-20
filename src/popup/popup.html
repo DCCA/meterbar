@@ -9,13 +9,19 @@
   <body>
     <main class="popup">
       <header>
-        <h1>MeterBar</h1>
-        <p>One bar for all your AI limits.</p>
+        <div class="brand">
+          <span class="mark" aria-hidden="true"></span>
+          <h1>MeterBar</h1>
+        </div>
+        <p class="tagline">One bar for all your AI limits.</p>
       </header>
-      <section id="cards" class="cards"></section>
+      <section id="cards" class="cards" aria-live="polite"></section>
       <footer>
-        <button id="refresh">Refresh</button>
-        <a href="../options/options.html" target="_blank">Settings</a>
+        <button id="refresh" type="button">
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="label">Refresh</span>
+        </button>
+        <a href="../options/options.html" target="_blank" rel="noopener">Settings</a>
       </footer>
     </main>
     <script type="module" src="./popup.ts"></script>
