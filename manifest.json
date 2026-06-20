@@ -21,11 +21,6 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
-      "js": ["assets/chatgpt.js"],
-      "run_at": "document_idle"
-    },
-    {
       "matches": ["https://gemini.google.com/*"],
       "js": ["assets/gemini.js"],
       "run_at": "document_idle"
