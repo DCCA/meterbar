@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Privacy-first Chrome extension that shows AI subscription usage limits in one real-time bar.",
+  "license": "Apache-2.0",
   "scripts": {
     "build": "vite build",
     "test": "vitest run",
