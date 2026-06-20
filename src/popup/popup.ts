@@ -55,7 +55,7 @@ async function rowHtml(snapshot: UsageSnapshot): Promise<string> {
   const reset = snapshot.resetsAt ? `resets in ${formatCountdown(snapshot.resetsAt)}` : 'reset unknown';
   return `
     <div class="row">
-      <span>${labelForWindow(snapshot.window)}</span>
+      <span>${snapshot.workspaceLabel ?? labelForWindow(snapshot.window)}</span>
       <div class="bar"><div class="fill ${classForSnapshot(snapshot)}" style="width:${snapshot.usedPercent}%"></div></div>
       <strong>${snapshot.usedPercent}%</strong>
     </div>

@@ -26,7 +26,7 @@ describe('parseChatgptUsage', () => {
     expect(snaps).toMatchObject([
       { provider: 'chatgpt', window: 'five_hour', usedPercent: 27, usedRatio: 0.27, confidence: 'exact', stale: false },
       { provider: 'chatgpt', window: 'seven_day', usedPercent: 39, confidence: 'exact' },
-      { provider: 'chatgpt', workspaceLabel: 'Codex', usedPercent: 11 }
+      { provider: 'chatgpt', window: 'custom', workspaceLabel: 'Codex', usedPercent: 11 }
     ]);
   });
 
@@ -37,7 +37,7 @@ describe('parseChatgptUsage', () => {
 
   it('emits one Codex bar = the riskiest additional window across entries', () => {
     const codex = parseChatgptUsage(CAPTURED, NOW).find((s) => s.workspaceLabel === 'Codex');
-    expect(codex).toMatchObject({ window: 'seven_day', usedPercent: 11 });
+    expect(codex).toMatchObject({ window: 'custom', usedPercent: 11 });
     expect(codex?.resetsAt).toBe(new Date(1782588049 * 1000).toISOString());
   });
 

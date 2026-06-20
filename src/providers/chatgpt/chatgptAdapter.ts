@@ -45,22 +45,19 @@ export function parseChatgptUsage(payload: ChatgptUsageResponse, now: Date = new
   if (primary) out.push(primary);
   if (secondary) out.push(secondary);
 
-  // One Codex bar = the single riskiest window across every additional rate limit.
-  let riskiest: { window: UsageWindow; w: ChatgptWindow } | null = null;
+  // One Codex bar under a distinct 'custom' window so it doesn't collide with the
+  // chat windows in the history store (keyed by provider:window) or the popup.
+  let riskiest: ChatgptWindow | null = null;
   let riskiestPct = -1;
   for (const entry of payload.additional_rate_limits ?? []) {
     const rl = entry.rate_limit ?? {};
-    const candidates: Array<[UsageWindow, ChatgptWindow | null | undefined]> = [
-      ['five_hour', rl.primary_window],
-      ['seven_day', rl.secondary_window]
-    ];
-    for (const [window, w] of candidates) {
+    for (const w of [rl.primary_window, rl.secondary_window]) {
       if (!w || typeof w.used_percent !== 'number') continue;
-      if (w.used_percent > riskiestPct) { riskiestPct = w.used_percent; riskiest = { window, w }; }
+      if (w.used_percent > riskiestPct) { riskiestPct = w.used_percent; riskiest = w; }
     }
   }
   if (riskiest) {
-    const codex = snapshot(riskiest.window, riskiest.w, capturedAt, 'Codex');
+    const codex = snapshot('custom', riskiest, capturedAt, 'Codex');
     if (codex) out.push(codex);
   }
 
