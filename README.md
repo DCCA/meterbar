@@ -8,9 +8,48 @@ AI power users increasingly juggle Claude, ChatGPT/Codex, Gemini, and other AI s
 
 ## Status
 
-Private early product definition.
+MVP + Phase 2 in progress. The extension builds and loads: a toolbar badge shows the highest-risk usage, a popup renders per-provider cards with trend sparklines, and settings allow per-provider toggles and CSV/JSON export. Claude reads usage via a background fetch of the logged-in `claude.ai` session; ChatGPT/Codex and Gemini collect via content scripts. The exact provider endpoints/DOM hooks are validated by live inspection — until validated, a provider reports "not connected" rather than showing unverified numbers.
+
+## Local development
+
+```bash
+npm install
+npm test            # vitest run (all suites)
+npm run typecheck   # tsc --noEmit
+npm run build       # vite build → dist/ (the unpacked extension)
+```
+
+Run a single test file:
+
+```bash
+npm test -- tests/badge.test.ts
+```
+
+### Load in Chrome
+
+1. `npm run build`
+2. Go to `chrome://extensions`.
+3. Enable **Developer mode**.
+4. Click **Load unpacked** and select the `dist/` folder.
+5. Pin MeterBar to the toolbar.
+
+## Permissions and privacy
+
+MeterBar is local-first: there is no backend, no cloud sync, and no analytics. It stores **only** usage metrics (percentages, reset timestamps, provider names, and your settings) in `chrome.storage.local`. It never reads or stores prompts, responses, uploaded files, or chat content.
+
+| Permission | Why |
+|---|---|
+| `storage` | Save usage snapshots, history, and settings locally. |
+| `alarms` | Refresh usage on a periodic schedule. |
+| `notifications` | Warn at 70% / 90% and when a window resets. |
+| `host_permissions: https://claude.ai/*` | Read your Claude usage from your logged-in session. |
+| `host_permissions: https://chatgpt.com/*`, `https://chat.openai.com/*` | Read ChatGPT/Codex usage surfaced to the page. |
+| `host_permissions: https://gemini.google.com/*` | Read Gemini usage surfaced to the page. |
+
+Use **Settings → Clear local MeterBar data** to erase everything at any time.
 
 ## Docs
 
 - [Product Requirements Document](docs/PRD.md)
 - [MVP Implementation Plan](docs/superpowers/plans/2026-06-20-meterbar-mvp.md)
+- [MVP + Phase 2 Implementation Plan](docs/superpowers/plans/2026-06-20-meterbar-mvp-phase2.md)
