@@ -1,6 +1,6 @@
 import { calculateBadgeState } from './badge';
 import { aggregateCards, flattenSnapshots } from './aggregate';
-import { refreshClaude, storeSnapshots } from './refresh';
+import { refreshClaude, refreshChatgpt, storeSnapshots } from './refresh';
 import { evaluateAndNotify } from './alerts';
 import { claudeAdapter } from '../providers/claude/claudeAdapter';
 import { chatgptAdapter } from '../providers/chatgpt/chatgptAdapter';
@@ -31,8 +31,11 @@ async function recompute(): Promise<void> {
 
 async function refreshAll(): Promise<void> {
   const settings = await loadSettings();
-  // Claude is the only background-fetch provider; ChatGPT/Gemini report via content scripts.
-  if (isEnabled('claude', settings)) await refreshClaude();
+  // Claude and ChatGPT/Codex are background-fetch providers; Gemini reports via a content script.
+  await Promise.all([
+    isEnabled('claude', settings) ? refreshClaude() : Promise.resolve(),
+    isEnabled('chatgpt', settings) ? refreshChatgpt() : Promise.resolve()
+  ]);
   await recompute();
 }
 
