@@ -1,7 +1,7 @@
-import type { ProviderAdapter } from '../providers/providerAdapter';
 import type { ProviderCardState, ProviderId, UsageSnapshot } from '../shared/types';
 import { getCard, putCard } from '../storage/usageStore';
 import { recordPoint } from '../storage/historyStore';
+import { claudeAdapter, claudeOrgsUrl, claudeUsageUrl, pickClaudeOrgUuid } from '../providers/claude/claudeAdapter';
 
 /** Persist parsed snapshots as the provider's latest card and append history. */
 export async function storeSnapshots(provider: ProviderId, label: string, snapshots: UsageSnapshot[]): Promise<void> {
@@ -20,18 +20,35 @@ export async function storeStatus(provider: ProviderId, label: string, status: P
   await putCard({ provider, label, status, message, snapshots: prev?.snapshots ?? [], lastUpdatedAt: prev?.lastUpdatedAt });
 }
 
-/** Background fetch for `fetch`-strategy adapters; uses the logged-in session via host_permissions. */
-export async function refreshFetchAdapter(adapter: ProviderAdapter): Promise<void> {
-  if (adapter.collection.strategy !== 'fetch') return;
+const SESSION_FETCH: RequestInit = { credentials: 'include', headers: { accept: 'application/json' } };
+
+/** An unauthenticated/redirected response means the user isn't logged in to claude.ai. */
+function isAuthFailure(res: Response): boolean {
+  return res.status === 401 || res.status === 403 || res.redirected;
+}
+
+/**
+ * Background refresh for Claude: discover the account's org from the same endpoint the
+ * logged-in UI uses, then read that org's usage — both with the session cookie, nothing
+ * stored. All network I/O and HTTP→status mapping live here; the adapter contributes
+ * only the pure `pickClaudeOrgUuid`, URL builders, and `parse`.
+ */
+export async function refreshClaude(): Promise<void> {
+  const { provider, label } = claudeAdapter;
   try {
-    const res = await fetch(adapter.collection.endpoint, { credentials: 'include', ...adapter.collection.init });
-    if (res.status === 401 || res.status === 403 || res.redirected) {
-      return storeStatus(adapter.provider, adapter.label, 'not_connected', 'Not logged in.');
-    }
-    if (!res.ok) return storeStatus(adapter.provider, adapter.label, 'stale', `HTTP ${res.status}`);
-    const snapshots = adapter.parse(await res.json());
-    await storeSnapshots(adapter.provider, adapter.label, snapshots);
+    const orgsRes = await fetch(claudeOrgsUrl(), SESSION_FETCH);
+    if (isAuthFailure(orgsRes)) return storeStatus(provider, label, 'not_connected', 'Not logged in.');
+    if (!orgsRes.ok) return storeStatus(provider, label, 'stale', `HTTP ${orgsRes.status}`);
+
+    const uuid = pickClaudeOrgUuid(await orgsRes.json());
+    if (!uuid) return storeStatus(provider, label, 'not_connected', 'No Claude organization found.');
+
+    const usageRes = await fetch(claudeUsageUrl(uuid), SESSION_FETCH);
+    if (isAuthFailure(usageRes)) return storeStatus(provider, label, 'not_connected', 'Not logged in.');
+    if (!usageRes.ok) return storeStatus(provider, label, 'stale', `HTTP ${usageRes.status}`);
+
+    await storeSnapshots(provider, label, claudeAdapter.parse(await usageRes.json()));
   } catch {
-    await storeStatus(adapter.provider, adapter.label, 'stale', 'Fetch failed.');
+    await storeStatus(provider, label, 'stale', 'Fetch failed.');
   }
 }

@@ -1,6 +1,6 @@
 import { calculateBadgeState } from './badge';
 import { aggregateCards, flattenSnapshots } from './aggregate';
-import { refreshFetchAdapter, storeSnapshots } from './refresh';
+import { refreshClaude, storeSnapshots } from './refresh';
 import { evaluateAndNotify } from './alerts';
 import { claudeAdapter } from '../providers/claude/claudeAdapter';
 import { chatgptAdapter } from '../providers/chatgpt/chatgptAdapter';
@@ -10,7 +10,6 @@ import { isUsageReport, type ExtensionMessage } from '../shared/messages';
 import type { ProviderId } from '../shared/types';
 
 const ADAPTERS = [claudeAdapter, chatgptAdapter, geminiAdapter];
-const FETCH_ADAPTERS = ADAPTERS.filter((a) => a.collection.strategy === 'fetch');
 const ADAPTERS_BY_ID: Partial<Record<ProviderId, (typeof ADAPTERS)[number]>> =
   Object.fromEntries(ADAPTERS.map((a) => [a.provider, a]));
 
@@ -32,7 +31,8 @@ async function recompute(): Promise<void> {
 
 async function refreshAll(): Promise<void> {
   const settings = await loadSettings();
-  await Promise.all(FETCH_ADAPTERS.filter((a) => isEnabled(a.provider, settings)).map(refreshFetchAdapter));
+  // Claude is the only background-fetch provider; ChatGPT/Gemini report via content scripts.
+  if (isEnabled('claude', settings)) await refreshClaude();
   await recompute();
 }
 
