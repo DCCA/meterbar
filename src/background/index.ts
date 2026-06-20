@@ -1,4 +1,6 @@
 import { calculateBadgeState } from './badge';
+import { iconBars } from './iconModel';
+import { renderIcon } from './icon';
 import { aggregateCards, flattenSnapshots } from './aggregate';
 import { refreshClaude, refreshChatgpt, storeSnapshots, storeStatus } from './refresh';
 import { evaluateAndNotify } from './alerts';
@@ -26,6 +28,7 @@ async function recompute(): Promise<void> {
   const badge = calculateBadgeState(flattenSnapshots(cards));
   await chrome.action.setBadgeText({ text: badge.text });
   await chrome.action.setBadgeBackgroundColor({ color: badge.color });
+  await renderIcon(iconBars(cards));
   if (settings.notificationsEnabled) await evaluateAndNotify(cards);
 }
 
