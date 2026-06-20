@@ -10,9 +10,13 @@ const TOGGLES: Array<[id: string, key: keyof Settings]> = [
   ['gemini', 'geminiEnabled']
 ];
 
+let statusTimer: ReturnType<typeof setTimeout> | undefined;
 function setStatus(message: string): void {
   const el = document.querySelector('#status');
-  if (el) el.textContent = message;
+  if (!el) return;
+  el.textContent = message;
+  if (statusTimer) clearTimeout(statusTimer);
+  if (message) statusTimer = setTimeout(() => { el.textContent = ''; }, 4000);
 }
 
 function download(filename: string, text: string, type: string): void {
@@ -50,6 +54,7 @@ async function wire(): Promise<void> {
   });
 
   document.querySelector<HTMLButtonElement>('#clear')?.addEventListener('click', async () => {
+    if (!confirm('Clear all locally stored MeterBar data (usage history and settings)? This cannot be undone.')) return;
     await chrome.storage.local.clear();
     setStatus('Local MeterBar data cleared.');
     await render();
