@@ -1,13 +1,16 @@
 import type { ProviderCardState, ProviderId } from '../shared/types';
+import type { BadgeTargetId } from '../shared/badgeTarget';
 
 export interface Settings {
   notificationsEnabled: boolean;
   claudeEnabled: boolean;
   chatgptEnabled: boolean;
   geminiEnabled: boolean;
+  badgeTarget: BadgeTargetId;
 }
 export const DEFAULT_SETTINGS: Settings = {
-  notificationsEnabled: true, claudeEnabled: true, chatgptEnabled: true, geminiEnabled: true
+  notificationsEnabled: true, claudeEnabled: true, chatgptEnabled: true, geminiEnabled: true,
+  badgeTarget: 'riskiest'
 };
 
 export interface AlertState { seen: string[]; lastReset: Record<string, string>; }

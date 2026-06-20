@@ -1,17 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { calculateBadgeState } from '../src/background/badge';
-import type { UsageSnapshot } from '../src/shared/types';
+import type { UsageSnapshot, UsageWindow } from '../src/shared/types';
 
-function snapshot(provider: UsageSnapshot['provider'], usedPercent: number): UsageSnapshot {
+function snapshot(
+  provider: UsageSnapshot['provider'],
+  usedPercent: number,
+  window: UsageWindow = 'five_hour',
+  rest: Partial<UsageSnapshot> = {}
+): UsageSnapshot {
   return {
     provider,
-    window: 'five_hour',
+    window,
     usedRatio: usedPercent / 100,
     usedPercent,
     capturedAt: '2026-06-20T12:00:00Z',
     source: 'test',
     confidence: 'exact',
-    stale: false
+    stale: false,
+    ...rest
   };
 }
 
@@ -30,5 +36,43 @@ describe('calculateBadgeState', () => {
       text: '?',
       color: '#6b7280'
     });
+  });
+
+  it("with an explicit 'riskiest' target keeps the riskiest pick", () => {
+    expect(calculateBadgeState([snapshot('claude', 42), snapshot('gemini', 81)], 'riskiest')).toMatchObject({
+      text: '81',
+      provider: 'gemini'
+    });
+  });
+
+  it('pins the number to a chosen provider + window even when it is not the riskiest', () => {
+    const snapshots = [
+      snapshot('chatgpt', 95, 'five_hour'),
+      snapshot('claude', 60, 'five_hour'),
+      snapshot('claude', 30, 'seven_day')
+    ];
+    expect(calculateBadgeState(snapshots, 'claude:five_hour')).toEqual({
+      text: '60',
+      color: '#22c55e',
+      provider: 'claude',
+      usedPercent: 60
+    });
+  });
+
+  it('resolves the ChatGPT Codex (custom) target', () => {
+    const snapshots = [snapshot('chatgpt', 40, 'five_hour'), snapshot('chatgpt', 88, 'custom')];
+    expect(calculateBadgeState(snapshots, 'chatgpt:custom')).toMatchObject({ text: '88', color: '#f59e0b' });
+  });
+
+  it('shows ? when the pinned target has no snapshot', () => {
+    expect(calculateBadgeState([snapshot('chatgpt', 95)], 'claude:five_hour')).toEqual({
+      text: '?',
+      color: '#6b7280'
+    });
+  });
+
+  it('shows ? when the pinned target exists only as a stale snapshot', () => {
+    const stale = snapshot('claude', 80, 'five_hour', { stale: true });
+    expect(calculateBadgeState([stale], 'claude:five_hour')).toEqual({ text: '?', color: '#6b7280' });
   });
 });
