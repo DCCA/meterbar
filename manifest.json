@@ -4,11 +4,28 @@
   "version": "0.1.0",
   "description": "One bar for all your AI limits.",
   "permissions": ["storage", "alarms", "notifications"],
-  "host_permissions": ["https://claude.ai/*"],
+  "host_permissions": [
+    "https://claude.ai/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://gemini.google.com/*"
+  ],
   "background": {
     "service_worker": "assets/background.js",
     "type": "module"
   },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["assets/chatgpt.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["assets/gemini.js"],
+      "run_at": "document_idle"
+    }
+  ],
   "action": {
     "default_title": "MeterBar",
     "default_popup": "src/popup/popup.html"
