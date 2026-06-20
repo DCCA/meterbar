@@ -59,4 +59,4 @@ These are hard product invariants, not style preferences — every change must h
 
 ## Git
 
-Develop on branch `claude/great-albattani-82r7an`. Do not push to `main` without explicit permission.
+`main` is the default branch — do not commit or push to it directly without explicit permission; branch first and open changes from a feature branch.
