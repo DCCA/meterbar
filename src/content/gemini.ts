@@ -12,8 +12,10 @@ function isSignedIn(): boolean {
 }
 
 function report(): void {
-  if (!isSignedIn()) return;
-  const msg: ExtensionMessage = { type: 'status:report', provider: 'gemini', status: 'connected', message: MESSAGE };
+  // Signed in → connected with the copy; signed out → reset the card to the default look.
+  const msg: ExtensionMessage = isSignedIn()
+    ? { type: 'status:report', provider: 'gemini', status: 'connected', message: MESSAGE }
+    : { type: 'status:report', provider: 'gemini', status: 'unsupported' };
   try { chrome.runtime.sendMessage(msg); } catch { /* stay silent; never surface page errors */ }
 }
 

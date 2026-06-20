@@ -2,7 +2,7 @@ import type { ProviderCardState, ProviderId } from './types';
 
 export type ExtensionMessage =
   | { type: 'usage:report'; provider: ProviderId; raw: unknown; capturedAt: string } // content → bg
-  | { type: 'status:report'; provider: ProviderId; status: ProviderCardState['status']; message: string } // content → bg
+  | { type: 'status:report'; provider: ProviderId; status: ProviderCardState['status']; message?: string } // content → bg
   | { type: 'usage:refresh' }                                                         // popup → bg
   | { type: 'state:get' }                                                             // popup → bg
   | { type: 'state:result'; cards: ProviderCardState[] };                             // bg → popup
