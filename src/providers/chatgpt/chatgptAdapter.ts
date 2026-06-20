@@ -73,6 +73,23 @@ export function chatgptSessionUrl(): string { return `${CHATGPT_ORIGIN}/api/auth
 export function chatgptAccountsUrl(): string { return `${CHATGPT_ORIGIN}/backend-api/accounts/check/v4-2023-04-27`; }
 export function chatgptUsageUrl(): string { return `${CHATGPT_ORIGIN}/backend-api/wham/usage`; }
 
+interface ChatgptAccountsCheck { accounts?: Record<string, { account?: { account_id?: string } }>; }
+
+/**
+ * Choose the account whose usage to read from the `/backend-api/accounts/check`
+ * response (the first account with an id). Pure: the response is fetched by the
+ * background worker. The id is used only to build the request header, never stored.
+ */
+export function pickChatgptAccountId(body: unknown): string | null {
+  const accounts = (body as ChatgptAccountsCheck | null)?.accounts;
+  if (!accounts || typeof accounts !== 'object') return null;
+  for (const entry of Object.values(accounts)) {
+    const id = entry?.account?.account_id;
+    if (typeof id === 'string' && id) return id;
+  }
+  return null;
+}
+
 export const chatgptAdapter: ProviderAdapter = {
   provider: 'chatgpt',
   label: 'ChatGPT / Codex',

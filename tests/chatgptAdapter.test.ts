@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseChatgptUsage } from '../src/providers/chatgpt/chatgptAdapter';
+import { parseChatgptUsage, pickChatgptAccountId } from '../src/providers/chatgpt/chatgptAdapter';
 
 const NOW = new Date('2026-06-20T16:16:00Z');
 
@@ -49,5 +49,19 @@ describe('parseChatgptUsage', () => {
 
   it('skips windows missing a numeric used_percent', () => {
     expect(parseChatgptUsage({ rate_limit: { primary_window: {}, secondary_window: null } }, NOW)).toEqual([]);
+  });
+});
+
+describe('pickChatgptAccountId', () => {
+  it('returns the first account_id from the accounts map', () => {
+    const body = { accounts: { default: { account: { account_id: 'acct-123' } } } };
+    expect(pickChatgptAccountId(body)).toBe('acct-123');
+  });
+
+  it('returns null for a missing, empty, or malformed accounts map', () => {
+    expect(pickChatgptAccountId(null)).toBeNull();
+    expect(pickChatgptAccountId({})).toBeNull();
+    expect(pickChatgptAccountId({ accounts: {} })).toBeNull();
+    expect(pickChatgptAccountId({ accounts: { x: {} } })).toBeNull();
   });
 });
