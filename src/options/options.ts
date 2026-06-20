@@ -1,45 +1,60 @@
-const DEFAULT_SETTINGS = {
-  notificationsEnabled: true,
-  claudeEnabled: true
-};
+import { loadSettings, saveSettings, type Settings } from '../storage/usageStore';
+import { readAllHistory } from '../storage/historyStore';
+import { historyToCsv, historyToJson } from '../shared/exporters';
+import type { ExtensionMessage } from '../shared/messages';
 
-type Settings = typeof DEFAULT_SETTINGS;
+const TOGGLES: Array<[id: string, key: keyof Settings]> = [
+  ['notifications', 'notificationsEnabled'],
+  ['claude', 'claudeEnabled'],
+  ['chatgpt', 'chatgptEnabled'],
+  ['gemini', 'geminiEnabled']
+];
 
-async function loadSettings(): Promise<Settings> {
-  const stored = await chrome.storage.local.get(DEFAULT_SETTINGS);
-  return stored as Settings;
+function setStatus(message: string): void {
+  const el = document.querySelector('#status');
+  if (el) el.textContent = message;
 }
 
-async function saveSettings(settings: Settings): Promise<void> {
-  await chrome.storage.local.set(settings);
+function download(filename: string, text: string, type: string): void {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 async function render(): Promise<void> {
   const settings = await loadSettings();
-  const notifications = document.querySelector<HTMLInputElement>('#notifications');
-  const claude = document.querySelector<HTMLInputElement>('#claude');
-  if (notifications) notifications.checked = settings.notificationsEnabled;
-  if (claude) claude.checked = settings.claudeEnabled;
+  for (const [id, key] of TOGGLES) {
+    const el = document.querySelector<HTMLInputElement>(`#${id}`);
+    if (el) el.checked = settings[key];
+  }
 }
 
 async function wire(): Promise<void> {
-  document.querySelector<HTMLInputElement>('#notifications')?.addEventListener('change', async (event) => {
-    const current = await loadSettings();
-    await saveSettings({ ...current, notificationsEnabled: (event.target as HTMLInputElement).checked });
-  });
+  for (const [id, key] of TOGGLES) {
+    document.querySelector<HTMLInputElement>(`#${id}`)?.addEventListener('change', async (event) => {
+      const current = await loadSettings();
+      await saveSettings({ ...current, [key]: (event.target as HTMLInputElement).checked });
+      void chrome.runtime.sendMessage({ type: 'usage:refresh' } as ExtensionMessage);
+    });
+  }
 
-  document.querySelector<HTMLInputElement>('#claude')?.addEventListener('change', async (event) => {
-    const current = await loadSettings();
-    await saveSettings({ ...current, claudeEnabled: (event.target as HTMLInputElement).checked });
+  const date = new Date().toISOString().slice(0, 10);
+  document.querySelector('#export-json')?.addEventListener('click', async () => {
+    download(`meterbar-history-${date}.json`, historyToJson(await readAllHistory()), 'application/json');
+  });
+  document.querySelector('#export-csv')?.addEventListener('click', async () => {
+    download(`meterbar-history-${date}.csv`, historyToCsv(await readAllHistory()), 'text/csv');
   });
 
   document.querySelector<HTMLButtonElement>('#clear')?.addEventListener('click', async () => {
     await chrome.storage.local.clear();
-    const status = document.querySelector('#status');
-    if (status) status.textContent = 'Local MeterBar data cleared.';
+    setStatus('Local MeterBar data cleared.');
     await render();
   });
 }
 
-render();
-wire();
+void render();
+void wire();

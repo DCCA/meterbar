@@ -9,8 +9,21 @@
   <body>
     <main>
       <h1>MeterBar Settings</h1>
-      <label><input id="notifications" type="checkbox" checked /> Enable local notifications</label>
-      <label><input id="claude" type="checkbox" checked /> Enable Claude adapter</label>
+
+      <label><input id="notifications" type="checkbox" /> Enable local notifications</label>
+
+      <h2>Providers</h2>
+      <label><input id="claude" type="checkbox" /> Claude</label>
+      <label><input id="chatgpt" type="checkbox" /> ChatGPT / Codex</label>
+      <label><input id="gemini" type="checkbox" /> Gemini</label>
+
+      <section>
+        <h2>Usage history</h2>
+        <p>Export your locally stored usage history (percentages and timestamps only).</p>
+        <button id="export-json">Export JSON</button>
+        <button id="export-csv">Export CSV</button>
+      </section>
+
       <section>
         <h2>Privacy</h2>
         <p>MeterBar stores usage percentages, reset timestamps, provider names, and local settings. It does not store prompts, responses, uploaded files, or chat content.</p>
