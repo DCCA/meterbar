@@ -1,7 +1,18 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
+import { copyFileSync } from 'node:fs';
 
 export default defineConfig({
+  plugins: [
+    {
+      // Copy the root manifest into dist/ so dist/ is a loadable unpacked extension.
+      // (Icons live in public/assets/ and are copied by Vite's publicDir handling.)
+      name: 'meterbar-copy-manifest',
+      closeBundle() {
+        copyFileSync(resolve(__dirname, 'manifest.json'), resolve(__dirname, 'dist/manifest.json'));
+      }
+    }
+  ],
   build: {
     outDir: 'dist',
     emptyOutDir: true,
