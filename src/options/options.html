@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MeterBar Settings</title>
+    <link rel="stylesheet" href="./options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>MeterBar Settings</h1>
+      <label><input id="notifications" type="checkbox" checked /> Enable local notifications</label>
+      <label><input id="claude" type="checkbox" checked /> Enable Claude adapter</label>
+      <section>
+        <h2>Privacy</h2>
+        <p>MeterBar stores usage percentages, reset timestamps, provider names, and local settings. It does not store prompts, responses, uploaded files, or chat content.</p>
+        <button id="clear">Clear local MeterBar data</button>
+        <p id="status" role="status"></p>
+      </section>
+    </main>
+    <script type="module" src="./options.ts"></script>
+  </body>
+</html>

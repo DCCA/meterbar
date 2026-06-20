@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "MeterBar",
+  "version": "0.1.0",
+  "description": "One bar for all your AI limits.",
+  "permissions": ["storage", "alarms", "notifications"],
+  "host_permissions": ["https://claude.ai/*"],
+  "background": {
+    "service_worker": "assets/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "MeterBar",
+    "default_popup": "src/popup/popup.html"
+  },
+  "options_page": "src/options/options.html"
+}
