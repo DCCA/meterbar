@@ -75,8 +75,8 @@ jobs:
                 "ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
                 "ANTHROPIC_AUTH_TOKEN": "${{ secrets.OPENROUTER_API_KEY }}",
                 "ANTHROPIC_API_KEY": "",
-                "ANTHROPIC_MODEL": "anthropic/claude-sonnet-4.6",
-                "ANTHROPIC_SMALL_FAST_MODEL": "anthropic/claude-haiku-4.5"
+                "ANTHROPIC_MODEL": "z-ai/glm-5.2",
+                "ANTHROPIC_SMALL_FAST_MODEL": "z-ai/glm-5-turbo"
               }
             }
           prompt: |
