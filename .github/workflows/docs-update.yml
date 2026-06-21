@@ -17,6 +17,12 @@ name: Update docs on merge
 on:
   pull_request:
     types: [closed]
+    # Only react when code/behaviour changed — skip docs-only merges. This also
+    # stops this workflow's own (markdown-only) docs PRs from retriggering it.
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'LICENSE'
   workflow_dispatch: {}
 
 permissions:
