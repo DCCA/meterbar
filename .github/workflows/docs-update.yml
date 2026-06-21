@@ -1,0 +1,88 @@
+# Keeps the living docs (README.md, CLAUDE.md) in sync with the code.
+#
+# On every merged pull request, Claude reviews what changed and updates the docs,
+# then opens a separate docs PR for review. It never touches docs/PRD.md (product
+# source of truth) or docs/superpowers/** (historical records), and makes no PR when
+# the docs are already accurate.
+#
+# Setup (one-time):
+#   1. Add an `ANTHROPIC_API_KEY` secret:
+#      Settings → Secrets and variables → Actions → New repository secret.
+#      (Or swap to the Claude GitHub App + `claude_code_oauth_token`.)
+#   2. Allow Actions to open PRs:
+#      Settings → Actions → General → Workflow permissions →
+#      enable "Allow GitHub Actions to create and approve pull requests".
+name: Update docs on merge
+
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: docs-update
+  cancel-in-progress: false
+
+jobs:
+  update-docs:
+    # Run on a real merge, or on manual dispatch. Skip the workflow's own docs PRs
+    # so merging a docs update never retriggers this loop.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       !startsWith(github.event.pull_request.head.ref, 'docs/auto-update'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure the Anthropic API key is configured
+        run: |
+          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "::error::ANTHROPIC_API_KEY secret is not set. Add it in Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Let Claude refresh the living docs
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Recent changes were merged into the main branch of this repository${{ github.event.pull_request.number && format(' (most recently PR #{0} — "{1}")', github.event.pull_request.number, github.event.pull_request.title) || '' }}.
+
+            Review what changed on main (use `git log` and `git diff` against the previous state) and update ONLY the living documentation so it accurately reflects the current code:
+              - README.md
+              - CLAUDE.md
+
+            Rules:
+              - Do NOT modify docs/PRD.md (product source of truth) or anything under docs/superpowers/ (historical records).
+              - Only change docs if the merge actually changed behaviour, architecture, commands, permissions, or user-facing features. If the docs are already accurate, make NO changes at all.
+              - Keep edits accurate, concise, and consistent with the existing tone; do not invent features.
+              - Edit the files in place. Do NOT commit, push, or open a pull request — a later workflow step does that.
+          claude_args: >-
+            --allowedTools "Read,Edit,Write,Grep,Glob,Bash(git log:*),Bash(git diff:*),Bash(git show:*)"
+
+      - name: Open a docs PR if anything changed
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: docs/auto-update-${{ github.event.pull_request.number || github.run_id }}
+          base: ${{ github.event.pull_request.base.ref || github.ref_name }}
+          title: "docs: refresh after #${{ github.event.pull_request.number || github.run_id }}"
+          commit-message: "docs: sync README/CLAUDE with merged changes"
+          body: |
+            Automated documentation refresh following the merge of
+            #${{ github.event.pull_request.number }} ("${{ github.event.pull_request.title }}").
+
+            Claude reviewed the merged change and updated the living docs (README.md / CLAUDE.md only).
+            Please review before merging. If nothing needed updating, this PR will not have been created.
+          add-paths: |
+            README.md
+            CLAUDE.md
+          delete-branch: true
+          labels: documentation
