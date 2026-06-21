@@ -8,7 +8,10 @@
     "48": "assets/icon48.png",
     "128": "assets/icon128.png"
   },
-  "permissions": ["storage", "alarms", "notifications"],
+  "permissions": ["storage", "alarms", "notifications", "sidePanel"],
+  "side_panel": {
+    "default_path": "src/sidepanel/sidepanel.html"
+  },
   "host_permissions": [
     "https://claude.ai/*",
     "https://chatgpt.com/*",

@@ -1,0 +1,7 @@
+/* The side panel reuses the popup's redesigned styles, then relaxes the fixed
+   popup width so it fills whatever width the user gives the docked panel. */
+@import '../popup/popup.css';
+
+body {
+  width: auto;
+}

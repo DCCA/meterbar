@@ -9,6 +9,7 @@ import { chatgptAdapter } from '../providers/chatgpt/chatgptAdapter';
 import { geminiAdapter } from '../providers/gemini/geminiAdapter';
 import { getAllCards, loadSettings, type Settings } from '../storage/usageStore';
 import { isUsageReport, isStatusReport, type ExtensionMessage } from '../shared/messages';
+import { buildTooltip } from '../shared/summary';
 import type { ProviderId } from '../shared/types';
 
 const ADAPTERS = [claudeAdapter, chatgptAdapter, geminiAdapter];
@@ -29,6 +30,7 @@ async function recompute(): Promise<void> {
   await chrome.action.setBadgeText({ text: badge.text });
   await chrome.action.setBadgeBackgroundColor({ color: badge.color });
   await renderIcon(iconBars(cards));
+  await chrome.action.setTitle({ title: buildTooltip(cards) });
   if (settings.notificationsEnabled) await evaluateAndNotify(cards);
 }
 
