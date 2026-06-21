@@ -1,17 +1,22 @@
 # Keeps the living docs (README.md, CLAUDE.md) in sync with the code.
 #
-# On every merged pull request, Claude reviews what changed and updates the docs,
+# On every merged code PR, Claude reviews what changed and updates the docs,
 # then opens a separate docs PR for review. It never touches docs/PRD.md (product
 # source of truth) or docs/superpowers/** (historical records), and makes no PR when
 # the docs are already accurate.
 #
+# Model backend: OpenRouter (Anthropic-compatible endpoint — no proxy needed).
+#
 # Setup (one-time):
-#   1. Add an `ANTHROPIC_API_KEY` secret:
+#   1. Add an `OPENROUTER_API_KEY` secret (your key from https://openrouter.ai/keys,
+#      starts with `sk-or-`):
 #      Settings → Secrets and variables → Actions → New repository secret.
-#      (Or swap to the Claude GitHub App + `claude_code_oauth_token`.)
 #   2. Allow Actions to open PRs:
 #      Settings → Actions → General → Workflow permissions →
 #      enable "Allow GitHub Actions to create and approve pull requests".
+#
+# To use a different/cheaper model, change ANTHROPIC_MODEL / ANTHROPIC_SMALL_FAST_MODEL
+# in the settings block below to any OpenRouter slug (see https://openrouter.ai/models).
 name: Update docs on merge
 
 on:
@@ -43,10 +48,10 @@ jobs:
        !startsWith(github.event.pull_request.head.ref, 'docs/auto-update'))
     runs-on: ubuntu-latest
     steps:
-      - name: Ensure the Anthropic API key is configured
+      - name: Ensure the OpenRouter API key is configured
         run: |
-          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
-            echo "::error::ANTHROPIC_API_KEY secret is not set. Add it in Settings → Secrets and variables → Actions."
+          if [ -z "${{ secrets.OPENROUTER_API_KEY }}" ]; then
+            echo "::error::OPENROUTER_API_KEY secret is not set. Add it in Settings → Secrets and variables → Actions (key from https://openrouter.ai/keys)."
             exit 1
           fi
 
@@ -58,7 +63,21 @@ jobs:
       - name: Let Claude refresh the living docs
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # OpenRouter key. Also exported as ANTHROPIC_AUTH_TOKEN in settings.env below;
+          # ANTHROPIC_API_KEY is forced empty there so the CLI does not fall back to Anthropic.
+          anthropic_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+          # The job `env:` block is not reliably forwarded to the CLI by the composite
+          # action, so the provider override is passed via the settings JSON instead.
+          settings: |
+            {
+              "env": {
+                "ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
+                "ANTHROPIC_AUTH_TOKEN": "${{ secrets.OPENROUTER_API_KEY }}",
+                "ANTHROPIC_API_KEY": "",
+                "ANTHROPIC_MODEL": "anthropic/claude-sonnet-4.6",
+                "ANTHROPIC_SMALL_FAST_MODEL": "anthropic/claude-haiku-4.5"
+              }
+            }
           prompt: |
             Recent changes were merged into the main branch of this repository${{ github.event.pull_request.number && format(' (most recently PR #{0} — "{1}")', github.event.pull_request.number, github.event.pull_request.title) || '' }}.
 
@@ -85,8 +104,9 @@ jobs:
             Automated documentation refresh following the merge of
             #${{ github.event.pull_request.number }} ("${{ github.event.pull_request.title }}").
 
-            Claude reviewed the merged change and updated the living docs (README.md / CLAUDE.md only).
-            Please review before merging. If nothing needed updating, this PR will not have been created.
+            Claude (via OpenRouter) reviewed the merged change and updated the living docs
+            (README.md / CLAUDE.md only). Please review before merging. If nothing needed
+            updating, this PR will not have been created.
           add-paths: |
             README.md
             CLAUDE.md
