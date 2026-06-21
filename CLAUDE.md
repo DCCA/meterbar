@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status: MVP + Phase 2 implemented
 
-The extension is built and loadable — `manifest.json`, `package.json`, the full `src/` tree, and 11 Vitest suites all exist. Claude and ChatGPT/Codex read live usage via background fetches; Gemini reports connected-status via a content script. The authoritative documents:
+The extension is built and loadable — `manifest.json`, `package.json`, the full `src/` tree, and 15 Vitest suites all exist. Claude and ChatGPT/Codex read live usage via background fetches; Gemini reports connected-status via a content script. The authoritative documents:
 
 - `docs/PRD.md` — product requirements, the canonical data model, and the privacy/security rules. **Source of truth for *what* to build and what is out of scope.** If the PRD ever conflicts with anything else, the PRD's privacy/security rules win.
 - `docs/superpowers/plans/` and `docs/superpowers/specs/` — historical records of *how* each feature (MVP, ChatGPT/Codex live usage, Gemini connected-status) was built. Useful context, not an active checklist.
@@ -28,14 +28,15 @@ npm run typecheck   # tsc --noEmit
 
 Load in Chrome: `chrome://extensions` → enable Developer mode → **Load unpacked** → select `dist/`.
 
-Development is **test-first**: write the Vitest spec, watch it fail, then implement. Pure logic (badge math, time helpers, alert de-dup, provider parsers) is unit-tested in `node` environment; `chrome.*` APIs are only touched in the background/popup/options entry points, not in testable logic.
+Development is **test-first**: write the Vitest spec, watch it fail, then implement. Pure logic (badge math, time helpers, alert de-dup, provider parsers, tooltip summary) is unit-tested in `node` environment; `chrome.*` APIs are only touched in the background/popup/options/side-panel entry points, not in testable logic.
 
 ## Architecture (the big picture)
 
-Four runtime surfaces coordinate through `chrome.storage.local` — there is no shared in-memory state:
+Five runtime surfaces coordinate through `chrome.storage.local` — there is no shared in-memory state:
 
-- **Background service worker** (`src/background/`) — `index.ts` owns the lifecycle: a `chrome.alarms` loop (`meterbar-refresh`, every 10 min) drives `refresh.ts`, then `recompute()` aggregates cards, sets the badge, and fires notifications. It also routes `ExtensionMessage`s from the popup and content scripts.
-- **Popup** (`src/popup/`) — sends `state:get`/`usage:refresh`, renders per-provider cards with trend sparklines. Vanilla HTML/CSS/TS, no framework.
+- **Background service worker** (`src/background/`) — `index.ts` owns the lifecycle: a `chrome.alarms` loop (`meterbar-refresh`, every 10 min) drives `refresh.ts`, then `recompute()` aggregates cards, sets the badge, sets the toolbar-icon hover tooltip (`buildTooltip`, `src/shared/summary.ts`), and fires notifications. It also routes `ExtensionMessage`s from the popup and content scripts.
+- **Popup** (`src/popup/`) — sends `state:get`/`usage:refresh`, renders per-provider cards with trend sparklines, and offers a **Side panel** button. Vanilla HTML/CSS/TS, no framework. Card rendering is shared with the side panel via `src/ui/cardsView.ts`.
+- **Side panel** (`src/sidepanel/`) — `chrome.sidePanel` docks a persistent, auto-updating view that reuses the popup's `cardsView` rendering. It opens from the popup button or Chrome's side-panel toolbar button and re-renders on `chrome.storage.onChanged` (local area) so it stays live while browsing.
 - **Options page** (`src/options/`) — per-provider toggles, privacy explanation, CSV/JSON export, and "clear local data".
 - **Content scripts** (`src/content/`) — `gemini.ts` runs on `gemini.google.com` and posts a `status:report` (see strategy split below).
 - **Storage** (`src/storage/`) — `usageStore.ts` (latest card per provider + settings + alert de-dup state) and `historyStore.ts` (per-`provider:window` time series) over `chrome.storage.local`.
@@ -60,7 +61,7 @@ These are hard product invariants, not style preferences — every change must h
 
 - **Never collect chat content.** No prompts, completions, messages, uploaded files, screenshots, full browsing history, raw session cookies, or API keys. Store **only** usage metrics (percentages, reset timestamps, provider names, optional anonymized account id, settings).
 - **Local-first, no backend.** No cloud sync, no remote analytics, no account system in the MVP. The only permitted network traffic is to the provider pages/endpoints required to read usage.
-- **Least-privilege permissions.** API permissions are `storage`, `alarms`, `notifications`; host permissions cover only the read-usage origins (`claude.ai`, `chatgpt.com`, `chat.openai.com`, `gemini.google.com`). Add a host only when a provider needs it, and declare permissions plainly.
+- **Least-privilege permissions.** API permissions are `storage`, `alarms`, `notifications`, `sidePanel`; host permissions cover only the read-usage origins (`claude.ai`, `chatgpt.com`, `chat.openai.com`, `gemini.google.com`). Add a host only when a provider needs it, and declare permissions plainly.
 - **Truthful uncertainty.** If a value is estimated, inferred, stale, or from an undocumented endpoint, the UI must say so via the `confidence`/`stale` fields — never present a guess as exact. Gemini deliberately reports *connected-status only* (its adapter emits no usage snapshots) because usage sits behind a fragile `batchexecute` RPC — do not "fix" this by scraping an unverified number.
 - **No routing/failover** in the Chrome MVP; that belongs to a future companion app.
 
