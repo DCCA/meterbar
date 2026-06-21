@@ -24,6 +24,7 @@ npm test            # vitest run (all tests)
 npm test -- tests/badge.test.ts   # run a single test file
 npm run test:watch  # vitest watch mode
 npm run typecheck   # tsc --noEmit
+npm run check       # typecheck + test (convenience)
 ```
 
 Load in Chrome: `chrome://extensions` → enable Developer mode → **Load unpacked** → select `dist/`.

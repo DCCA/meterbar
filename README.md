@@ -22,6 +22,7 @@ MVP + Phase 2 in progress. The extension builds and loads: a toolbar badge shows
 npm install
 npm test            # vitest run (all suites)
 npm run typecheck   # tsc --noEmit
+npm run check       # typecheck + test
 npm run build       # vite build → dist/ (the unpacked extension)
 ```
 
