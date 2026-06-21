@@ -95,6 +95,7 @@ jobs:
             --allowedTools "Read,Edit,Write,Grep,Glob,Bash(git log:*),Bash(git diff:*),Bash(git show:*)"
 
       - name: Open a docs PR if anything changed
+        id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
           branch: docs/auto-update-${{ github.event.pull_request.number || github.run_id }}
@@ -113,3 +114,23 @@ jobs:
             CLAUDE.md
           delete-branch: true
           labels: documentation
+
+      - name: Auto-merge the docs PR
+        # Only when a docs PR was actually created/updated. Docs PRs are markdown-only,
+        # so merging them does NOT retrigger this workflow (paths-ignore covers **/*.md).
+        if: steps.cpr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          # Retry while GitHub is still computing the PR's mergeability.
+          for attempt in 1 2 3 4 5; do
+            if gh pr merge "$PR" --squash --delete-branch --repo "$GITHUB_REPOSITORY"; then
+              echo "Merged docs PR #$PR"
+              exit 0
+            fi
+            echo "::notice::Merge attempt $attempt for PR #$PR failed (mergeability may still be computing); retrying in 5s"
+            sleep 5
+          done
+          echo "::error::Could not auto-merge docs PR #$PR"
+          exit 1
