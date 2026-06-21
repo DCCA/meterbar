@@ -1,13 +1,23 @@
-import { renderCardsInto, requestRefresh } from '../ui/cardView';
+import { renderCardsInto, requestRefresh } from '../ui/cardsView';
 
-const container = document.querySelector<HTMLDivElement>('#cards');
+async function render(): Promise<void> {
+  const container = document.querySelector<HTMLDivElement>('#cards');
+  if (container) await renderCardsInto(container);
+}
 
-function rerender(): void {
-  if (container) void renderCardsInto(container);
+function setRefreshing(on: boolean): void {
+  const btn = document.querySelector<HTMLButtonElement>('#refresh');
+  if (!btn) return;
+  btn.disabled = on;
+  btn.setAttribute('aria-busy', String(on));
+  btn.classList.toggle('is-busy', on);
 }
 
 document.querySelector('#refresh')?.addEventListener('click', () => {
-  void requestRefresh().then(rerender);
+  setRefreshing(true);
+  void requestRefresh()
+    .then(render)
+    .finally(() => setRefreshing(false));
 });
 
 document.querySelector('#open-sidepanel')?.addEventListener('click', async () => {
@@ -18,4 +28,4 @@ document.querySelector('#open-sidepanel')?.addEventListener('click', async () =>
   }
 });
 
-rerender();
+void render();

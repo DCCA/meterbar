@@ -1,4 +1,5 @@
 import type { ProviderId, UsageSnapshot } from '../shared/types';
+import { parseBadgeTarget, type BadgeTargetId } from '../shared/badgeTarget';
 
 export interface BadgeState {
   text: string;
@@ -7,21 +8,25 @@ export interface BadgeState {
   usedPercent?: number;
 }
 
-export function calculateBadgeState(snapshots: UsageSnapshot[]): BadgeState {
-  const fresh = snapshots.filter((snapshot) => !snapshot.stale && snapshot.confidence !== 'unavailable');
-  if (fresh.length === 0) {
-    return { text: '?', color: '#6b7280' };
-  }
+const UNKNOWN: BadgeState = { text: '?', color: '#6b7280' };
 
-  const riskiest = fresh.reduce((max, snapshot) =>
-    snapshot.usedPercent > max.usedPercent ? snapshot : max
-  );
+export function calculateBadgeState(snapshots: UsageSnapshot[], targetId: BadgeTargetId = 'riskiest'): BadgeState {
+  const fresh = snapshots.filter((snapshot) => !snapshot.stale && snapshot.confidence !== 'unavailable');
+  if (fresh.length === 0) return UNKNOWN;
+
+  const target = parseBadgeTarget(targetId);
+  const chosen =
+    target.id === 'riskiest'
+      ? fresh.reduce((max, snapshot) => (snapshot.usedPercent > max.usedPercent ? snapshot : max))
+      : fresh.find((s) => s.provider === target.provider && s.window === target.window);
+
+  if (!chosen) return UNKNOWN;
 
   return {
-    text: String(Math.round(riskiest.usedPercent)),
-    color: colorForPercent(riskiest.usedPercent),
-    provider: riskiest.provider,
-    usedPercent: riskiest.usedPercent
+    text: String(Math.round(chosen.usedPercent)),
+    color: colorForPercent(chosen.usedPercent),
+    provider: chosen.provider,
+    usedPercent: chosen.usedPercent
   };
 }
 

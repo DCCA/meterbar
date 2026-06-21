@@ -14,7 +14,7 @@ MVP + Phase 2 in progress. The extension builds and loads: a toolbar badge shows
 
 - **Badge** — the pinned toolbar icon always shows your single riskiest percentage, color-coded.
 - **Hover tooltip** — hover the icon for a full per-provider, per-window summary, no click needed.
-- **Side panel** — open it once (the **Open side panel** button in the popup, or Chrome's side-panel toolbar button) and it stays docked and glanceable while you browse, refreshing itself as new usage arrives.
+- **Side panel** — open it once (the **Side panel** button in the popup, or Chrome's side-panel toolbar button) and it stays docked and glanceable while you browse, refreshing itself as new usage arrives.
 
 ## Local development
 
@@ -53,6 +53,25 @@ MeterBar is local-first: there is no backend, no cloud sync, and no analytics. I
 | `host_permissions: https://gemini.google.com/*` | Read Gemini usage surfaced to the page. |
 
 Use **Settings → Clear local MeterBar data** to erase everything at any time.
+
+## Disclaimer
+
+MeterBar is an independent, community project. It is **not affiliated with, endorsed by,
+or sponsored by Anthropic, OpenAI, or Google**. "Claude", "ChatGPT", "Codex", "Gemini",
+and related marks belong to their respective owners and are used here only to identify the
+services MeterBar reads.
+
+MeterBar reads **your own** subscription usage from **your own** logged-in browser session.
+To do so it relies on **undocumented provider endpoints** that may change or disappear
+without notice, and accessing them may be inconsistent with a provider's Terms of Service.
+You are responsible for your use of MeterBar with any third-party service.
+
+The software is provided **"AS IS", without warranty of any kind** (see [LICENSE](LICENSE)).
+Use it at your own risk.
+
+## License
+
+Licensed under the [Apache License 2.0](LICENSE).
 
 ## Docs
 

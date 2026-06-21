@@ -8,27 +8,82 @@
   </head>
   <body>
     <main>
-      <h1>MeterBar Settings</h1>
+      <header class="page-head">
+        <span class="mark" aria-hidden="true"></span>
+        <div>
+          <h1>MeterBar Settings</h1>
+          <p class="sub">Local-first. Everything stays on this device.</p>
+        </div>
+      </header>
 
-      <label><input id="notifications" type="checkbox" /> Enable local notifications</label>
-
-      <h2>Providers</h2>
-      <label><input id="claude" type="checkbox" /> Claude</label>
-      <label><input id="chatgpt" type="checkbox" /> ChatGPT / Codex</label>
-      <label><input id="gemini" type="checkbox" /> Gemini</label>
-
-      <section>
-        <h2>Usage history</h2>
-        <p>Export your locally stored usage history (percentages and timestamps only).</p>
-        <button id="export-json">Export JSON</button>
-        <button id="export-csv">Export CSV</button>
+      <section class="panel">
+        <h2>Notifications</h2>
+        <label class="switch">
+          <span class="switch-text">
+            <span class="switch-title">Enable local notifications</span>
+            <span class="switch-desc">Get a heads-up at 70% and 90% of a limit, and when a window resets.</span>
+          </span>
+          <input id="notifications" type="checkbox" />
+          <span class="track" aria-hidden="true"></span>
+        </label>
       </section>
 
-      <section>
+      <section class="panel">
+        <h2>Icon number</h2>
+        <label class="select-row" for="badge-target">
+          <span class="switch-text">
+            <span class="switch-title">Number shown on the toolbar icon</span>
+            <span class="switch-desc">The bars always show every connected provider; this picks which number sits on top.</span>
+          </span>
+          <select id="badge-target" class="select"></select>
+        </label>
+      </section>
+
+      <section class="panel">
+        <h2>Providers</h2>
+        <label class="switch">
+          <span class="switch-text">
+            <span class="switch-title">Claude</span>
+            <span class="switch-desc">Reads claude.ai subscription usage from your signed-in session.</span>
+          </span>
+          <input id="claude" type="checkbox" />
+          <span class="track" aria-hidden="true"></span>
+        </label>
+        <label class="switch">
+          <span class="switch-text">
+            <span class="switch-title">ChatGPT / Codex</span>
+            <span class="switch-desc">Reads chatgpt.com rate-limit windows from your signed-in session.</span>
+          </span>
+          <input id="chatgpt" type="checkbox" />
+          <span class="track" aria-hidden="true"></span>
+        </label>
+        <label class="switch">
+          <span class="switch-text">
+            <span class="switch-title">Gemini</span>
+            <span class="switch-desc">Shows connected status; usage isn't exposed by a stable endpoint yet.</span>
+          </span>
+          <input id="gemini" type="checkbox" />
+          <span class="track" aria-hidden="true"></span>
+        </label>
+      </section>
+
+      <section class="panel">
+        <h2>Usage history</h2>
+        <p class="panel-desc">Export your locally stored usage history — percentages and timestamps only.</p>
+        <div class="btn-row">
+          <button id="export-json" type="button" class="btn">Export JSON</button>
+          <button id="export-csv" type="button" class="btn">Export CSV</button>
+        </div>
+      </section>
+
+      <section class="panel">
         <h2>Privacy</h2>
-        <p>MeterBar stores usage percentages, reset timestamps, provider names, and local settings. It does not store prompts, responses, uploaded files, or chat content.</p>
-        <button id="clear">Clear local MeterBar data</button>
-        <p id="status" role="status"></p>
+        <p class="panel-desc">
+          MeterBar stores usage percentages, reset timestamps, provider names, and your settings. It never
+          stores prompts, responses, uploaded files, or chat content.
+        </p>
+        <button id="clear" type="button" class="btn btn-danger">Clear local MeterBar data</button>
+        <p id="status" role="status" class="status"></p>
       </section>
     </main>
     <script type="module" src="./options.ts"></script>
