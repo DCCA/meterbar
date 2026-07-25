@@ -8,7 +8,7 @@ AI power users increasingly juggle Claude, ChatGPT/Codex, Gemini, and other AI s
 
 ## Status
 
-MVP + Phase 2 in progress. The extension builds and loads: a toolbar badge shows the highest-risk usage, a popup renders per-provider cards with trend sparklines, and settings allow per-provider toggles and CSV/JSON export. Claude reads usage via a background fetch of the logged-in `claude.ai` session; ChatGPT/Codex and Gemini collect via content scripts. The exact provider endpoints/DOM hooks are validated by live inspection — until validated, a provider reports "not connected" rather than showing unverified numbers.
+MVP + Phase 2 implemented. The extension builds and loads: the toolbar icon shows a risk-colored bar per connected provider plus a badge number you can pin to a specific provider window, a popup and side panel render per-provider cards with trend sparklines, and settings allow per-provider toggles and CSV/JSON export. Claude and ChatGPT/Codex read live usage via background fetches of your logged-in sessions; Gemini reports connected-status via a content script. The exact provider endpoints are validated by live inspection — until validated, a provider reports "not connected" rather than showing unverified numbers.
 
 ### Viewing your usage without clicking
 
