@@ -24,20 +24,22 @@ npm test            # vitest run (all tests)
 npm test -- tests/badge.test.ts   # run a single test file
 npm run test:watch  # vitest watch mode
 npm run typecheck   # tsc --noEmit
+npm run check       # typecheck + test (convenience)
 ```
 
 Load in Chrome: `chrome://extensions` → enable Developer mode → **Load unpacked** → select `dist/`.
 
 Build plumbing: every entry surface (page or content script) is a named rollup input in `vite.config.ts`, which pins deterministic `assets/[name].js` output names that `manifest.json` references; a build plugin copies the manifest into `dist/`. Adding a surface means touching both files.
 
-Development is **test-first**: write the Vitest spec, watch it fail, then implement. Pure logic (badge math, time helpers, alert de-dup, provider parsers) is unit-tested in `node` environment; `chrome.*` APIs are only touched in the background/popup/options entry points, not in testable logic.
+Development is **test-first**: write the Vitest spec, watch it fail, then implement. Pure logic (badge math, time helpers, alert de-dup, provider parsers, tooltip summary) is unit-tested in `node` environment; `chrome.*` APIs are only touched in the background/popup/options/side-panel entry points, not in testable logic.
 
 ## Architecture (the big picture)
 
 Five runtime surfaces coordinate through `chrome.storage.local` — there is no shared in-memory state:
 
-- **Background service worker** (`src/background/`) — `index.ts` owns the lifecycle: a `chrome.alarms` loop (`meterbar-refresh`, every 10 min) drives `refresh.ts`, then `recompute()` aggregates cards and updates every always-visible surface in one pass: badge text/color, the multi-bar icon, the hover tooltip (`chrome.action.setTitle`), and notifications. It also routes `ExtensionMessage`s from the popup, side panel, and content scripts.
-- **Popup & side panel** (`src/popup/`, `src/sidepanel/`) — both render the same per-provider cards (trend sparklines included) through the shared DOM layer `src/ui/cardsView.ts`; pure presentational helpers stay in `src/popup/render.ts` (node-env tested). The side panel stays docked and re-renders on every `chrome.storage.onChanged` write, so it is live without polling. Vanilla HTML/CSS/TS, no framework.
+- **Background service worker** (`src/background/`) — `index.ts` owns the lifecycle: a `chrome.alarms` loop (`meterbar-refresh`, every 10 min) drives `refresh.ts`, then `recompute()` aggregates cards and updates every always-visible surface in one pass: badge text/color, the multi-bar icon, the hover tooltip, and notifications. It also routes `ExtensionMessage`s from the popup, side panel, and content scripts.
+- **Popup** (`src/popup/`) — sends `state:get`/`usage:refresh`, renders per-provider cards with trend sparklines, and offers a **Side panel** button. Vanilla HTML/CSS/TS, no framework. Card rendering is shared with the side panel via `src/ui/cardsView.ts` (the DOM layer); pure presentational helpers stay in `src/popup/render.ts` (node-env tested).
+- **Side panel** (`src/sidepanel/`) — `chrome.sidePanel` docks a persistent, auto-updating view that reuses the popup's `cardsView` rendering. It opens from the popup button or Chrome's side-panel toolbar button and re-renders on `chrome.storage.onChanged` (local area) so it stays live while browsing.
 - **Options page** (`src/options/`) — per-provider toggles, badge-number picker, privacy explanation, CSV/JSON export, and "clear local data".
 - **Content scripts** (`src/content/`) — `gemini.ts` runs on `gemini.google.com` and posts a `status:report` (see strategy split below).
 - **Storage** (`src/storage/`) — `usageStore.ts` (latest card per provider + settings + alert de-dup state) and `historyStore.ts` (per-`provider:window` time series) over `chrome.storage.local`. Stored snapshots are never mutated after write: `aggregate.ts` derives `stale` and card status from `capturedAt` at read time.
@@ -74,3 +76,5 @@ These are hard product invariants, not style preferences — every change must h
 ## Git
 
 `main` is the default branch — do not commit or push to it directly without explicit permission; branch first and open changes from a feature branch.
+
+Docs are living: `.github/workflows/docs-update.yml` reviews every merged code PR (changes under `src/`, `manifest.json`, `package.json`) and opens + auto-merges a docs-sync PR updating README.md and this file. It never touches `docs/PRD.md` or `docs/superpowers/**`. Expect README/CLAUDE.md to move after code merges, and rebase docs edits onto `origin/main` before opening a PR.

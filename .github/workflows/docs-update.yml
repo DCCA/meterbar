@@ -1,0 +1,138 @@
+# Keeps the living docs (README.md, CLAUDE.md) in sync with the code.
+#
+# On every merged code PR, Claude reviews what changed and updates the docs,
+# then opens a separate docs PR for review. It never touches docs/PRD.md (product
+# source of truth) or docs/superpowers/** (historical records), and makes no PR when
+# the docs are already accurate.
+#
+# Model backend: OpenRouter (Anthropic-compatible endpoint — no proxy needed).
+#
+# Setup (one-time):
+#   1. Add an `OPENROUTER_API_KEY` secret (your key from https://openrouter.ai/keys,
+#      starts with `sk-or-`):
+#      Settings → Secrets and variables → Actions → New repository secret.
+#   2. Allow Actions to open PRs:
+#      Settings → Actions → General → Workflow permissions →
+#      enable "Allow GitHub Actions to create and approve pull requests".
+#
+# To use a different/cheaper model, change ANTHROPIC_MODEL / ANTHROPIC_SMALL_FAST_MODEL
+# in the settings block below to any OpenRouter slug (see https://openrouter.ai/models).
+name: Update docs on merge
+
+on:
+  pull_request:
+    types: [closed]
+    # Cost control + loop safety: only run when files the docs actually describe
+    # change. Skips test-only, CI-only, and docs-only merges (including this
+    # workflow's own markdown-only docs PRs, so it never retriggers itself).
+    paths:
+      - 'src/**'
+      - 'manifest.json'
+      - 'package.json'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write # claude-code-action fetches an OIDC token
+
+concurrency:
+  group: docs-update
+  cancel-in-progress: false
+
+jobs:
+  update-docs:
+    # Run on a real merge, or on manual dispatch. Skip the workflow's own docs PRs
+    # so merging a docs update never retriggers this loop.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       !startsWith(github.event.pull_request.head.ref, 'docs/auto-update'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure the OpenRouter API key is configured
+        run: |
+          if [ -z "${{ secrets.OPENROUTER_API_KEY }}" ]; then
+            echo "::error::OPENROUTER_API_KEY secret is not set. Add it in Settings → Secrets and variables → Actions (key from https://openrouter.ai/keys)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Let Claude refresh the living docs
+        uses: anthropics/claude-code-action@v1
+        with:
+          # OpenRouter key. Also exported as ANTHROPIC_AUTH_TOKEN in settings.env below;
+          # ANTHROPIC_API_KEY is forced empty there so the CLI does not fall back to Anthropic.
+          anthropic_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+          # The job `env:` block is not reliably forwarded to the CLI by the composite
+          # action, so the provider override is passed via the settings JSON instead.
+          settings: |
+            {
+              "env": {
+                "ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
+                "ANTHROPIC_AUTH_TOKEN": "${{ secrets.OPENROUTER_API_KEY }}",
+                "ANTHROPIC_API_KEY": "",
+                "ANTHROPIC_MODEL": "z-ai/glm-5-turbo",
+                "ANTHROPIC_SMALL_FAST_MODEL": "z-ai/glm-5-turbo"
+              }
+            }
+          prompt: |
+            Recent changes were merged into the main branch of this repository${{ github.event.pull_request.number && format(' (most recently PR #{0} — "{1}")', github.event.pull_request.number, github.event.pull_request.title) || '' }}.
+
+            Review what changed on main (use `git log` and `git diff` against the previous state) and update ONLY the living documentation so it accurately reflects the current code:
+              - README.md
+              - CLAUDE.md
+
+            Rules:
+              - Do NOT modify docs/PRD.md (product source of truth) or anything under docs/superpowers/ (historical records).
+              - Only change docs if the merge actually changed behaviour, architecture, commands, permissions, or user-facing features. If the docs are already accurate, make NO changes at all.
+              - Keep edits accurate, concise, and consistent with the existing tone; do not invent features.
+              - Edit the files in place. Do NOT commit, push, or open a pull request — a later workflow step does that.
+          claude_args: >-
+            --max-turns 12
+            --allowedTools "Read,Edit,Write,Grep,Glob,Bash(git log:*),Bash(git diff:*),Bash(git show:*)"
+
+      - name: Open a docs PR if anything changed
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: docs/auto-update-${{ github.event.pull_request.number || github.run_id }}
+          base: ${{ github.event.pull_request.base.ref || github.ref_name }}
+          title: "docs: refresh after #${{ github.event.pull_request.number || github.run_id }}"
+          commit-message: "docs: sync README/CLAUDE with merged changes"
+          body: |
+            Automated documentation refresh following the merge of
+            #${{ github.event.pull_request.number }} ("${{ github.event.pull_request.title }}").
+
+            Claude (via OpenRouter) reviewed the merged change and updated the living docs
+            (README.md / CLAUDE.md only). Please review before merging. If nothing needed
+            updating, this PR will not have been created.
+          add-paths: |
+            README.md
+            CLAUDE.md
+          delete-branch: true
+          labels: documentation
+
+      - name: Auto-merge the docs PR
+        # Only when a docs PR was actually created/updated. Docs PRs are markdown-only,
+        # so merging them does NOT retrigger this workflow (paths-ignore covers **/*.md).
+        if: steps.cpr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          # Retry while GitHub is still computing the PR's mergeability.
+          for attempt in 1 2 3 4 5; do
+            if gh pr merge "$PR" --squash --delete-branch --repo "$GITHUB_REPOSITORY"; then
+              echo "Merged docs PR #$PR"
+              exit 0
+            fi
+            echo "::notice::Merge attempt $attempt for PR #$PR failed (mergeability may still be computing); retrying in 5s"
+            sleep 5
+          done
+          echo "::error::Could not auto-merge docs PR #$PR"
+          exit 1
