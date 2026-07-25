@@ -75,32 +75,12 @@ export function riskiestPercent(card: ProviderCardState): number {
   return card.snapshots.reduce((max, s) => Math.max(max, s.usedPercent), -1);
 }
 
-export interface OrderedProvider {
-  provider: ProviderId;
-  label: string;
-  card?: ProviderCardState;
-}
-
 /**
- * Order providers so the most relevant card leads, mirroring the badge's "riskiest wins":
- * cards with usage data first (highest percent first), then connected-but-empty cards,
- * then everything else in its declared order. Stable when nothing has data.
+ * Needle rotation for the live gauge mark: -120deg at 0% used, +120deg at 100%, clamped.
+ * Same sweep as the first-run hero gauge, so the logo and the hero read as one instrument.
  */
-export function orderByRisk(
-  known: Array<{ provider: ProviderId; label: string }>,
-  byId: Map<ProviderId, ProviderCardState>
-): OrderedProvider[] {
-  return known
-    .map((k, index) => ({ ...k, card: byId.get(k.provider), index }))
-    .map((entry) => {
-      const risk = entry.card ? riskiestPercent(entry.card) : -1;
-      const connected = entry.card?.status === 'connected';
-      // rank: 0 = has data, 1 = connected no data, 2 = the rest
-      const rank = risk >= 0 ? 0 : connected ? 1 : 2;
-      return { ...entry, risk, rank };
-    })
-    .sort((a, b) => a.rank - b.rank || b.risk - a.risk || a.index - b.index)
-    .map(({ provider, label, card }) => ({ provider, label, card }));
+export function needleAngle(percent: number): number {
+  return -120 + (Math.max(0, Math.min(100, percent)) / 100) * 240;
 }
 
 export const PROVIDER_HOMES: Partial<Record<ProviderId, string>> = {

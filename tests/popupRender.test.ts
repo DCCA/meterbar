@@ -5,18 +5,18 @@ import {
   escapeHtml,
   humanWindowLabel,
   isCompactRow,
+  needleAngle,
   paceFraction,
   renderableSnapshots,
   riskLevel,
   riskClass,
   riskiestPercent,
-  orderByRisk,
   providerHome,
   timeAgo,
   resetLabel,
   PROVIDER_HOMES
 } from '../src/popup/render';
-import type { ProviderCardState, ProviderId, UsageSnapshot } from '../src/shared/types';
+import type { ProviderCardState, UsageSnapshot } from '../src/shared/types';
 
 function snap(partial: Partial<UsageSnapshot>): UsageSnapshot {
   return {
@@ -80,34 +80,13 @@ describe('riskiestPercent', () => {
   });
 });
 
-describe('orderByRisk', () => {
-  it('puts providers with data first (riskiest first), connected-but-empty next, then the rest', () => {
-    const claude = card({ provider: 'claude', snapshots: [snap({ usedPercent: 40 })] });
-    const chatgpt = card({ provider: 'chatgpt', snapshots: [snap({ provider: 'chatgpt', usedPercent: 88 })] });
-    const geminiConnected = card({ provider: 'gemini', status: 'connected', snapshots: [] });
-    const known = [
-      { provider: 'claude' as const, label: 'Claude' },
-      { provider: 'chatgpt' as const, label: 'ChatGPT / Codex' },
-      { provider: 'gemini' as const, label: 'Gemini' }
-    ];
-    const byId = new Map<ProviderId, ProviderCardState>([
-      ['claude', claude],
-      ['chatgpt', chatgpt],
-      ['gemini', geminiConnected]
-    ]);
-    const ordered = orderByRisk(known, byId).map((e) => e.provider);
-    // chatgpt (88%) before claude (40%); gemini (connected, no data) before any missing card
-    expect(ordered).toEqual(['chatgpt', 'claude', 'gemini']);
-  });
-
-  it('keeps the known order stable when nothing has data', () => {
-    const known = [
-      { provider: 'claude' as const, label: 'Claude' },
-      { provider: 'chatgpt' as const, label: 'ChatGPT / Codex' },
-      { provider: 'gemini' as const, label: 'Gemini' }
-    ];
-    const ordered = orderByRisk(known, new Map<ProviderId, ProviderCardState>()).map((e) => e.provider);
-    expect(ordered).toEqual(['claude', 'chatgpt', 'gemini']);
+describe('needleAngle', () => {
+  it('sweeps -120deg (0%) to +120deg (100%), clamped', () => {
+    expect(needleAngle(0)).toBe(-120);
+    expect(needleAngle(50)).toBe(0);
+    expect(needleAngle(100)).toBe(120);
+    expect(needleAngle(-5)).toBe(-120);
+    expect(needleAngle(130)).toBe(120);
   });
 });
 

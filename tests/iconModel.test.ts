@@ -63,6 +63,19 @@ describe('iconBars', () => {
     expect(bars).toEqual([]);
   });
 
+  it('holds an empty slot for every known provider once any provider has fresh data', () => {
+    // Position identifies the provider, so a connected-but-dataless provider keeps
+    // its slot (empty track) instead of letting later bars shift left.
+    const bars = iconBars([
+      card('claude', [snap({ usedPercent: 40 })]),
+      card('gemini', [], { status: 'connected' })
+    ]);
+    expect(bars).toEqual([
+      { provider: 'claude', level: 'ok', fillRatio: 0.4 },
+      { provider: 'gemini', level: 'ok', fillRatio: 0 }
+    ]);
+  });
+
   it('clamps fillRatio into [0, 1]', () => {
     const bars = iconBars([card('claude', [snap({ usedPercent: 130 })])]);
     expect(bars[0].fillRatio).toBe(1);

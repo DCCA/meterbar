@@ -29,11 +29,21 @@
       </section>
 
       <section class="panel">
-        <h2>Icon number</h2>
+        <h2>Toolbar icon</h2>
+        <div class="icon-legend" aria-hidden="true">
+          <span class="legend-item"><span class="legend-bar" style="--fill: 40%"></span>Claude</span>
+          <span class="legend-item"><span class="legend-bar" style="--fill: 75%; --bar-color: var(--warn)"></span>ChatGPT</span>
+          <span class="legend-item"><span class="legend-bar" style="--fill: 92%; --bar-color: var(--crit)"></span>Codex</span>
+          <span class="legend-item"><span class="legend-bar" style="--fill: 0%"></span>Gemini</span>
+        </div>
+        <p class="legend-note">
+          The icon draws one bar per provider in this fixed left-to-right order, so a bar's position always
+          identifies its provider. A bar appears once a provider has reported at least once.
+        </p>
         <label class="select-row" for="badge-target">
           <span class="switch-text">
             <span class="switch-title">Number shown on the toolbar icon</span>
-            <span class="switch-desc">The bars always show every connected provider; this picks which number sits on top.</span>
+            <span class="switch-desc">The bars always show every reporting provider; this picks which number sits on top.</span>
           </span>
           <select id="badge-target" class="select"></select>
         </label>
