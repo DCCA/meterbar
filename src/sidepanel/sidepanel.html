@@ -15,7 +15,9 @@
         </div>
         <p class="tagline">One bar for all your AI limits.</p>
       </header>
-      <section id="cards" class="cards" aria-live="polite"></section>
+      <!-- No aria-live here: the panel re-renders on every background write, and a live
+           region would re-announce every card to screen readers each refresh cycle. -->
+      <section id="cards" class="cards"></section>
       <footer>
         <button id="refresh" type="button">
           <span class="spinner" aria-hidden="true"></span>

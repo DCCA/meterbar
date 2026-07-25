@@ -1,4 +1,5 @@
 import { formatCountdown } from '../shared/time';
+import { windowLongLabel } from '../shared/summary';
 import type { ProviderCardState, ProviderId, UsageSnapshot, UsageWindow } from '../shared/types';
 
 // --- Pure rendering helpers (no DOM, no chrome.*; unit-tested in the node env) ---
@@ -13,17 +14,45 @@ export function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
-const WINDOW_LABELS: Record<UsageWindow, string> = {
-  five_hour: '5-hour limit',
-  seven_day: '7-day limit',
-  daily: 'Daily',
-  monthly: 'Monthly',
-  api_billing: 'API billing',
-  custom: 'Usage'
+export function humanWindowLabel(window: UsageWindow): string {
+  return windowLongLabel(window);
+}
+
+// Wall-clock length of each rolling window; windows without a fixed length get no pace tick.
+const WINDOW_MS: Partial<Record<UsageWindow, number>> = {
+  five_hour: 5 * 60 * 60 * 1000,
+  seven_day: 7 * 24 * 60 * 60 * 1000,
+  daily: 24 * 60 * 60 * 1000,
+  monthly: 30 * 24 * 60 * 60 * 1000
 };
 
-export function humanWindowLabel(window: UsageWindow): string {
-  return WINDOW_LABELS[window] ?? 'Usage';
+/**
+ * How far through the current window we are (0..1), derived from the reset time.
+ * This is what makes 91%-with-46m-left and 91%-with-4h-left look different: the bar
+ * gets a tick at the even-pace position. Undefined when it cannot be computed honestly.
+ */
+export function paceFraction(window: UsageWindow, resetsAt: string | undefined, now: Date = new Date()): number | undefined {
+  if (!resetsAt) return undefined;
+  const total = WINDOW_MS[window];
+  if (!total) return undefined;
+  const remaining = Date.parse(resetsAt) - now.getTime();
+  if (!Number.isFinite(remaining) || remaining < 0 || remaining > total) return undefined;
+  return (total - remaining) / total;
+}
+
+/** Snapshots worth rendering as numbers — mirrors the badge/icon filter for 'unavailable'. */
+export function renderableSnapshots(snapshots: UsageSnapshot[]): UsageSnapshot[] {
+  return snapshots.filter((s) => s.confidence !== 'unavailable');
+}
+
+/** Fresh, healthy rows collapse to a single line; risk and staleness earn the full row. */
+export function isCompactRow(snapshot: UsageSnapshot): boolean {
+  return !snapshot.stale && riskLevel(snapshot.usedPercent) === 'ok';
+}
+
+/** True when a card has data but every reading is out of date. */
+export function cardAllStale(card: ProviderCardState): boolean {
+  return card.snapshots.length > 0 && card.snapshots.every((s) => s.stale);
 }
 
 export type RiskLevel = 'ok' | 'warn' | 'crit';
@@ -118,6 +147,9 @@ export function emptyHint(card: ProviderCardState | undefined): string {
 }
 
 // Confidence is only worth surfacing when it is NOT exact (truthful uncertainty, no noise).
+// 'unavailable' snapshots never reach the numeric render (renderableSnapshots drops them).
 export function confidenceNote(snapshot: UsageSnapshot): string | undefined {
-  return snapshot.confidence === 'exact' ? undefined : snapshot.confidence;
+  if (snapshot.confidence === 'estimated') return 'estimated';
+  if (snapshot.confidence === 'inferred') return 'approximate';
+  return undefined;
 }

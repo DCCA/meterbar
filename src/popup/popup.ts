@@ -1,24 +1,12 @@
-import { renderCardsInto, requestRefresh } from '../ui/cardsView';
+import { renderCardsInto, wireRefresh } from '../ui/cardsView';
 
 async function render(): Promise<void> {
   const container = document.querySelector<HTMLDivElement>('#cards');
   if (container) await renderCardsInto(container);
 }
 
-function setRefreshing(on: boolean): void {
-  const btn = document.querySelector<HTMLButtonElement>('#refresh');
-  if (!btn) return;
-  btn.disabled = on;
-  btn.setAttribute('aria-busy', String(on));
-  btn.classList.toggle('is-busy', on);
-}
-
-document.querySelector('#refresh')?.addEventListener('click', () => {
-  setRefreshing(true);
-  void requestRefresh()
-    .then(render)
-    .finally(() => setRefreshing(false));
-});
+const refreshBtn = document.querySelector<HTMLButtonElement>('#refresh');
+if (refreshBtn) wireRefresh(refreshBtn, render);
 
 document.querySelector('#open-sidepanel')?.addEventListener('click', async () => {
   const win = await chrome.windows.getCurrent();

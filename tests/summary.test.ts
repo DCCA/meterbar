@@ -13,9 +13,9 @@ function card(label: string, windows: Array<['five_hour' | 'seven_day', number]>
 }
 
 describe('buildTooltip', () => {
-  it('summarizes fresh windows per provider on separate lines', () => {
+  it('summarizes fresh windows per provider and names the direction of the number', () => {
     expect(buildTooltip([card('Claude', [['five_hour', 62], ['seven_day', 41]])]))
-      .toBe('MeterBar\nClaude: 5h 62% · 7d 41%');
+      .toBe('MeterBar · % of limit used\nClaude: 5h 62% · 7d 41%');
   });
 
   it('falls back when there is no fresh data', () => {
