@@ -1,25 +1,4 @@
-:root {
-  --bg: #0a0f1c;
-  --bg-glow: #16233f;
-  --surface: #111a2e;
-  --surface-2: #16213a;
-  --border: #243149;
-  --border-soft: #1c283e;
-  --text: #eaf0fb;
-  --muted: #8a9bb8;
-  --faint: #5d6e8c;
-  --track: #1d2940;
-
-  --ok: #34d399;
-  --warn: #fbbf24;
-  --crit: #fb7185;
-  --accent: #60a5fa;
-
-  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
-  --radius: 16px;
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);
-}
+@import '../ui/tokens.css';
 
 * { box-sizing: border-box; }
 
@@ -34,7 +13,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.popup { padding: 18px 16px 14px; }
+.popup { padding: 18px 16px 0; }
 
 /* ---- Header ---- */
 header { margin-bottom: 16px; }
@@ -68,10 +47,10 @@ h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
   animation: rise 0.4s var(--ease) both;
 }
 .card-live.level-warn { border-color: rgba(251, 191, 36, 0.32); }
-.card-live.level-crit {
-  border-color: rgba(251, 113, 133, 0.42);
-  box-shadow: 0 0 0 1px rgba(251, 113, 133, 0.12), 0 6px 22px rgba(251, 113, 133, 0.12);
-}
+/* Elevation declared once: the border alone escalates — pulse, pct, and fill do the rest. */
+.card-live.level-crit { border-color: rgba(251, 113, 133, 0.55); }
+/* Stale: the card goes quiet — no risk color anywhere, the pill carries the state. */
+.card-stale { border-color: var(--border-soft); box-shadow: none; }
 
 .card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .card-head h2 { margin: 0; font-size: 14px; font-weight: 600; flex: 1; letter-spacing: -0.01em; }
@@ -80,7 +59,8 @@ h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
 .dot-warn { background: var(--warn); box-shadow: 0 0 8px rgba(251, 191, 36, 0.7); }
 .dot-crit { background: var(--crit); box-shadow: 0 0 9px rgba(251, 113, 133, 0.8); animation: pulse 1.6s ease-in-out infinite; }
 .dot-idle { background: var(--faint); }
-.updated { color: var(--faint); font-size: 11px; font-variant-numeric: tabular-nums; }
+.updated { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.notice { margin: 2px 0 0; color: var(--warn); font-size: 12px; line-height: 1.45; }
 
 /* ---- Usage row ---- */
 .row { margin-top: 11px; }
@@ -98,8 +78,15 @@ h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
 .pct .unit { font-size: 13px; font-weight: 500; color: var(--muted); margin-left: 1px; }
 .row.level-warn .pct { color: var(--warn); }
 .row.level-crit .pct { color: var(--crit); }
+.row.level-stale .pct { color: var(--muted); }
+
+/* Compact row: healthy windows earn one line, risk earns the full treatment. */
+.row.compact .row-head { margin-bottom: 5px; }
+.row.compact .pct { font-size: 15px; }
+.win-meta { color: var(--muted); font-size: 11px; }
 
 .bar {
+  position: relative;
   height: 9px;
   border-radius: 999px;
   background: var(--track);
@@ -115,10 +102,23 @@ h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
 }
 .fill.warn { background: linear-gradient(90deg, #f59e0b, var(--warn)); }
 .fill.crit { background: linear-gradient(90deg, #ef4444, var(--crit)); }
+.fill.stale { background: #3d4a63; }
+
+/* Pace tick: where an even burn rate would sit right now. The one mark that makes
+   91%-with-46m and 91%-with-4h read differently at a glance. */
+.tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  border-radius: 1px;
+  background: rgba(234, 240, 251, 0.75);
+}
 
 .spark-wrap { color: var(--faint); margin-top: 7px; }
 .spark-wrap.level-warn { color: rgba(251, 191, 36, 0.55); }
 .spark-wrap.level-crit { color: rgba(251, 113, 133, 0.6); }
+.spark-wrap.level-stale { color: var(--faint); }
 .spark { display: block; width: 100%; height: 28px; }
 
 .meta {
@@ -131,12 +131,14 @@ h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
 /* ---- Empty / not-connected card ---- */
 .card-empty { background: var(--surface); border-style: dashed; border-color: var(--border); }
 .status-pill {
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: var(--muted);
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 2px 8px;
+  white-space: nowrap;
 }
+.pill-stale { color: var(--warn); border-color: rgba(251, 191, 36, 0.4); }
 .hint { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
 .cta {
   display: inline-block;
@@ -177,7 +179,17 @@ h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
 }
 
 /* ---- Footer ---- */
-footer { display: flex; gap: 10px; margin-top: 16px; }
+/* Sticky: Chrome caps popups at 600px and scrolls — the actions never leave the
+   viewport, and the gradient doubles as the scroll affordance. */
+footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 10px;
+  margin: 16px -16px 0;
+  padding: 12px 16px 14px;
+  background: linear-gradient(180deg, rgba(10, 15, 28, 0) 0%, var(--bg) 38%);
+}
 button,
 footer a {
   flex: 1;

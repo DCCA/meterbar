@@ -28,6 +28,19 @@ function isAuthFailure(res: Response): boolean {
   return res.status === 401 || res.status === 403 || res.redirected;
 }
 
+const SIGNED_OUT = 'Signed out — sign in and MeterBar will pick up automatically.';
+
+/**
+ * Human copy for a failed usage read. Raw HTTP codes never reach the UI; the message
+ * names the problem and what happens next (heuristic 9).
+ */
+export function fetchFailureMessage(label: string, status?: number): string {
+  if (status === 429) return `${label} is rate-limiting MeterBar — retrying automatically.`;
+  if (status !== undefined && status >= 500) return `${label} didn't respond — keeping your last reading.`;
+  if (status !== undefined) return `Couldn't read ${label} usage — keeping your last reading.`;
+  return `Couldn't reach ${label} — keeping your last reading.`;
+}
+
 /**
  * Background refresh for Claude: discover the account's org from the same endpoint the
  * logged-in UI uses, then read that org's usage — both with the session cookie, nothing
@@ -38,19 +51,19 @@ export async function refreshClaude(): Promise<void> {
   const { provider, label } = claudeAdapter;
   try {
     const orgsRes = await fetch(claudeOrgsUrl(), SESSION_FETCH);
-    if (isAuthFailure(orgsRes)) return storeStatus(provider, label, 'not_connected', 'Not logged in.');
-    if (!orgsRes.ok) return storeStatus(provider, label, 'stale', `HTTP ${orgsRes.status}`);
+    if (isAuthFailure(orgsRes)) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
+    if (!orgsRes.ok) return storeStatus(provider, label, 'stale', fetchFailureMessage(label, orgsRes.status));
 
     const uuid = pickClaudeOrgUuid(await orgsRes.json());
     if (!uuid) return storeStatus(provider, label, 'not_connected', 'No Claude organization found.');
 
     const usageRes = await fetch(claudeUsageUrl(uuid), SESSION_FETCH);
-    if (isAuthFailure(usageRes)) return storeStatus(provider, label, 'not_connected', 'Not logged in.');
-    if (!usageRes.ok) return storeStatus(provider, label, 'stale', `HTTP ${usageRes.status}`);
+    if (isAuthFailure(usageRes)) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
+    if (!usageRes.ok) return storeStatus(provider, label, 'stale', fetchFailureMessage(label, usageRes.status));
 
     await storeSnapshots(provider, label, claudeAdapter.parse(await usageRes.json()));
   } catch {
-    await storeStatus(provider, label, 'stale', 'Fetch failed.');
+    await storeStatus(provider, label, 'stale', fetchFailureMessage(label));
   }
 }
 
@@ -64,10 +77,10 @@ export async function refreshChatgpt(): Promise<void> {
   const { provider, label } = chatgptAdapter;
   try {
     const sessionRes = await fetch(chatgptSessionUrl(), SESSION_FETCH);
-    if (isAuthFailure(sessionRes)) return storeStatus(provider, label, 'not_connected', 'Not logged in.');
-    if (!sessionRes.ok) return storeStatus(provider, label, 'stale', `HTTP ${sessionRes.status}`);
+    if (isAuthFailure(sessionRes)) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
+    if (!sessionRes.ok) return storeStatus(provider, label, 'stale', fetchFailureMessage(label, sessionRes.status));
     const token = ((await sessionRes.json()) as { accessToken?: string })?.accessToken;
-    if (!token) return storeStatus(provider, label, 'not_connected', 'Not logged in.');
+    if (!token) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
 
     const authInit: RequestInit = { credentials: 'include', headers: { accept: 'application/json', authorization: `Bearer ${token}` } };
     const acctRes = await fetch(chatgptAccountsUrl(), authInit);
@@ -76,11 +89,11 @@ export async function refreshChatgpt(): Promise<void> {
     const usageHeaders: Record<string, string> = { accept: 'application/json', authorization: `Bearer ${token}` };
     if (accountId) usageHeaders['ChatGPT-Account-Id'] = accountId;
     const usageRes = await fetch(chatgptUsageUrl(), { credentials: 'include', headers: usageHeaders });
-    if (isAuthFailure(usageRes)) return storeStatus(provider, label, 'not_connected', 'Not logged in.');
-    if (!usageRes.ok) return storeStatus(provider, label, 'stale', `HTTP ${usageRes.status}`);
+    if (isAuthFailure(usageRes)) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
+    if (!usageRes.ok) return storeStatus(provider, label, 'stale', fetchFailureMessage(label, usageRes.status));
 
     await storeSnapshots(provider, label, chatgptAdapter.parse(await usageRes.json()));
   } catch {
-    await storeStatus(provider, label, 'stale', 'Fetch failed.');
+    await storeStatus(provider, label, 'stale', fetchFailureMessage(label));
   }
 }

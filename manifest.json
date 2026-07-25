@@ -9,6 +9,12 @@
     "128": "assets/icon128.png"
   },
   "permissions": ["storage", "alarms", "notifications", "sidePanel"],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": { "default": "Alt+Shift+M" },
+      "description": "Open the MeterBar popup"
+    }
+  },
   "side_panel": {
     "default_path": "src/sidepanel/sidepanel.html"
   },

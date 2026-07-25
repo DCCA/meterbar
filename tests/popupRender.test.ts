@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  cardAllStale,
+  confidenceNote,
   escapeHtml,
   humanWindowLabel,
+  isCompactRow,
+  paceFraction,
+  renderableSnapshots,
   riskLevel,
   riskClass,
   riskiestPercent,
@@ -132,5 +137,61 @@ describe('resetLabel', () => {
   });
   it('falls back honestly when reset time is unknown', () => {
     expect(resetLabel(undefined, now)).toBe('Reset time unknown');
+  });
+});
+
+describe('paceFraction', () => {
+  const now = new Date('2026-06-20T12:00:00Z');
+  it('returns elapsed fraction of the window implied by the reset time', () => {
+    // 5h window resetting in 1h15m -> 3h45m elapsed of 5h = 0.75
+    expect(paceFraction('five_hour', new Date('2026-06-20T13:15:00Z').toISOString(), now)).toBeCloseTo(0.75);
+    // 7d window resetting in 7d -> just started
+    expect(paceFraction('seven_day', new Date('2026-06-27T12:00:00Z').toISOString(), now)).toBeCloseTo(0);
+  });
+  it('is undefined without a reset time or for windows of unknown length', () => {
+    expect(paceFraction('five_hour', undefined, now)).toBeUndefined();
+    expect(paceFraction('custom', new Date('2026-06-20T13:00:00Z').toISOString(), now)).toBeUndefined();
+    expect(paceFraction('api_billing', new Date('2026-06-20T13:00:00Z').toISOString(), now)).toBeUndefined();
+  });
+  it('is undefined when the reset time is implausible for the window', () => {
+    // already past
+    expect(paceFraction('five_hour', new Date('2026-06-20T11:00:00Z').toISOString(), now)).toBeUndefined();
+    // further out than the window is long
+    expect(paceFraction('five_hour', new Date('2026-06-21T12:00:00Z').toISOString(), now)).toBeUndefined();
+    expect(paceFraction('five_hour', 'not-a-date', now)).toBeUndefined();
+  });
+});
+
+describe('renderableSnapshots', () => {
+  it('drops unavailable-confidence snapshots, matching the badge filter', () => {
+    const keep = snap({ usedPercent: 40 });
+    const drop = snap({ usedPercent: 80, confidence: 'unavailable' });
+    expect(renderableSnapshots([keep, drop])).toEqual([keep]);
+  });
+});
+
+describe('isCompactRow', () => {
+  it('compacts only fresh ok-level rows', () => {
+    expect(isCompactRow(snap({ usedPercent: 42 }))).toBe(true);
+    expect(isCompactRow(snap({ usedPercent: 42, confidence: 'estimated' }))).toBe(true);
+    expect(isCompactRow(snap({ usedPercent: 70 }))).toBe(false);
+    expect(isCompactRow(snap({ usedPercent: 42, stale: true }))).toBe(false);
+  });
+});
+
+describe('cardAllStale', () => {
+  it('is true only when every snapshot on a card with data is stale', () => {
+    expect(cardAllStale(card({ snapshots: [snap({ stale: true }), snap({ stale: true })] }))).toBe(true);
+    expect(cardAllStale(card({ snapshots: [snap({ stale: true }), snap({})] }))).toBe(false);
+    expect(cardAllStale(card({ snapshots: [] }))).toBe(false);
+  });
+});
+
+describe('confidenceNote', () => {
+  it('stays silent for exact and filtered-out unavailable, humanizes the rest', () => {
+    expect(confidenceNote(snap({}))).toBeUndefined();
+    expect(confidenceNote(snap({ confidence: 'unavailable' }))).toBeUndefined();
+    expect(confidenceNote(snap({ confidence: 'estimated' }))).toBe('estimated');
+    expect(confidenceNote(snap({ confidence: 'inferred' }))).toBe('approximate');
   });
 });

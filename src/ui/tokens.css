@@ -1,0 +1,30 @@
+/* Shared design tokens for every MeterBar surface. Single source of truth —
+   popup.css and options.css import this file; never redeclare palette vars locally.
+   color-scheme keeps native widgets (select dropdown, confirm dialog, scrollbars)
+   in the dark scheme instead of punching white holes in the UI. */
+:root {
+  color-scheme: dark;
+
+  --bg: #0a0f1c;
+  --bg-glow: #16233f;
+  --surface: #111a2e;
+  --surface-2: #16213a;
+  --border: #243149;
+  --border-soft: #1c283e;
+  --text: #eaf0fb;
+  --muted: #8a9bb8;
+  /* Non-text graphics only (sparklines, idle dots, spinner track): >=3:1 on surfaces.
+     Text never uses --faint — use --muted, which passes 4.5:1. */
+  --faint: #6b7d9c;
+  --track: #1d2940;
+
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --crit: #fb7185;
+  --accent: #60a5fa;
+
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  --radius: 16px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
