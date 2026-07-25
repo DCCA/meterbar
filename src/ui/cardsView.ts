@@ -12,7 +12,7 @@ import {
   escapeHtml,
   humanWindowLabel,
   isCompactRow,
-  orderByRisk,
+  needleAngle,
   paceFraction,
   providerHome,
   renderableSnapshots,
@@ -23,6 +23,8 @@ import {
   STATUS_TEXT,
   timeAgo
 } from '../popup/render';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const KNOWN: Array<{ provider: ProviderId; label: string }> = [
   { provider: 'claude', label: 'Claude' },
@@ -82,12 +84,14 @@ async function rowHtml(snapshot: UsageSnapshot, cardLabel: string): Promise<stri
 
   const level = snapshot.stale ? 'stale' : riskLevel(pct);
   const series = await readSeries(snapshot.provider, snapshot.window);
-  const path = sparklinePath(series, 320, 28);
+  // Fixed 24h domain: identical shapes mean identical periods across every row.
+  const now = Date.now();
+  const path = sparklinePath(series, 320, 28, { from: now - DAY_MS, to: now });
   const spark = path
     ? `<svg class="spark" viewBox="0 0 320 28" preserveAspectRatio="none" aria-hidden="true"><path d="${path}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" /></svg>`
     : '';
   const staleNote = snapshot.stale ? `stale — last read ${timeAgo(snapshot.capturedAt)}` : undefined;
-  const meta = [resetLabel(snapshot.resetsAt), staleNote, note ? escapeHtml(note) : undefined]
+  const meta = [resetLabel(snapshot.resetsAt), staleNote, note ? escapeHtml(note) : undefined, spark ? 'last 24h' : undefined]
     .filter(Boolean)
     .join(' · ');
 
@@ -167,8 +171,18 @@ function heroEmptyHtml(): string {
       <div class="gauge" aria-hidden="true"><span></span></div>
       <h2>No providers connected yet</h2>
       <p>Sign in to Claude, ChatGPT, or Gemini in your browser and MeterBar reads your usage automatically — locally, never leaving your device.</p>
+      <p class="hero-tip">Tip: pin the toolbar icon — it grows one risk-colored bar per provider, in a fixed left-to-right order.</p>
     </div>
   `;
+}
+
+/** Point the header's mini gauge needle at the riskiest fresh percent. */
+function updateGaugeMark(cards: ProviderCardState[]): void {
+  const needle = document.querySelector<HTMLElement>('.gauge-mark .needle');
+  if (!needle) return;
+  const fresh = cards.flatMap((c) => c.snapshots).filter((s) => !s.stale && s.confidence !== 'unavailable');
+  const peak = fresh.reduce((max, s) => Math.max(max, s.usedPercent), 0);
+  needle.style.transform = `translate(-50%, -100%) rotate(${needleAngle(peak)}deg)`;
 }
 
 /** Render the provider cards into a container (shared by the popup and the side panel). */
@@ -176,13 +190,14 @@ export async function renderCardsInto(container: HTMLElement): Promise<void> {
   const cards = await getCards();
   const byId = new Map(cards.map((c) => [c.provider, c]));
   const anyLive = cards.some((c) => c.snapshots.length > 0 || c.status === 'connected');
-  const ordered = orderByRisk(KNOWN, byId);
 
+  // Fixed provider order — position means provider, matching the toolbar icon.
   // When the hero gives the sign-in instruction, the cards don't repeat it.
   const cardsHtml = (
-    await Promise.all(ordered.map(({ provider, label, card }) => cardHtml(provider, label, card, anyLive)))
+    await Promise.all(KNOWN.map(({ provider, label }) => cardHtml(provider, label, byId.get(provider), anyLive)))
   ).join('');
   container.innerHTML = (anyLive ? '' : heroEmptyHtml()) + cardsHtml;
+  updateGaugeMark(cards);
 }
 
 /** Ask the worker to refresh fetch-strategy providers now. */

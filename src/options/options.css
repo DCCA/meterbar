@@ -117,6 +117,25 @@ h1 { margin: 0; font-size: 21px; font-weight: 650; letter-spacing: -0.01em; }
 .btn-danger { color: var(--crit); border-color: rgba(251, 113, 133, 0.35); background: rgba(251, 113, 133, 0.08); }
 .btn-danger:hover { background: rgba(251, 113, 133, 0.16); border-color: rgba(251, 113, 133, 0.6); }
 
+/* ---- Toolbar icon legend ---- */
+.icon-legend { display: flex; gap: 18px; margin: 10px 0 2px; }
+.legend-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.legend-bar {
+  display: block;
+  width: 10px;
+  height: 30px;
+  border-radius: 4px;
+  background: linear-gradient(to top, var(--bar-color, var(--ok)) 0 var(--fill, 0%), var(--track) var(--fill, 0%) 100%);
+}
+.legend-note { margin: 8px 0 6px; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+
 /* ---- Select row (icon number) ---- */
 .select-row { display: flex; align-items: center; gap: 16px; padding: 13px 0; }
 .panel h2 + .select-row { padding-top: 4px; }
