@@ -92,9 +92,12 @@ jobs:
               - Only change docs if the merge actually changed behaviour, architecture, commands, permissions, or user-facing features. If the docs are already accurate, make NO changes at all.
               - Keep edits accurate, concise, and consistent with the existing tone; do not invent features.
               - Edit the files in place. Do NOT commit, push, or open a pull request — a later workflow step does that.
+          # The prior runs exhausted the 12-turn budget while reviewing a merge.
+          # Keep the agent sandboxed to documentation and read-only Git operations,
+          # but allow the normal repository-state check it needs to finish reliably.
           claude_args: >-
-            --max-turns 12
-            --allowedTools "Read,Edit,Write,Grep,Glob,Bash(git log:*),Bash(git diff:*),Bash(git show:*)"
+            --max-turns 20
+            --allowedTools "Read,Edit,Write,Grep,Glob,Bash(git status:*),Bash(git log:*),Bash(git diff:*),Bash(git show:*)"
 
       - name: Open a docs PR if anything changed
         id: cpr
