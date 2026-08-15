@@ -20,6 +20,7 @@ import {
   riskClass,
   riskiestPercent,
   riskLevel,
+  safeProviderStatus,
   STATUS_TEXT,
   timeAgo
 } from '../popup/render';
@@ -114,14 +115,14 @@ function emptyCardHtml(
   card: ProviderCardState | undefined,
   showHint: boolean
 ): string {
-  const status = card?.status ?? 'unsupported';
+  const status = safeProviderStatus(card?.status);
   const home = providerHome(provider);
   const cta = home
     ? `<a class="cta" href="${home}" target="_blank" rel="noopener">Open ${escapeHtml(label.split(' / ')[0])} &rarr;</a>`
     : '';
   const hint = showHint ? `<p class="hint">${escapeHtml(emptyHint(card))}</p>` : '';
   return `
-    <article class="card card-empty" data-status="${status}">
+    <article class="card card-empty" data-status="${escapeHtml(status)}">
       <div class="card-head">
         <span class="dot dot-idle" aria-hidden="true"></span>
         <h2>${escapeHtml(label)}</h2>

@@ -46,16 +46,18 @@ describe('refreshChatgpt', () => {
     vi.stubGlobal('chrome', {
       storage: { local: { get: vi.fn(async () => ({})), set } }
     });
-    vi.stubGlobal('fetch', vi.fn()
+    const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: 'token' }), { status: 200 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({
         accounts: { default: { account: { account_id: 'acct-123' } } }
       }), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ rate_limit: null }), { status: 200 }))
-    );
+      .mockResolvedValueOnce(new Response(JSON.stringify({ rate_limit: null }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
 
     await refreshChatgpt();
 
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    for (const [, init] of fetchMock.mock.calls) expect(init).toMatchObject({ cache: 'no-store' });
     expect(set).toHaveBeenCalledWith({
       'latest:chatgpt': expect.objectContaining({
         status: 'connected',

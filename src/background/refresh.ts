@@ -45,7 +45,11 @@ export async function storeStatus(provider: ProviderId, label: string, status: P
   await putCard({ provider, label, status, message, snapshots: prev?.snapshots ?? [], lastUpdatedAt: prev?.lastUpdatedAt });
 }
 
-const SESSION_FETCH: RequestInit = { credentials: 'include', headers: { accept: 'application/json' } };
+const SESSION_FETCH: RequestInit = {
+  credentials: 'include',
+  cache: 'no-store',
+  headers: { accept: 'application/json' }
+};
 
 /** An unauthenticated/redirected response means the user isn't logged in to claude.ai. */
 function isAuthFailure(res: Response): boolean {
@@ -106,13 +110,16 @@ export async function refreshChatgpt(): Promise<void> {
     const token = ((await sessionRes.json()) as { accessToken?: string })?.accessToken;
     if (!token) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
 
-    const authInit: RequestInit = { credentials: 'include', headers: { accept: 'application/json', authorization: `Bearer ${token}` } };
+    const authInit: RequestInit = {
+      ...SESSION_FETCH,
+      headers: { accept: 'application/json', authorization: `Bearer ${token}` }
+    };
     const acctRes = await fetch(chatgptAccountsUrl(), authInit);
     const accountId = acctRes.ok ? pickChatgptAccountId(await acctRes.json()) : null;
 
     const usageHeaders: Record<string, string> = { accept: 'application/json', authorization: `Bearer ${token}` };
     if (accountId) usageHeaders['ChatGPT-Account-Id'] = accountId;
-    const usageRes = await fetch(chatgptUsageUrl(), { credentials: 'include', headers: usageHeaders });
+    const usageRes = await fetch(chatgptUsageUrl(), { ...SESSION_FETCH, headers: usageHeaders });
     if (isAuthFailure(usageRes)) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
     if (!usageRes.ok) return storeStatus(provider, label, 'stale', fetchFailureMessage(label, usageRes.status));
 

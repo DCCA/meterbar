@@ -21,7 +21,6 @@
   "host_permissions": [
     "https://claude.ai/*",
     "https://chatgpt.com/*",
-    "https://chat.openai.com/*",
     "https://gemini.google.com/*"
   ],
   "background": {

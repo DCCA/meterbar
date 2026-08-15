@@ -34,7 +34,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  id-token: write # claude-code-action fetches an OIDC token
 
 concurrency:
   group: docs-update
@@ -57,13 +56,13 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.event.pull_request.base.ref || github.ref_name }}
           fetch-depth: 0
 
       - name: Let Claude refresh the living docs
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@9d7150bc8a3dae8149739a88019d192b579ad90c # v1
         with:
           # OpenRouter key. Also exported as ANTHROPIC_AUTH_TOKEN in settings.env below;
           # ANTHROPIC_API_KEY is forced empty there so the CLI does not fall back to Anthropic.
@@ -81,7 +80,7 @@ jobs:
               }
             }
           prompt: |
-            Recent changes were merged into the main branch of this repository${{ github.event.pull_request.number && format(' (most recently PR #{0} — "{1}")', github.event.pull_request.number, github.event.pull_request.title) || '' }}.
+            Recent changes were merged into the main branch of this repository.
 
             Review what changed on main (use `git log` and `git diff` against the previous state) and update ONLY the living documentation so it accurately reflects the current code:
               - README.md
@@ -101,15 +100,14 @@ jobs:
 
       - name: Open a docs PR if anything changed
         id: cpr
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
         with:
           branch: docs/auto-update-${{ github.event.pull_request.number || github.run_id }}
           base: ${{ github.event.pull_request.base.ref || github.ref_name }}
           title: "docs: refresh after #${{ github.event.pull_request.number || github.run_id }}"
           commit-message: "docs: sync README/CLAUDE with merged changes"
           body: |
-            Automated documentation refresh following the merge of
-            #${{ github.event.pull_request.number }} ("${{ github.event.pull_request.title }}").
+            Automated documentation refresh following merged code changes.
 
             Claude (via OpenRouter) reviewed the merged change and updated the living docs
             (README.md / CLAUDE.md only). Please review before merging. If nothing needed
@@ -119,23 +117,3 @@ jobs:
             CLAUDE.md
           delete-branch: true
           labels: documentation
-
-      - name: Auto-merge the docs PR
-        # Only when a docs PR was actually created/updated. Docs PRs are markdown-only,
-        # so merging them does NOT retrigger this workflow (paths-ignore covers **/*.md).
-        if: steps.cpr.outputs.pull-request-number
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR: ${{ steps.cpr.outputs.pull-request-number }}
-        run: |
-          # Retry while GitHub is still computing the PR's mergeability.
-          for attempt in 1 2 3 4 5; do
-            if gh pr merge "$PR" --squash --delete-branch --repo "$GITHUB_REPOSITORY"; then
-              echo "Merged docs PR #$PR"
-              exit 0
-            fi
-            echo "::notice::Merge attempt $attempt for PR #$PR failed (mergeability may still be computing); retrying in 5s"
-            sleep 5
-          done
-          echo "::error::Could not auto-merge docs PR #$PR"
-          exit 1

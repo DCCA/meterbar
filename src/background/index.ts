@@ -8,7 +8,14 @@ import { claudeAdapter } from '../providers/claude/claudeAdapter';
 import { chatgptAdapter } from '../providers/chatgpt/chatgptAdapter';
 import { geminiAdapter } from '../providers/gemini/geminiAdapter';
 import { getAllCards, loadSettings, type Settings } from '../storage/usageStore';
-import { isUsageReport, isStatusReport, type ExtensionMessage } from '../shared/messages';
+import {
+  isStateGet,
+  isStatusReport,
+  isTrustedContentReportSender,
+  isTrustedExtensionPageSender,
+  isUsageRefresh,
+  isUsageReport
+} from '../shared/messages';
 import { buildTooltip } from '../shared/summary';
 import type { ProviderId } from '../shared/types';
 
@@ -50,20 +57,29 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 chrome.alarms.onAlarm.addListener((a) => { if (a.name === 'meterbar-refresh') void refreshAll(); });
 
-chrome.runtime.onMessage.addListener((msg: ExtensionMessage, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg: unknown, sender, sendResponse) => {
   if (isUsageReport(msg)) {
+    if (!isTrustedContentReportSender(msg.provider, sender, chrome.runtime.id)) return false;
     const adapter = ADAPTERS_BY_ID[msg.provider];
     if (adapter) void storeSnapshots(msg.provider, adapter.label, adapter.parse(msg.raw)).then(recompute);
     return false;
   }
   if (isStatusReport(msg)) {
+    if (!isTrustedContentReportSender(msg.provider, sender, chrome.runtime.id)) return false;
     const adapter = ADAPTERS_BY_ID[msg.provider];
-    void storeStatus(msg.provider, adapter?.label ?? msg.provider, msg.status, msg.message).then(recompute);
+    if (adapter) void storeStatus(msg.provider, adapter.label, msg.status, msg.message).then(recompute);
     return false;
   }
-  if (msg.type === 'usage:refresh') { void refreshAll().then(() => sendResponse({ ok: true })); return true; }
-  if (msg.type === 'state:get') {
-    void loadSettings().then(async (s) => sendResponse({ type: 'state:result', cards: aggregateCards(await getAllCards(), s) }));
+  if (!isTrustedExtensionPageSender(sender, chrome.runtime.id)) return false;
+  if (isUsageRefresh(msg)) {
+    void refreshAll().then(() => sendResponse({ ok: true }));
+    return true;
+  }
+  if (isStateGet(msg)) {
+    void loadSettings().then(async (s) => sendResponse({
+      type: 'state:result',
+      cards: aggregateCards(await getAllCards(), s)
+    }));
     return true;
   }
   return false;
