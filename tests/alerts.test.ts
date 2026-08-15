@@ -17,12 +17,15 @@ describe('alerts', () => {
 describe('alertCopy', () => {
   const now = new Date('2026-06-20T12:00:00Z');
 
-  it('names the provider and window in plain language, with the reset countdown', () => {
+  it('names a server-reported OpenAI window without assuming a 5-hour limit', () => {
     const copy = alertCopy(
-      { kind: 'threshold', label: 'ChatGPT / Codex', window: 'five_hour', usedPercent: 91, resetsAt: '2026-06-20T12:46:00Z' },
+      {
+        kind: 'threshold', label: 'ChatGPT / Codex', window: 'rolling', windowSeconds: 10800,
+        usedPercent: 91, resetsAt: '2026-06-20T12:46:00Z'
+      },
       now
     );
-    expect(copy.title).toBe('ChatGPT / Codex: 5-hour limit at 91% used');
+    expect(copy.title).toBe('ChatGPT / Codex: 3-hour window at 91% used');
     expect(copy.message).toBe('Resets in 46m.');
   });
 

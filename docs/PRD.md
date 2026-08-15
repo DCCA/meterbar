@@ -154,6 +154,7 @@ Minimum stored fields:
 - provider
 - account/workspace identifier if available and non-sensitive
 - usage window type
+- provider-reported window duration, if exposed
 - used percentage
 - reset timestamp
 - captured timestamp
@@ -294,6 +295,7 @@ Canonical usage snapshot:
   "accountIdHash": "optional-stable-non-reversible-id",
   "workspaceLabel": "optional-display-name",
   "window": "five_hour",
+  "windowSeconds": 18000,
   "usedRatio": 0.62,
   "usedPercent": 62,
   "resetsAt": "2026-06-20T18:30:00Z",
@@ -312,6 +314,8 @@ Provider enum:
 - `gemini`
 - `unknown`
 
+`windowSeconds` is optional. When present, it is the exact rolling-window duration reported by the provider and must drive provider-specific labels and pacing instead of positional assumptions such as "primary means 5 hours."
+
 Window enum:
 
 - `five_hour`
@@ -319,6 +323,7 @@ Window enum:
 - `daily`
 - `monthly`
 - `api_billing`
+- `rolling`
 - `custom`
 
 Confidence enum:

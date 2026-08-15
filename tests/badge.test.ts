@@ -59,9 +59,15 @@ describe('calculateBadgeState', () => {
     });
   });
 
-  it('resolves the ChatGPT Codex (custom) target', () => {
-    const snapshots = [snapshot('chatgpt', 40, 'five_hour'), snapshot('chatgpt', 88, 'custom')];
-    expect(calculateBadgeState(snapshots, 'chatgpt:custom')).toMatchObject({ text: '88', color: '#f59e0b' });
+  it('pins OpenAI to its riskiest server-reported window without assuming a duration', () => {
+    const snapshots = [
+      snapshot('chatgpt', 40, 'seven_day'),
+      snapshot('chatgpt', 88, 'rolling', { windowSeconds: 10800 }),
+      snapshot('claude', 95, 'five_hour')
+    ];
+    expect(calculateBadgeState(snapshots, 'chatgpt:riskiest')).toMatchObject({
+      text: '88', color: '#f59e0b', provider: 'chatgpt'
+    });
   });
 
   it('shows ? when the pinned target has no snapshot', () => {

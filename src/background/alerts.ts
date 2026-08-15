@@ -17,6 +17,7 @@ export interface FiredAlert {
   kind: 'threshold' | 'reset';
   provider: UsageSnapshot['provider'];
   window: UsageSnapshot['window'];
+  windowSeconds?: number;
   threshold?: number;
   usedPercent: number;
   resetsAt?: string;
@@ -29,9 +30,14 @@ export function evaluateAlerts(snapshots: UsageSnapshot[], state: AlertState): {
   const fired: FiredAlert[] = [];
 
   for (const s of snapshots) {
+    // Keep legacy alert identities stable. Reset timestamps already separate cycles;
+    // windowSeconds is display metadata, not part of persisted de-duplication keys.
     const resetKey = `${s.provider}:${s.window}`;
     if (s.resetsAt && lastReset[resetKey] && lastReset[resetKey] !== s.resetsAt) {
-      fired.push({ kind: 'reset', provider: s.provider, window: s.window, usedPercent: s.usedPercent, resetsAt: s.resetsAt });
+      fired.push({
+        kind: 'reset', provider: s.provider, window: s.window, windowSeconds: s.windowSeconds,
+        usedPercent: s.usedPercent, resetsAt: s.resetsAt
+      });
     }
     if (s.resetsAt) lastReset[resetKey] = s.resetsAt;
 
@@ -39,7 +45,10 @@ export function evaluateAlerts(snapshots: UsageSnapshot[], state: AlertState): {
       if (s.usedPercent >= threshold) {
         const key = getAlertKey(s.provider, s.window, threshold, s.resetsAt ?? 'unknown');
         if (shouldAlert(seen, key)) {
-          fired.push({ kind: 'threshold', provider: s.provider, window: s.window, threshold, usedPercent: s.usedPercent, resetsAt: s.resetsAt });
+          fired.push({
+            kind: 'threshold', provider: s.provider, window: s.window, windowSeconds: s.windowSeconds,
+            threshold, usedPercent: s.usedPercent, resetsAt: s.resetsAt
+          });
         }
       }
     }
@@ -57,6 +66,7 @@ export async function evaluateAndNotify(cards: ProviderCardState[]): Promise<voi
       kind: f.kind,
       label: labelByProvider.get(f.provider) ?? f.provider,
       window: f.window,
+      windowSeconds: f.windowSeconds,
       usedPercent: f.usedPercent,
       resetsAt: f.resetsAt
     });

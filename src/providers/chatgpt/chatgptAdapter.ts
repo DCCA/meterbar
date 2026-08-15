@@ -1,7 +1,7 @@
 import type { ProviderAdapter } from '../providerAdapter';
 import type { UsageSnapshot, UsageWindow } from '../../shared/types';
 
-interface ChatgptWindow { used_percent?: number; reset_at?: number; }
+interface ChatgptWindow { used_percent?: number; limit_window_seconds?: number; reset_at?: number; }
 interface ChatgptRateLimit { primary_window?: ChatgptWindow | null; secondary_window?: ChatgptWindow | null; }
 interface ChatgptAdditionalLimit { limit_name?: string; rate_limit?: ChatgptRateLimit | null; }
 interface ChatgptUsageResponse {
@@ -13,12 +13,34 @@ function epochToIso(seconds?: number): string | undefined {
   return typeof seconds === 'number' ? new Date(seconds * 1000).toISOString() : undefined;
 }
 
-function snapshot(window: UsageWindow, w: ChatgptWindow, capturedAt: string, workspaceLabel?: string): UsageSnapshot | null {
-  if (typeof w.used_percent !== 'number') return null;
+function reportedWindowSeconds(value?: number): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.round(value)
+    : undefined;
+}
+
+/** Map only known durations. Other provider-reported periods stay rolling. */
+function usageWindow(seconds?: number): UsageWindow {
+  switch (seconds) {
+    case 5 * 60 * 60: return 'five_hour';
+    case 7 * 24 * 60 * 60: return 'seven_day';
+    case 24 * 60 * 60: return 'daily';
+    case 30 * 24 * 60 * 60: return 'monthly';
+    default: return 'rolling';
+  }
+}
+
+function snapshot(w: ChatgptWindow, capturedAt: string, options: {
+  window?: UsageWindow;
+  workspaceLabel?: string;
+} = {}): UsageSnapshot | null {
+  if (typeof w.used_percent !== 'number' || !Number.isFinite(w.used_percent)) return null;
+  const windowSeconds = reportedWindowSeconds(w.limit_window_seconds);
   return {
     provider: 'chatgpt',
-    window,
-    ...(workspaceLabel ? { workspaceLabel } : {}),
+    window: options.window ?? usageWindow(windowSeconds),
+    ...(windowSeconds ? { windowSeconds } : {}),
+    ...(options.workspaceLabel ? { workspaceLabel: options.workspaceLabel } : {}),
     usedRatio: w.used_percent / 100,
     usedPercent: Math.round(w.used_percent),
     resetsAt: epochToIso(w.reset_at),
@@ -38,12 +60,14 @@ export function parseChatgptUsage(payload: ChatgptUsageResponse, now: Date = new
   const capturedAt = now.toISOString();
   const out: UsageSnapshot[] = [];
 
-  // Account-wide ChatGPT usage: primary = 5h window, secondary = 7d window.
+  // OpenAI can vary or omit windows by plan. Derive each type from the duration in
+  // the response instead of assuming primary = 5h and secondary = 7d.
   const main = payload.rate_limit ?? {};
-  const primary = main.primary_window ? snapshot('five_hour', main.primary_window, capturedAt) : null;
-  const secondary = main.secondary_window ? snapshot('seven_day', main.secondary_window, capturedAt) : null;
-  if (primary) out.push(primary);
-  if (secondary) out.push(secondary);
+  for (const value of [main.primary_window, main.secondary_window]) {
+    if (!value) continue;
+    const parsed = snapshot(value, capturedAt);
+    if (parsed) out.push(parsed);
+  }
 
   // One Codex bar under a distinct 'custom' window so it doesn't collide with the
   // chat windows in the history store (keyed by provider:window) or the popup.
@@ -57,7 +81,7 @@ export function parseChatgptUsage(payload: ChatgptUsageResponse, now: Date = new
     }
   }
   if (riskiest) {
-    const codex = snapshot('custom', riskiest, capturedAt, 'Codex');
+    const codex = snapshot(riskiest, capturedAt, { window: 'custom', workspaceLabel: 'Codex' });
     if (codex) out.push(codex);
   }
 

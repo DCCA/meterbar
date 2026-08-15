@@ -3,6 +3,36 @@
 Session logbook, newest first. Each entry: where the project was, what the session
 changed (with evidence), and what is still open.
 
+## 2026-08-15 - OpenAI usage windows now follow the provider response
+
+**Where we were:** `parseChatgptUsage()` ignored `limit_window_seconds` and assumed
+`primary_window` always meant 5 hours and `secondary_window` always meant 7 days. The
+same fixed OpenAI choices appeared in the badge selector. A successful OpenAI response
+with no fixed windows was incorrectly stored as `not_connected`.
+
+**What we did:**
+- Added optional `windowSeconds` metadata to the canonical snapshot and derive OpenAI
+  window types, labels, pace marks, tooltip copy, rolling history, CSV exports, and alerts
+  from the duration returned by `wham/usage`.
+- Replaced fixed OpenAI badge choices with one provider-level **OpenAI · Riskiest**
+  target. Stored legacy OpenAI targets migrate at read time.
+- Keep a successful OpenAI read connected when that plan reports no fixed window, with
+  explicit empty-state copy instead of a fake 5-hour bar or a signed-out state.
+- Corrected stale manual-QA instructions for fixed provider order and `role="meter"`.
+- Added a narrow-screen options layout after browser QA found the new selector cramped.
+
+**Evidence:** `npm run check` passes 94 tests; `npm run build` succeeds; desktop and
+390px browser screenshots show the migrated **OpenAI · Riskiest** selector and the
+responsive options layout. [OpenAI's current Codex pricing page](https://developers.openai.com/codex/pricing/)
+still documents a shared five-hour window for Plus, while flexible Enterprise/Edu plans
+can have no fixed rate limits. The implementation therefore follows the endpoint instead of removing 5-hour
+support globally.
+
+**Pending / next:**
+- [ ] Run the live-provider manual QA path with an OpenAI account that reports no fixed
+      window. The parser and empty-state behavior are unit-tested, but this checkout has
+      no authenticated provider fixture for an end-to-end request.
+
 ## 2026-07-25 - Docs sync, design critique, and two UI overhaul PRs
 
 **Where we were:** MVP + Phase 2 shipped (last activity 2026-06-21); local checkout was

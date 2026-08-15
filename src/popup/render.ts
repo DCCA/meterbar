@@ -14,8 +14,8 @@ export function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
-export function humanWindowLabel(window: UsageWindow): string {
-  return windowLongLabel(window);
+export function humanWindowLabel(window: UsageWindow, windowSeconds?: number): string {
+  return windowLongLabel(window, windowSeconds);
 }
 
 // Wall-clock length of each rolling window; windows without a fixed length get no pace tick.
@@ -31,9 +31,16 @@ const WINDOW_MS: Partial<Record<UsageWindow, number>> = {
  * This is what makes 91%-with-46m-left and 91%-with-4h-left look different: the bar
  * gets a tick at the even-pace position. Undefined when it cannot be computed honestly.
  */
-export function paceFraction(window: UsageWindow, resetsAt: string | undefined, now: Date = new Date()): number | undefined {
+export function paceFraction(
+  window: UsageWindow,
+  resetsAt: string | undefined,
+  now: Date = new Date(),
+  windowSeconds?: number
+): number | undefined {
   if (!resetsAt) return undefined;
-  const total = WINDOW_MS[window];
+  const total = windowSeconds && Number.isFinite(windowSeconds) && windowSeconds > 0
+    ? windowSeconds * 1000
+    : WINDOW_MS[window];
   if (!total) return undefined;
   const remaining = Date.parse(resetsAt) - now.getTime();
   if (!Number.isFinite(remaining) || remaining < 0 || remaining > total) return undefined;

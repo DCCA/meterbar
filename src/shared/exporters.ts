@@ -5,10 +5,12 @@ export function historyToJson(history: Record<string, Point[]>): string {
 }
 
 export function historyToCsv(history: Record<string, Point[]>): string {
-  const rows = ['provider,window,capturedAt,usedPercent'];
+  const rows = ['provider,window,windowSeconds,capturedAt,usedPercent'];
   for (const [key, points] of Object.entries(history)) {
-    const [, provider, window] = key.split(':');
-    for (const [t, p] of points) rows.push(`${provider},${window},${new Date(t).toISOString()},${p}`);
+    const [, provider, window, windowSeconds = ''] = key.split(':');
+    for (const [t, p] of points) {
+      rows.push(`${provider},${window},${windowSeconds},${new Date(t).toISOString()},${p}`);
+    }
   }
   return rows.join('\n');
 }

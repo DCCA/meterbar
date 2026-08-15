@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { appendPoint, pruneSeries } from '../src/storage/historyStore';
+import { appendPoint, historyKey, pruneSeries } from '../src/storage/historyStore';
 
 const H = 60 * 60 * 1000;
 
 describe('history series', () => {
+  it('separates new rolling durations without changing legacy custom keys', () => {
+    expect(historyKey('chatgpt', 'rolling', 10800)).toBe('history:chatgpt:rolling:10800');
+    expect(historyKey('chatgpt', 'rolling', 7200)).toBe('history:chatgpt:rolling:7200');
+    expect(historyKey('chatgpt', 'custom', 10800)).toBe('history:chatgpt:custom');
+  });
+
   it('appends a compact [t, p] tuple', () => {
     expect(appendPoint([], Date.parse('2026-06-20T12:00:00Z'), 62)).toEqual([
       [Date.parse('2026-06-20T12:00:00Z'), 62]

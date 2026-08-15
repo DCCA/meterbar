@@ -55,6 +55,7 @@ describe('humanWindowLabel', () => {
     expect(humanWindowLabel('seven_day')).toBe('7-day limit');
     expect(humanWindowLabel('daily')).toBe('Daily');
     expect(humanWindowLabel('monthly')).toBe('Monthly');
+    expect(humanWindowLabel('rolling', 10800)).toBe('3-hour window');
   });
 });
 
@@ -126,6 +127,8 @@ describe('paceFraction', () => {
     expect(paceFraction('five_hour', new Date('2026-06-20T13:15:00Z').toISOString(), now)).toBeCloseTo(0.75);
     // 7d window resetting in 7d -> just started
     expect(paceFraction('seven_day', new Date('2026-06-27T12:00:00Z').toISOString(), now)).toBeCloseTo(0);
+    // Unknown enum, but OpenAI reported an exact 3h duration resetting in 45m.
+    expect(paceFraction('rolling', new Date('2026-06-20T12:45:00Z').toISOString(), now, 10800)).toBeCloseTo(0.75);
   });
   it('is undefined without a reset time or for windows of unknown length', () => {
     expect(paceFraction('five_hour', undefined, now)).toBeUndefined();

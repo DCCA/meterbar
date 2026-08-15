@@ -46,7 +46,7 @@ async function getCards(): Promise<ProviderCardState[]> {
 /** The bar is a meter (consumption of a fixed limit), announced with its direction. */
 function barHtml(snapshot: UsageSnapshot, cardLabel: string, rowLabel: string): string {
   const pct = snapshot.usedPercent;
-  const pace = paceFraction(snapshot.window, snapshot.resetsAt);
+  const pace = paceFraction(snapshot.window, snapshot.resetsAt, new Date(), snapshot.windowSeconds);
   const tick =
     pace === undefined
       ? ''
@@ -64,7 +64,7 @@ function barHtml(snapshot: UsageSnapshot, cardLabel: string, rowLabel: string): 
 
 async function rowHtml(snapshot: UsageSnapshot, cardLabel: string): Promise<string> {
   const pct = snapshot.usedPercent;
-  const label = escapeHtml(snapshot.workspaceLabel ?? humanWindowLabel(snapshot.window));
+  const label = escapeHtml(snapshot.workspaceLabel ?? humanWindowLabel(snapshot.window, snapshot.windowSeconds));
   const note = confidenceNote(snapshot);
 
   if (isCompactRow(snapshot)) {
@@ -83,7 +83,7 @@ async function rowHtml(snapshot: UsageSnapshot, cardLabel: string): Promise<stri
   }
 
   const level = snapshot.stale ? 'stale' : riskLevel(pct);
-  const series = await readSeries(snapshot.provider, snapshot.window);
+  const series = await readSeries(snapshot.provider, snapshot.window, snapshot.windowSeconds);
   // Fixed 24h domain: identical shapes mean identical periods across every row.
   const now = Date.now();
   const path = sparklinePath(series, 320, 28, { from: now - DAY_MS, to: now });

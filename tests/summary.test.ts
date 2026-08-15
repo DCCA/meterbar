@@ -23,7 +23,20 @@ describe('buildTooltip', () => {
     expect(buildTooltip([card('Claude', [['five_hour', 62]], true)])).toBe('MeterBar · no usage data yet');
   });
 
-  it('shortens window labels', () => {
+  it('shortens known and server-reported window durations', () => {
     expect(windowShortLabel('seven_day')).toBe('7d');
+    expect(windowShortLabel('rolling', 10800)).toBe('3h');
+  });
+
+  it('uses server-reported durations in OpenAI tooltip copy', () => {
+    const openai: ProviderCardState = {
+      provider: 'chatgpt', label: 'ChatGPT / Codex', status: 'connected',
+      snapshots: [{
+        provider: 'chatgpt', window: 'rolling', windowSeconds: 10800,
+        usedRatio: 0.12, usedPercent: 12, capturedAt: '2026-06-20T12:00:00Z',
+        source: 't', confidence: 'exact', stale: false
+      }]
+    };
+    expect(buildTooltip([openai])).toContain('ChatGPT / Codex: 3h 12%');
   });
 });

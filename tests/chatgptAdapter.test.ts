@@ -13,21 +13,54 @@ const CAPTURED = {
     {
       limit_name: 'GPT-5.3-Codex-Spark',
       rate_limit: {
-        primary_window:   { used_percent: 4,  reset_at: 1782001249 },
-        secondary_window: { used_percent: 11, reset_at: 1782588049 }
+        primary_window:   { used_percent: 4,  limit_window_seconds: 18000, reset_at: 1782001249 },
+        secondary_window: { used_percent: 11, limit_window_seconds: 604800, reset_at: 1782588049 }
       }
     }
   ]
 };
 
 describe('parseChatgptUsage', () => {
-  it('maps the main rate_limit to five_hour + seven_day ChatGPT windows', () => {
+  it('derives main window types from the durations reported by OpenAI', () => {
     const snaps = parseChatgptUsage(CAPTURED, NOW);
     expect(snaps).toMatchObject([
-      { provider: 'chatgpt', window: 'five_hour', usedPercent: 27, usedRatio: 0.27, confidence: 'exact', stale: false },
-      { provider: 'chatgpt', window: 'seven_day', usedPercent: 39, confidence: 'exact' },
-      { provider: 'chatgpt', window: 'custom', workspaceLabel: 'Codex', usedPercent: 11 }
+      {
+        provider: 'chatgpt', window: 'five_hour', windowSeconds: 18000,
+        usedPercent: 27, usedRatio: 0.27, confidence: 'exact', stale: false
+      },
+      {
+        provider: 'chatgpt', window: 'seven_day', windowSeconds: 604800,
+        usedPercent: 39, confidence: 'exact'
+      },
+      {
+        provider: 'chatgpt', window: 'custom', windowSeconds: 604800,
+        workspaceLabel: 'Codex', usedPercent: 11
+      }
     ]);
+  });
+
+  it('does not invent a 5-hour limit when OpenAI reports only a weekly primary window', () => {
+    const snaps = parseChatgptUsage({
+      rate_limit: {
+        primary_window: { used_percent: 46, limit_window_seconds: 604800, reset_at: 1782342911 },
+        secondary_window: null
+      }
+    }, NOW);
+
+    expect(snaps).toMatchObject([
+      { provider: 'chatgpt', window: 'seven_day', windowSeconds: 604800, usedPercent: 46 }
+    ]);
+    expect(snaps.some((snapshot) => snapshot.window === 'five_hour')).toBe(false);
+  });
+
+  it('keeps an unfamiliar server-reported duration as a rolling window', () => {
+    const [snapshot] = parseChatgptUsage({
+      rate_limit: {
+        primary_window: { used_percent: 12, limit_window_seconds: 10800, reset_at: 1781989386 }
+      }
+    }, NOW);
+
+    expect(snapshot).toMatchObject({ window: 'rolling', windowSeconds: 10800, usedPercent: 12 });
   });
 
   it('converts reset_at epoch seconds to an ISO timestamp', () => {
@@ -37,7 +70,7 @@ describe('parseChatgptUsage', () => {
 
   it('emits one Codex bar = the riskiest additional window across entries', () => {
     const codex = parseChatgptUsage(CAPTURED, NOW).find((s) => s.workspaceLabel === 'Codex');
-    expect(codex).toMatchObject({ window: 'custom', usedPercent: 11 });
+    expect(codex).toMatchObject({ window: 'custom', windowSeconds: 604800, usedPercent: 11 });
     expect(codex?.resetsAt).toBe(new Date(1782588049 * 1000).toISOString());
   });
 

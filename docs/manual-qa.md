@@ -38,8 +38,8 @@ Use a Chrome profile **not** signed into any provider (or clear data first — s
 
 Sign into `claude.ai` and/or `chatgpt.com` in the same profile, open the popup, click **Refresh**.
 
-- [ ] Cards populate with real percentages and window labels ("5-hour limit", "7-day limit").
-- [ ] Providers are ordered **riskiest first** (highest % at top), matching the badge.
+- [ ] Cards populate with real percentages and truthful window labels. Claude may show "5-hour limit" / "7-day limit"; OpenAI uses the duration returned by its usage response and never invents a 5-hour window.
+- [ ] Providers stay in the fixed order **Claude, ChatGPT/Codex, Gemini**. Risk changes color, pulse, and badge number, never position.
 - [ ] Toolbar **badge** shows the single highest fresh % and the right color
       (green <70, amber ≥70, red ≥90).
 - [ ] Per-window risk colors are correct on bar, number, and status dot — and a window's
@@ -79,8 +79,9 @@ Right-click the icon → **Options** (or the popup's Settings link).
 
 - [ ] Dark theme matches the popup; toggle switches animate on/off.
 - [ ] Toggling a provider off removes it from the popup after refresh; on restores it.
+- [ ] The badge-number selector offers **OpenAI · Riskiest**, not fixed OpenAI window choices.
 - [ ] **Export JSON** and **Export CSV** download files containing only percentages +
-      timestamps (open them and confirm — no prompts/messages/content).
+      window durations + timestamps (open them and confirm - no prompts/messages/content).
 - [ ] **Clear local MeterBar data** shows a confirm dialog; cancelling does nothing.
 - [ ] Confirming clears data, shows the green status line, and it auto-clears after ~4s.
 - [ ] After clearing, the popup falls back to the first-run hero (§1).
@@ -89,7 +90,7 @@ Right-click the icon → **Options** (or the popup's Settings link).
 
 - [ ] Tab through the popup and options — focus rings are visible on buttons, links,
       toggles, and CTAs.
-- [ ] Each usage bar exposes `role="progressbar"` with `aria-valuenow` (inspect, or a
+- [ ] Each usage bar exposes `role="meter"` with `aria-valuenow` (inspect, or a
       screen reader announces the percentage).
 - [ ] **Refresh** shows the spinner + disables while in flight, then re-enables.
 - [ ] With OS "reduce motion" on, fills/spinner/pulse don't animate.

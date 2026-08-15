@@ -7,21 +7,19 @@ describe('BADGE_TARGETS', () => {
       'riskiest',
       'claude:five_hour',
       'claude:seven_day',
-      'chatgpt:five_hour',
-      'chatgpt:seven_day',
-      'chatgpt:custom'
+      'chatgpt:riskiest'
     ]);
   });
 
-  it('labels the Codex (custom) target clearly and omits provider/window for riskiest', () => {
+  it('offers one provider-level OpenAI target instead of fixed window assumptions', () => {
     const riskiest = BADGE_TARGETS.find((t) => t.id === 'riskiest')!;
     expect(riskiest.provider).toBeUndefined();
     expect(riskiest.window).toBeUndefined();
 
-    const codex = BADGE_TARGETS.find((t) => t.id === 'chatgpt:custom')!;
-    expect(codex.label).toBe('ChatGPT · Codex');
-    expect(codex.provider).toBe('chatgpt');
-    expect(codex.window).toBe('custom');
+    const openai = BADGE_TARGETS.find((t) => t.id === 'chatgpt:riskiest')!;
+    expect(openai.label).toBe('OpenAI · Riskiest');
+    expect(openai.provider).toBe('chatgpt');
+    expect(openai.window).toBeUndefined();
   });
 
   it('does not offer Gemini (status-only, no number)', () => {
@@ -36,6 +34,12 @@ describe('parseBadgeTarget', () => {
       provider: 'claude',
       window: 'five_hour'
     });
+  });
+
+  it('migrates removed fixed OpenAI targets to the provider-level target', () => {
+    expect(parseBadgeTarget('chatgpt:five_hour').id).toBe('chatgpt:riskiest');
+    expect(parseBadgeTarget('chatgpt:seven_day').id).toBe('chatgpt:riskiest');
+    expect(parseBadgeTarget('chatgpt:custom').id).toBe('chatgpt:riskiest');
   });
 
   it('falls back to riskiest for an unknown or removed id', () => {

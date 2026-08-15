@@ -4,16 +4,40 @@ import { recordPoint } from '../storage/historyStore';
 import { claudeAdapter, claudeOrgsUrl, claudeUsageUrl, pickClaudeOrgUuid } from '../providers/claude/claudeAdapter';
 import { chatgptAdapter, chatgptSessionUrl, chatgptAccountsUrl, chatgptUsageUrl, pickChatgptAccountId } from '../providers/chatgpt/chatgptAdapter';
 
-/** Persist parsed snapshots as the provider's latest card and append history. */
-export async function storeSnapshots(provider: ProviderId, label: string, snapshots: UsageSnapshot[]): Promise<void> {
-  const now = new Date().toISOString();
-  const card: ProviderCardState = {
-    provider, label,
-    status: snapshots.length ? 'connected' : 'not_connected',
-    lastUpdatedAt: now, snapshots
+interface CardForSnapshotsOptions {
+  emptyStatus?: ProviderCardState['status'];
+  emptyMessage?: string;
+}
+
+/** Build the card written after a successful provider response. */
+export function cardForSnapshots(
+  provider: ProviderId,
+  label: string,
+  snapshots: UsageSnapshot[],
+  options: CardForSnapshotsOptions = {}
+): ProviderCardState {
+  const hasUsage = snapshots.length > 0;
+  return {
+    provider,
+    label,
+    status: hasUsage ? 'connected' : options.emptyStatus ?? 'not_connected',
+    ...(!hasUsage && options.emptyMessage ? { message: options.emptyMessage } : {}),
+    lastUpdatedAt: new Date().toISOString(),
+    snapshots
   };
-  await putCard(card);
-  for (const s of snapshots) await recordPoint(provider, s.window, Date.parse(s.capturedAt), s.usedPercent);
+}
+
+/** Persist parsed snapshots as the provider's latest card and append history. */
+export async function storeSnapshots(
+  provider: ProviderId,
+  label: string,
+  snapshots: UsageSnapshot[],
+  options: CardForSnapshotsOptions = {}
+): Promise<void> {
+  await putCard(cardForSnapshots(provider, label, snapshots, options));
+  for (const s of snapshots) {
+    await recordPoint(provider, s.window, Date.parse(s.capturedAt), s.usedPercent, s.windowSeconds);
+  }
 }
 
 export async function storeStatus(provider: ProviderId, label: string, status: ProviderCardState['status'], message?: string): Promise<void> {
@@ -92,7 +116,11 @@ export async function refreshChatgpt(): Promise<void> {
     if (isAuthFailure(usageRes)) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
     if (!usageRes.ok) return storeStatus(provider, label, 'stale', fetchFailureMessage(label, usageRes.status));
 
-    await storeSnapshots(provider, label, chatgptAdapter.parse(await usageRes.json()));
+    const snapshots = chatgptAdapter.parse(await usageRes.json());
+    await storeSnapshots(provider, label, snapshots, {
+      emptyStatus: 'connected',
+      emptyMessage: 'OpenAI did not report a fixed usage window for this plan.'
+    });
   } catch {
     await storeStatus(provider, label, 'stale', fetchFailureMessage(label));
   }

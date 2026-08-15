@@ -29,7 +29,7 @@ Chrome MV3 extension. Five surfaces: toolbar badge + dynamically painted multi-b
 - Never collect chat content; store only usage metrics, reset timestamps, provider names, settings. Local-first, no backend, least-privilege permissions. (PRD §5.1–5.2, non-negotiable.)
 - Truthful uncertainty: estimated/inferred/stale values must say so in the UI; never present a guess as exact. (PRD §5.5.)
 - No routing/failover in the Chrome MVP. (PRD §5.6.)
-- Canonical schema: `UsageSnapshot` (PRD §10); provider adapters isolated behind it.
+- Canonical schema: `UsageSnapshot` (PRD §10); provider adapters isolated behind it. Provider-reported window durations drive labels and pacing, so positional fields are never assumed to mean a fixed period.
 - **Confirmed 2026-07-25 (user decision): position means provider.** Fixed provider order everywhere — icon bars and popup/side-panel cards share the order Claude, ChatGPT, Codex, Gemini. Risk is expressed through color/pulse/badge number, never through reordering.
 - **Confirmed 2026-07-25 (user decision): sparklines draw a fixed 24-hour span**, labeled, so identical shapes mean identical periods. Shown only on warn/crit rows.
 
