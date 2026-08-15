@@ -28,11 +28,10 @@ findings.
 
 **Evidence:** `npm run check` passes 20 suites / 105 tests; `npm run build` succeeds on
 Vite 7.3.6; `npm audit` reports 0 vulnerabilities. The built Gemini content script has no
-module import and contains no full-page `innerHTML` read.
+module import and contains no full-page `innerHTML` read. Live Gemini connected/signed-out
+behavior was confirmed after reloading the hardened extension.
 
-**Pending / next:**
-- [ ] Reload the unpacked extension and confirm Gemini still changes between connected
-      and signed-out status in a real Gemini session after the narrowed marker scan.
+**Pending / next:** None.
 
 ## 2026-08-15 - OpenAI usage windows now follow the provider response
 
