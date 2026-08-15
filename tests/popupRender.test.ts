@@ -14,6 +14,7 @@ import {
   providerHome,
   timeAgo,
   resetLabel,
+  safeProviderStatus,
   PROVIDER_HOMES
 } from '../src/popup/render';
 import type { ProviderCardState, UsageSnapshot } from '../src/shared/types';
@@ -55,6 +56,14 @@ describe('humanWindowLabel', () => {
     expect(humanWindowLabel('seven_day')).toBe('7-day limit');
     expect(humanWindowLabel('daily')).toBe('Daily');
     expect(humanWindowLabel('monthly')).toBe('Monthly');
+  });
+});
+
+describe('safeProviderStatus', () => {
+  it('falls back for corrupted or untrusted stored status values', () => {
+    expect(safeProviderStatus('connected')).toBe('connected');
+    expect(safeProviderStatus('admin')).toBe('unsupported');
+    expect(safeProviderStatus(undefined)).toBe('unsupported');
   });
 });
 

@@ -113,6 +113,12 @@ export const STATUS_TEXT: Record<ProviderCardState['status'], string> = {
   unsupported: 'Not connected yet'
 };
 
+export function safeProviderStatus(value: unknown): ProviderCardState['status'] {
+  return typeof value === 'string' && Object.hasOwn(STATUS_TEXT, value)
+    ? value as ProviderCardState['status']
+    : 'unsupported';
+}
+
 /** A short, honest hint for cards without usage data, used as the empty-state body. */
 export function emptyHint(card: ProviderCardState | undefined): string {
   if (card?.message) return card.message;

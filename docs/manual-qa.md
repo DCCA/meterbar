@@ -63,6 +63,8 @@ Sign into `claude.ai` and/or `chatgpt.com` in the same profile, open the popup, 
 
 - [ ] Visit `gemini.google.com` signed in → Gemini card shows **connected** status copy,
       and **no** invented usage number.
+- [ ] Open a conversation containing unique text and confirm only the fixed connected
+      status reaches MeterBar; no prompt/response text appears in extension storage.
 - [ ] Signed out → card resets to the default not-connected look.
 
 ## 5. Notifications
@@ -99,7 +101,10 @@ Right-click the icon → **Options** (or the popup's Settings link).
 These guard the PRD's non-negotiables — verify on every release.
 
 - [ ] DevTools → Network (popup + a provider tab): the only requests are to the provider
-      usage endpoints. **No** request to any MeterBar/third-party backend.
+      usage endpoints. **No** request to any MeterBar/third-party backend and authenticated
+      requests use `cache: no-store`.
+- [ ] `chrome://extensions` lists host access only for `claude.ai`, `chatgpt.com`, and
+      `gemini.google.com`; there is no broad or unused `chat.openai.com` access.
 - [ ] `chrome://extensions` → MeterBar → **Inspect service worker** → Application →
       Storage: stored keys are `latest:*`, `history:*`, `alertState`, and settings —
       containing only metrics/timestamps. No tokens, cookies, account ids, or chat content.
