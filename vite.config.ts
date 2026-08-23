@@ -16,6 +16,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    // Chrome flags <link rel="modulepreload"> in extension pages as unused preloads.
+    modulePreload: false,
     rollupOptions: {
       input: {
         background: resolve(__dirname, 'src/background/index.ts'),
