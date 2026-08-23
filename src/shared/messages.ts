@@ -37,6 +37,13 @@ function exactTypeMessage(value: unknown, type: 'usage:refresh' | 'state:get'): 
   return !!message && message.type === type && Object.keys(message).length === 1;
 }
 
+/** Coerce a stored/received status to a known value; unknown -> 'unsupported'. */
+export function safeProviderStatus(value: unknown): ProviderCardState['status'] {
+  return typeof value === 'string' && PROVIDER_STATUSES.has(value as ProviderCardState['status'])
+    ? value as ProviderCardState['status']
+    : 'unsupported';
+}
+
 export function isUsageReport(value: unknown): value is Extract<ExtensionMessage, { type: 'usage:report' }> {
   const message = record(value);
   return !!message

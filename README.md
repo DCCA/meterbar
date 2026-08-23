@@ -50,7 +50,7 @@ MeterBar is local-first: there is no backend, no cloud sync, and no analytics. I
 | `alarms` | Refresh usage on a periodic schedule. |
 | `notifications` | Warn at 70% / 90% and when a window resets. |
 | `host_permissions: https://claude.ai/*` | Read your Claude usage from your logged-in session. |
-| `host_permissions: https://chatgpt.com/*`, `https://chat.openai.com/*` | Read ChatGPT/Codex usage surfaced to the page. |
+| `host_permissions: https://chatgpt.com/*` | Read ChatGPT/Codex usage surfaced to the page. |
 | `host_permissions: https://gemini.google.com/*` | Read Gemini usage surfaced to the page. |
 
 Use **Settings → Clear local MeterBar data** to erase everything at any time.

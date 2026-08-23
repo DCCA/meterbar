@@ -67,7 +67,7 @@ chrome.runtime.onMessage.addListener((msg: unknown, sender, sendResponse) => {
   if (isStatusReport(msg)) {
     if (!isTrustedContentReportSender(msg.provider, sender, chrome.runtime.id)) return false;
     const adapter = ADAPTERS_BY_ID[msg.provider];
-    if (adapter) void storeStatus(msg.provider, adapter.label, msg.status, msg.message).then(recompute);
+    void storeStatus(msg.provider, adapter?.label ?? msg.provider, msg.status, msg.message).then(recompute);
     return false;
   }
   if (!isTrustedExtensionPageSender(sender, chrome.runtime.id)) return false;

@@ -1,8 +1,10 @@
 import type { ExtensionMessage } from '../shared/messages';
 
-// Gemini exposes usage only behind a fragile batchexecute RPC. Instead of parsing a
-// number, report an honest connected status when the signed-in bootstrap marker exists.
-const MESSAGE = "Connected - Gemini doesn't expose usage numbers, so MeterBar shows status only.";
+// Self-contained (only type-only imports, erased at build) so the bundle loads as an MV3
+// classic content script; the exported helper below is tree-shaken out of the bundle.
+// Gemini exposes usage only behind a fragile batchexecute RPC, so instead of parsing a
+// number we report an honest "connected" status when the signed-in bootstrap marker exists.
+const MESSAGE = "Connected — Gemini doesn't expose usage numbers, so MeterBar shows status only.";
 const AUTH_MARKER = '"SNlM0e"';
 
 /** Inspect only script payloads, never the rendered page or conversation DOM. */
