@@ -47,6 +47,14 @@ describe('parseChatgptUsage', () => {
     expect(snaps).toHaveLength(2);
   });
 
+  // Since 2026-07-12 OpenAI dropped the 5h window: one weekly pool (Codex/Work/agents).
+  it('labels windows by limit_window_seconds, not by position', () => {
+    const weeklyOnly = { rate_limit: { primary_window: { used_percent: 60, limit_window_seconds: 604800, reset_at: 1787816100 }, secondary_window: null } };
+    expect(parseChatgptUsage(weeklyOnly, NOW)).toMatchObject([{ window: 'seven_day', usedPercent: 60 }]);
+    const odd = { rate_limit: { primary_window: { used_percent: 5, limit_window_seconds: 86400 } } };
+    expect(parseChatgptUsage(odd, NOW)).toMatchObject([{ window: 'daily' }]);
+  });
+
   it('skips windows missing a numeric used_percent', () => {
     expect(parseChatgptUsage({ rate_limit: { primary_window: {}, secondary_window: null } }, NOW)).toEqual([]);
   });

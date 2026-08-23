@@ -1,7 +1,7 @@
 import type { ProviderAdapter } from '../providerAdapter';
 import type { UsageSnapshot, UsageWindow } from '../../shared/types';
 
-interface ChatgptWindow { used_percent?: number; reset_at?: number; }
+interface ChatgptWindow { used_percent?: number; reset_at?: number; limit_window_seconds?: number; }
 interface ChatgptRateLimit { primary_window?: ChatgptWindow | null; secondary_window?: ChatgptWindow | null; }
 interface ChatgptAdditionalLimit { limit_name?: string; rate_limit?: ChatgptRateLimit | null; }
 interface ChatgptUsageResponse {
@@ -11,6 +11,16 @@ interface ChatgptUsageResponse {
 
 function epochToIso(seconds?: number): string | undefined {
   return typeof seconds === 'number' ? new Date(seconds * 1000).toISOString() : undefined;
+}
+
+// Window label comes from the payload's duration when present; `fallback` is the
+// historical positional meaning (primary = 5h, secondary = 7d). OpenAI dropped the
+// 5h window on 2026-07-12, so position alone is no longer reliable.
+const WINDOW_BY_SECONDS: Record<number, UsageWindow> = { 18000: 'five_hour', 86400: 'daily', 604800: 'seven_day' };
+function windowOf(w: ChatgptWindow, fallback: UsageWindow): UsageWindow {
+  const secs = w.limit_window_seconds;
+  if (typeof secs !== 'number') return fallback;
+  return WINDOW_BY_SECONDS[secs] ?? 'custom';
 }
 
 function snapshot(window: UsageWindow, w: ChatgptWindow, capturedAt: string, workspaceLabel?: string): UsageSnapshot | null {
@@ -38,10 +48,10 @@ export function parseChatgptUsage(payload: ChatgptUsageResponse, now: Date = new
   const capturedAt = now.toISOString();
   const out: UsageSnapshot[] = [];
 
-  // Account-wide ChatGPT usage: primary = 5h window, secondary = 7d window.
+  // Account-wide usage pool (Codex / Work / agents; chat conversations excluded).
   const main = payload.rate_limit ?? {};
-  const primary = main.primary_window ? snapshot('five_hour', main.primary_window, capturedAt) : null;
-  const secondary = main.secondary_window ? snapshot('seven_day', main.secondary_window, capturedAt) : null;
+  const primary = main.primary_window ? snapshot(windowOf(main.primary_window, 'five_hour'), main.primary_window, capturedAt) : null;
+  const secondary = main.secondary_window ? snapshot(windowOf(main.secondary_window, 'seven_day'), main.secondary_window, capturedAt) : null;
   if (primary) out.push(primary);
   if (secondary) out.push(secondary);
 
