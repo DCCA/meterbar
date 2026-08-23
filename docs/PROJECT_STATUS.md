@@ -3,32 +3,42 @@
 Session logbook, newest first. Each entry: where the project was, what the session
 changed (with evidence), and what is still open.
 
-## 2026-08-23 - Security hardening (split from PR #25)
+## 2026-08-23 - Codex weekly window, PR #25 split, badge picker redesign
 
-**Where we were:** The OpenAI window update worked in live testing, then a focused
-security review found low-severity trust-boundary and privacy hardening gaps. Runtime
-reports had incomplete schema/sender checks, authenticated fetches used default cache
-behavior, the Gemini status script serialized the full page DOM, and one unused legacy
-OpenAI host permission remained. The development dependency tree also had known audit
-findings.
+**Where we were:** Extension installed on this machine (Chromium, unpacked `dist/`).
+OpenAI had dropped the Codex/Work 5-hour window on 2026-07-12 (only the weekly pool
+remains), but the adapter still labeled windows by position. PR #25 (2026-08-15) had the
+same fix bundled with security hardening, a badge-target redesign, and workflow changes,
+and sat unmerged.
 
 **What we did:**
-- Validate runtime message schemas and authorize content reports by exact provider origin;
-  privileged refresh/state requests now accept extension-page senders only.
-- Add `cache: 'no-store'` to every credentialed provider request so the short-lived OpenAI
-  access token and usage responses are not retained in the HTTP cache.
-- Narrow Gemini sign-in detection to inline script payloads instead of reading rendered
-  conversation DOM, while sending only the same fixed status message.
-- Remove the unused `https://chat.openai.com/*` permission and defensively normalize
-  corrupted stored status values before rendering.
-- Upgrade Vite and Vitest to secure supported releases and refresh the lockfile.
+- Labeled OpenAI windows by `limit_window_seconds` instead of position; disabled Vite
+  `modulePreload` (Chrome flagged the preload tags in extension pages) (#26).
+- Split #25 and closed it: security + dependency hardening (#27), docs-workflow SHA pins
+  and human-reviewed docs PRs (#28), badge picker (#29).
+- Badge picker rebuilt as design option B: targets are Auto / Claude / OpenAI (provider's
+  riskiest fresh window), legacy `provider:window` ids migrate in `loadSettings`, options
+  page shows a segmented radiogroup with live risk-colored previews and arrow-key
+  navigation (#29). Verified via a `chrome.*` shim + agent-browser.
+- Two-axis review of #27/#28/#29 before merge; fixes landed in-branch: status normalized
+  in `aggregateCards`, codex status-report no longer dropped, pin test covers `- uses:`,
+  `claude-code-action` pinned to exact `v1.0.193`, no `--faint` on text.
+- Docs workflow broke after #28 (`id-token: write` was not unused) and then hit the
+  20-turn cap; restored OIDC (#30) and raised `--max-turns` to 60 (#31). Dispatch run
+  32657848040 green.
+- User reloaded the extension and confirmed the Gemini card still reports correctly.
 
-**Evidence:** see PR. The built Gemini content script has no
-module import and contains no full-page `innerHTML` read.
+**Decisions:** windows are not pinnable anymore - providers change them, so pinning a
+provider is the only stable choice. The separate Codex pin is gone on purpose (OpenAI =
+riskiest of its windows, Codex included). Docs PRs are human-reviewed, not auto-merged.
 
 **Pending / next:**
-- [ ] Reload the unpacked extension and confirm Gemini still changes between connected
-      and signed-out status in a real Gemini session after the narrowed marker scan.
+- [ ] Capture a real post-July `wham/usage` payload and replace the 2026-06-20 fixture in
+      `tests/chatgptAdapter.test.ts` (the weekly-only case is hand-built).
+- [ ] Badge pin `ChatGPT · 5-hour` label rows are gone; if OpenAI reinstates 5h windows
+      nothing breaks, the OpenAI target just shows the riskiest.
+- [ ] `tests/workflowSecurity.test.ts` only guards `docs-update.yml`; extend if a second
+      workflow appears.
 
 ## 2026-07-25 - Docs sync, design critique, and two UI overhaul PRs
 
