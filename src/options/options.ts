@@ -1,6 +1,7 @@
 import { getAllCards, loadSettings, saveSettings, type Settings } from '../storage/usageStore';
 import { aggregateCards, flattenSnapshots } from '../background/aggregate';
 import { calculateBadgeState } from '../background/badge';
+import { riskLevel } from '../popup/render';
 import { readAllHistory } from '../storage/historyStore';
 import { historyToCsv, historyToJson } from '../shared/exporters';
 import { BADGE_TARGETS, parseBadgeTarget, type BadgeTargetId } from '../shared/badgeTarget';
@@ -34,33 +35,31 @@ function download(filename: string, text: string, type: string): void {
   URL.revokeObjectURL(url);
 }
 
-function riskClass(usedPercent?: number): string {
-  if (usedPercent === undefined) return 'none';
-  return usedPercent >= 90 ? 'crit' : usedPercent >= 70 ? 'warn' : 'ok';
-}
-
-// Segmented control: one button per target, each previewing the number the badge would
-// show right now. Disabled (showing "--") when that target has no fresh data.
+// Segmented control: one button per target, each previewing exactly what the badge would
+// show right now ("?" when that target has no fresh data). Every target stays selectable
+// so a provider can be pinned before it has reported.
 async function renderBadgeTargets(settings: Settings): Promise<void> {
   const group = document.querySelector<HTMLDivElement>('#badge-target');
   if (!group) return;
   const snapshots = flattenSnapshots(aggregateCards(await getAllCards(), settings));
   const current = parseBadgeTarget(settings.badgeTarget).id;
+  const hadFocus = group.contains(document.activeElement);
   group.replaceChildren(...BADGE_TARGETS.map((t) => {
     const state = calculateBadgeState(snapshots, t.id);
-    const has = state.usedPercent !== undefined;
+    const checked = t.id === current;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.role = 'radio';
     btn.dataset.target = t.id;
-    btn.setAttribute('aria-checked', String(t.id === current));
-    btn.disabled = !has && t.id !== current;
+    btn.setAttribute('aria-checked', String(checked));
+    btn.tabIndex = checked ? 0 : -1; // roving tabindex: one tab stop, arrows move within
     const value = document.createElement('span');
-    value.className = `seg-value ${riskClass(state.usedPercent)}`;
-    value.textContent = has ? state.text : '--';
+    value.className = `seg-value ${state.usedPercent === undefined ? 'none' : riskLevel(state.usedPercent)}`;
+    value.textContent = state.text;
     btn.append(t.label, value);
     return btn;
   }));
+  if (hadFocus) group.querySelector<HTMLButtonElement>('[aria-checked="true"]')?.focus();
 }
 
 async function render(): Promise<void> {
@@ -90,6 +89,18 @@ async function wire(): Promise<void> {
     await saveSettings(next);
     await renderBadgeTargets(next);
     void chrome.runtime.sendMessage({ type: 'usage:refresh' } as ExtensionMessage);
+  });
+
+  // Arrow keys move the selection like a native radio group.
+  document.querySelector('#badge-target')?.addEventListener('keydown', (event) => {
+    const e = event as KeyboardEvent;
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('#badge-target button'));
+    const i = buttons.findIndex((b) => b.getAttribute('aria-checked') === 'true');
+    const next = buttons[(i + step + buttons.length) % buttons.length];
+    e.preventDefault();
+    next.click();
   });
 
   // Keep the previews (and the checked state) live while the worker writes new data.

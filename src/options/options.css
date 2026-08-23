@@ -165,13 +165,12 @@ h1 { margin: 0; font-size: 21px; font-weight: 650; letter-spacing: -0.01em; }
   transition: background 160ms var(--ease), color 160ms var(--ease);
 }
 .seg button:hover { color: var(--text); }
-.seg button[aria-checked="true"] { background: #1f2d4a; color: var(--text); }
-.seg button:disabled { cursor: default; color: var(--faint); }
+.seg button[aria-checked="true"] { background: var(--border); color: var(--text); }
 .seg .seg-value { font: 600 15px var(--mono); }
 .seg .seg-value.ok { color: var(--ok); }
 .seg .seg-value.warn { color: var(--warn); }
 .seg .seg-value.crit { color: var(--crit); }
-.seg .seg-value.none { color: var(--faint); }
+.seg .seg-value.none { color: var(--muted); }
 
 .status { margin: 12px 0 0; min-height: 18px; color: var(--ok); font-size: 13px; }
 

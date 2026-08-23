@@ -1,5 +1,5 @@
 import type { ProviderCardState, ProviderId } from '../shared/types';
-import type { BadgeTargetId } from '../shared/badgeTarget';
+import { parseBadgeTarget, type BadgeTargetId } from '../shared/badgeTarget';
 
 export interface Settings {
   notificationsEnabled: boolean;
@@ -27,7 +27,9 @@ export async function getAllCards(): Promise<ProviderCardState[]> {
   return Object.entries(all).filter(([k]) => k.startsWith('latest:')).map(([, v]) => v as ProviderCardState);
 }
 export async function loadSettings(): Promise<Settings> {
-  return (await chrome.storage.local.get(DEFAULT_SETTINGS)) as Settings;
+  const raw = (await chrome.storage.local.get(DEFAULT_SETTINGS)) as Settings;
+  // Legacy `provider:window` ids map to their provider, so the type holds at runtime.
+  return { ...raw, badgeTarget: parseBadgeTarget(raw.badgeTarget).id };
 }
 export async function saveSettings(s: Settings): Promise<void> {
   await chrome.storage.local.set(s);

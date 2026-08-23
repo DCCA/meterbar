@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { calculateBadgeState } from '../src/background/badge';
 import type { UsageSnapshot, UsageWindow } from '../src/shared/types';
+import type { BadgeTargetId } from '../src/shared/badgeTarget';
 
 function snapshot(
   provider: UsageSnapshot['provider'],
@@ -61,7 +62,7 @@ describe('calculateBadgeState', () => {
 
   it('accepts a legacy provider:window id and treats it as the provider', () => {
     const snapshots = [snapshot('chatgpt', 40, 'seven_day'), snapshot('chatgpt', 88, 'custom')];
-    expect(calculateBadgeState(snapshots, 'chatgpt:five_hour' as never)).toMatchObject({ text: '88', color: '#f59e0b' });
+    expect(calculateBadgeState(snapshots, 'chatgpt:five_hour' as BadgeTargetId)).toMatchObject({ text: '88', color: '#f59e0b' });
   });
 
   it('shows ? when the pinned provider has no snapshot', () => {
