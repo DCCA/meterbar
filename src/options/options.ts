@@ -1,7 +1,9 @@
-import { loadSettings, saveSettings, type Settings } from '../storage/usageStore';
+import { getAllCards, loadSettings, saveSettings, type Settings } from '../storage/usageStore';
+import { aggregateCards, flattenSnapshots } from '../background/aggregate';
+import { calculateBadgeState } from '../background/badge';
 import { readAllHistory } from '../storage/historyStore';
 import { historyToCsv, historyToJson } from '../shared/exporters';
-import { BADGE_TARGETS, type BadgeTargetId } from '../shared/badgeTarget';
+import { BADGE_TARGETS, parseBadgeTarget, type BadgeTargetId } from '../shared/badgeTarget';
 import type { ExtensionMessage } from '../shared/messages';
 
 // Only the boolean settings drive the toggle switches.
@@ -32,8 +34,33 @@ function download(filename: string, text: string, type: string): void {
   URL.revokeObjectURL(url);
 }
 
-function badgeSelect(): HTMLSelectElement | null {
-  return document.querySelector<HTMLSelectElement>('#badge-target');
+function riskClass(usedPercent?: number): string {
+  if (usedPercent === undefined) return 'none';
+  return usedPercent >= 90 ? 'crit' : usedPercent >= 70 ? 'warn' : 'ok';
+}
+
+// Segmented control: one button per target, each previewing the number the badge would
+// show right now. Disabled (showing "--") when that target has no fresh data.
+async function renderBadgeTargets(settings: Settings): Promise<void> {
+  const group = document.querySelector<HTMLDivElement>('#badge-target');
+  if (!group) return;
+  const snapshots = flattenSnapshots(aggregateCards(await getAllCards(), settings));
+  const current = parseBadgeTarget(settings.badgeTarget).id;
+  group.replaceChildren(...BADGE_TARGETS.map((t) => {
+    const state = calculateBadgeState(snapshots, t.id);
+    const has = state.usedPercent !== undefined;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.role = 'radio';
+    btn.dataset.target = t.id;
+    btn.setAttribute('aria-checked', String(t.id === current));
+    btn.disabled = !has && t.id !== current;
+    const value = document.createElement('span');
+    value.className = `seg-value ${riskClass(state.usedPercent)}`;
+    value.textContent = has ? state.text : '--';
+    btn.append(t.label, value);
+    return btn;
+  }));
 }
 
 async function render(): Promise<void> {
@@ -43,11 +70,7 @@ async function render(): Promise<void> {
     if (el) el.checked = settings[key];
   }
 
-  const select = badgeSelect();
-  if (select) {
-    select.innerHTML = BADGE_TARGETS.map((t) => `<option value="${t.id}">${t.label}</option>`).join('');
-    select.value = settings.badgeTarget;
-  }
+  await renderBadgeTargets(settings);
 }
 
 async function wire(): Promise<void> {
@@ -59,10 +82,19 @@ async function wire(): Promise<void> {
     });
   }
 
-  badgeSelect()?.addEventListener('change', async (event) => {
+  document.querySelector('#badge-target')?.addEventListener('click', async (event) => {
+    const btn = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-target]');
+    if (!btn) return;
     const current = await loadSettings();
-    await saveSettings({ ...current, badgeTarget: (event.target as HTMLSelectElement).value as BadgeTargetId });
+    const next = { ...current, badgeTarget: btn.dataset.target as BadgeTargetId };
+    await saveSettings(next);
+    await renderBadgeTargets(next);
     void chrome.runtime.sendMessage({ type: 'usage:refresh' } as ExtensionMessage);
+  });
+
+  // Keep the previews (and the checked state) live while the worker writes new data.
+  chrome.storage.onChanged.addListener((_changes, area) => {
+    if (area === 'local') void loadSettings().then(renderBadgeTargets);
   });
 
   const date = new Date().toISOString().slice(0, 10);
