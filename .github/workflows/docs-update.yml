@@ -96,7 +96,7 @@ jobs:
           # Keep the agent sandboxed to documentation and read-only Git operations,
           # but allow the normal repository-state check it needs to finish reliably.
           claude_args: >-
-            --max-turns 20
+            --max-turns 60
             --allowedTools "Read,Edit,Write,Grep,Glob,Bash(git status:*),Bash(git log:*),Bash(git diff:*),Bash(git show:*)"
 
       - name: Open a docs PR if anything changed
