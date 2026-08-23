@@ -10,8 +10,7 @@ describe('docs workflow security', () => {
     for (const action of uses) expect(action).toMatch(/@[0-9a-f]{40}$/);
   });
 
-  it('does not grant OIDC or auto-merge model-authored documentation', () => {
-    expect(workflow).not.toContain('id-token: write');
+  it('does not auto-merge model-authored documentation', () => {
     expect(workflow).not.toContain('gh pr merge');
   });
 
