@@ -2,26 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { BADGE_TARGETS, parseBadgeTarget } from '../src/shared/badgeTarget';
 
 describe('BADGE_TARGETS', () => {
-  it('lists Riskiest first, then the provider+window pairs in order', () => {
-    expect(BADGE_TARGETS.map((t) => t.id)).toEqual([
-      'riskiest',
-      'claude:five_hour',
-      'claude:seven_day',
-      'chatgpt:five_hour',
-      'chatgpt:seven_day',
-      'chatgpt:custom'
-    ]);
-  });
-
-  it('labels the Codex (custom) target clearly and omits provider/window for riskiest', () => {
-    const riskiest = BADGE_TARGETS.find((t) => t.id === 'riskiest')!;
-    expect(riskiest.provider).toBeUndefined();
-    expect(riskiest.window).toBeUndefined();
-
-    const codex = BADGE_TARGETS.find((t) => t.id === 'chatgpt:custom')!;
-    expect(codex.label).toBe('ChatGPT · Codex');
-    expect(codex.provider).toBe('chatgpt');
-    expect(codex.window).toBe('custom');
+  it('offers Auto first, then one entry per provider with a number', () => {
+    expect(BADGE_TARGETS.map((t) => t.id)).toEqual(['riskiest', 'claude', 'chatgpt']);
+    expect(BADGE_TARGETS[0].provider).toBeUndefined();
+    expect(BADGE_TARGETS[2]).toMatchObject({ label: 'OpenAI', provider: 'chatgpt' });
   });
 
   it('does not offer Gemini (status-only, no number)', () => {
@@ -30,16 +14,19 @@ describe('BADGE_TARGETS', () => {
 });
 
 describe('parseBadgeTarget', () => {
-  it('parses a known id into its target', () => {
-    expect(parseBadgeTarget('claude:five_hour')).toMatchObject({
-      id: 'claude:five_hour',
-      provider: 'claude',
-      window: 'five_hour'
-    });
+  it('parses a provider id into its target', () => {
+    expect(parseBadgeTarget('claude')).toMatchObject({ id: 'claude', provider: 'claude' });
   });
 
-  it('falls back to riskiest for an unknown or removed id', () => {
+  it('migrates legacy provider:window ids to the provider', () => {
+    for (const legacy of ['chatgpt:five_hour', 'chatgpt:seven_day', 'chatgpt:custom']) {
+      expect(parseBadgeTarget(legacy).id).toBe('chatgpt');
+    }
+    expect(parseBadgeTarget('claude:seven_day').id).toBe('claude');
+  });
+
+  it('falls back to riskiest for an unknown id', () => {
     expect(parseBadgeTarget('nope:whatever').id).toBe('riskiest');
-    expect(parseBadgeTarget('').id).toBe('riskiest');
+    expect(parseBadgeTarget('gemini').id).toBe('riskiest');
   });
 });

@@ -40,13 +40,13 @@
           The icon draws one bar per provider in this fixed left-to-right order, so a bar's position always
           identifies its provider. A bar appears once a provider has reported at least once.
         </p>
-        <label class="select-row" for="badge-target">
-          <span class="switch-text">
+        <div class="select-row">
+          <span class="switch-text" id="badge-target-label">
             <span class="switch-title">Number shown on the toolbar icon</span>
-            <span class="switch-desc">The bars always show every reporting provider; this picks which number sits on top.</span>
+            <span class="switch-desc">The bars always show every reporting provider; this picks which number sits on top. Each choice previews its current value.</span>
           </span>
-          <select id="badge-target" class="select"></select>
-        </label>
+        </div>
+        <div id="badge-target" class="seg" role="radiogroup" aria-labelledby="badge-target-label"></div>
       </section>
 
       <section class="panel">

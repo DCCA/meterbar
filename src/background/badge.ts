@@ -15,12 +15,9 @@ export function calculateBadgeState(snapshots: UsageSnapshot[], targetId: BadgeT
   if (fresh.length === 0) return UNKNOWN;
 
   const target = parseBadgeTarget(targetId);
-  const chosen =
-    target.id === 'riskiest'
-      ? fresh.reduce((max, snapshot) => (snapshot.usedPercent > max.usedPercent ? snapshot : max))
-      : fresh.find((s) => s.provider === target.provider && s.window === target.window);
-
-  if (!chosen) return UNKNOWN;
+  const pool = target.provider ? fresh.filter((s) => s.provider === target.provider) : fresh;
+  if (pool.length === 0) return UNKNOWN;
+  const chosen = pool.reduce((max, snapshot) => (snapshot.usedPercent > max.usedPercent ? snapshot : max));
 
   return {
     text: String(Math.round(chosen.usedPercent)),
