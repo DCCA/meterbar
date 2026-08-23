@@ -5,8 +5,8 @@ const workflow = readFileSync(new URL('../.github/workflows/docs-update.yml', im
 
 describe('docs workflow security', () => {
   it('pins every third-party action to a full commit SHA', () => {
-    const uses = [...workflow.matchAll(/^\s*uses:\s*([^\s#]+)/gm)].map((match) => match[1]);
-    expect(uses.length).toBeGreaterThan(0);
+    const uses = [...workflow.matchAll(/^\s*(?:-\s*)?uses:\s*([^\s#]+)/gm)].map((match) => match[1]);
+    expect(uses).toHaveLength(3);
     for (const action of uses) expect(action).toMatch(/@[0-9a-f]{40}$/);
   });
 
