@@ -1,3 +1,4 @@
+export { safeProviderStatus } from '../shared/messages';
 import { formatCountdown } from '../shared/time';
 import { windowLongLabel } from '../shared/summary';
 import type { ProviderCardState, ProviderId, UsageSnapshot, UsageWindow } from '../shared/types';
@@ -112,6 +113,7 @@ export const STATUS_TEXT: Record<ProviderCardState['status'], string> = {
   stale: 'Data is stale',
   unsupported: 'Not connected yet'
 };
+
 
 /** A short, honest hint for cards without usage data, used as the empty-state body. */
 export function emptyHint(card: ProviderCardState | undefined): string {

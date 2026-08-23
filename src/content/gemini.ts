@@ -1,23 +1,35 @@
 import type { ExtensionMessage } from '../shared/messages';
 
 // Self-contained (only type-only imports, erased at build) so the bundle loads as an MV3
-// classic content script. Gemini exposes usage only behind a fragile batchexecute RPC, so
-// instead of parsing a number we report an honest "connected" status when signed in.
+// classic content script; the exported helper below is tree-shaken out of the bundle.
+// Gemini exposes usage only behind a fragile batchexecute RPC, so instead of parsing a
+// number we report an honest "connected" status when the signed-in bootstrap marker exists.
 const MESSAGE = "Connected — Gemini doesn't expose usage numbers, so MeterBar shows status only.";
+const AUTH_MARKER = '"SNlM0e"';
 
-// Signed-in app sessions embed the WIZ anti-XSRF token key ("SNlM0e") in the page HTML.
-// Its presence is a boolean sign-in signal — we never read or store its value.
+/** Inspect only script payloads, never the rendered page or conversation DOM. */
+export function hasGeminiAuthMarker(scripts: ArrayLike<{ textContent: string | null }>): boolean {
+  for (let index = 0; index < scripts.length; index += 1) {
+    if (scripts[index]?.textContent?.includes(AUTH_MARKER)) return true;
+  }
+  return false;
+}
+
 function isSignedIn(): boolean {
-  return document.documentElement.innerHTML.includes('"SNlM0e"');
+  return hasGeminiAuthMarker(document.scripts);
 }
 
 function report(): void {
-  // Signed in → connected with the copy; signed out → reset the card to the default look.
   const msg: ExtensionMessage = isSignedIn()
     ? { type: 'status:report', provider: 'gemini', status: 'connected', message: MESSAGE }
     : { type: 'status:report', provider: 'gemini', status: 'unsupported' };
   try { chrome.runtime.sendMessage(msg); } catch { /* stay silent; never surface page errors */ }
 }
 
-report();
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') report(); });
+// The guard keeps the pure marker helper importable in node-based unit tests.
+if (typeof document !== 'undefined' && typeof chrome !== 'undefined') {
+  report();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') report();
+  });
+}
