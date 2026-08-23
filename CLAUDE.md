@@ -77,4 +77,4 @@ These are hard product invariants, not style preferences — every change must h
 
 `main` is the default branch — do not commit or push to it directly without explicit permission; branch first and open changes from a feature branch.
 
-Docs are living: `.github/workflows/docs-update.yml` reviews every merged code PR (changes under `src/`, `manifest.json`, `package.json`) and opens + auto-merges a docs-sync PR updating README.md and this file. It never touches `docs/PRD.md` or `docs/superpowers/**`. Expect README/CLAUDE.md to move after code merges, and rebase docs edits onto `origin/main` before opening a PR.
+Docs are living: `.github/workflows/docs-update.yml` reviews every merged code PR (changes under `src/`, `manifest.json`, `package.json`) and opens a docs-sync PR updating README.md and this file, which a human reviews and merges. It never touches `docs/PRD.md` or `docs/superpowers/**`. Expect README/CLAUDE.md to move after code merges, and rebase docs edits onto `origin/main` before opening a PR.
