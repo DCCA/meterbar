@@ -2,6 +2,7 @@ import { calculateBadgeState } from './badge';
 import { iconBars } from './iconModel';
 import { renderIcon } from './icon';
 import { syncCompanion } from './nativeBridge';
+import { createCoalescedRefresh } from './refreshRunner';
 import { aggregateCards, flattenSnapshots } from './aggregate';
 import { refreshClaude, refreshChatgpt, storeSnapshots, storeStatus } from './refresh';
 import { evaluateAndNotify } from './alerts';
@@ -43,7 +44,7 @@ async function recompute(): Promise<void> {
   if (settings.notificationsEnabled) await evaluateAndNotify(cards);
 }
 
-async function refreshAll(): Promise<void> {
+const refreshAll = createCoalescedRefresh(async () => {
   const settings = await loadSettings();
   // Claude and ChatGPT/Codex are background-fetch providers; Gemini reports via a content script.
   await Promise.all([
@@ -51,7 +52,7 @@ async function refreshAll(): Promise<void> {
     isEnabled('chatgpt', settings) ? refreshChatgpt() : Promise.resolve()
   ]);
   await recompute();
-}
+});
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create('meterbar-refresh', { periodInMinutes: 10 });

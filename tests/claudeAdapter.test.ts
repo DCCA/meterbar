@@ -38,7 +38,7 @@ describe('parseClaudeUsageResponse', () => {
     expect(first.resetsAt).toBeUndefined();
   });
 
-  // Validation evidence for confidence: 'exact' — a real, sanitized response captured from
+  // Validation evidence for confidence: 'exact' - a real, sanitized response captured from
   // a logged-in claude.ai session on 2026-06-20. The parser must surface the two windows we
   // support and ignore the surrounding billing/limits/spend fields without error.
   it('parses the captured live response, ignoring non-window fields', () => {
@@ -61,17 +61,24 @@ describe('parseClaudeUsageResponse', () => {
 });
 
 describe('pickClaudeOrgUuid', () => {
-  it('prefers an org exposing a Claude consumer capability', () => {
+  it('prefers the chat-capable organization over API-only or plan-only organizations', () => {
     const body = [
-      { uuid: 'team-org', capabilities: ['api'] },
-      { uuid: 'max-org', capabilities: ['claude_max', 'chat'] }
+      { uuid: 'api-org', capabilities: ['api'] },
+      { uuid: 'plan-org', capabilities: ['claude_max'] },
+      { uuid: 'chat-org', capabilities: ['chat'] }
     ];
-    expect(pickClaudeOrgUuid(body)).toBe('max-org');
+    expect(pickClaudeOrgUuid(body)).toBe('chat-org');
   });
 
-  it('falls back to the first org when none expose a claude_* capability', () => {
-    const body = [{ uuid: 'first' }, { uuid: 'second', capabilities: ['api'] }];
-    expect(pickClaudeOrgUuid(body)).toBe('first');
+  it('falls back to a non-API-only organization, then the first valid organization', () => {
+    expect(pickClaudeOrgUuid([
+      { uuid: 'api-org', capabilities: ['api'] },
+      { uuid: 'workspace-org', capabilities: ['raven'] }
+    ])).toBe('workspace-org');
+    expect(pickClaudeOrgUuid([
+      { uuid: 'first-api', capabilities: ['api'] },
+      { uuid: 'second-api', capabilities: ['api'] }
+    ])).toBe('first-api');
   });
 
   it('returns null for an empty list, a non-array body, or an org without a uuid', () => {

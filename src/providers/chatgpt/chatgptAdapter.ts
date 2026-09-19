@@ -84,12 +84,14 @@ interface ChatgptAccountsCheck { accounts?: Record<string, { account?: { account
 
 /**
  * Choose the account whose usage to read from the `/backend-api/accounts/check`
- * response (the first account with an id). Pure: the response is fetched by the
- * background worker. The id is used only to build the request header, never stored.
+ * response. Prefer the response's explicit `default` entry, then fall back to the
+ * first account with an id. The id is used only as a request header, never stored.
  */
 export function pickChatgptAccountId(body: unknown): string | null {
   const accounts = (body as ChatgptAccountsCheck | null)?.accounts;
   if (!accounts || typeof accounts !== 'object') return null;
+  const defaultId = accounts.default?.account?.account_id;
+  if (typeof defaultId === 'string' && defaultId) return defaultId;
   for (const entry of Object.values(accounts)) {
     const id = entry?.account?.account_id;
     if (typeof id === 'string' && id) return id;

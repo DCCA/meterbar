@@ -12,8 +12,8 @@ MVP + Phase 2 implemented. The Workbench interface spans the toolbar, popup, sid
 
 ### Viewing your usage without clicking
 
-- **Badge** — the pinned toolbar icon always shows your single riskiest percentage, color-coded.
-- **Hover tooltip** — hover the icon for a full per-provider, per-window summary, no click needed.
+- **Badge** - the pinned toolbar icon always shows your single riskiest percentage, color-coded.
+- **Hover tooltip** - hover the icon for a full per-provider, per-window summary, no click needed.
 - **Side panel** - open it once (the **Side panel** button in the popup, or Chrome's side-panel toolbar button) and it stays docked and glanceable while you browse, refreshing itself as new usage arrives.
 - **Omarchy bar** - install the optional [local companion](companion/README.md) for an always-visible shell indicator and click-open Workbench panel.
 

@@ -61,9 +61,20 @@ describe('parseChatgptUsage', () => {
 });
 
 describe('pickChatgptAccountId', () => {
-  it('returns the first account_id from the accounts map', () => {
-    const body = { accounts: { default: { account: { account_id: 'acct-123' } } } };
-    expect(pickChatgptAccountId(body)).toBe('acct-123');
+  it('prefers the account explicitly named default regardless of object order', () => {
+    const body = { accounts: {
+      workspace: { account: { account_id: 'acct-workspace' } },
+      default: { account: { account_id: 'acct-default' } }
+    } };
+    expect(pickChatgptAccountId(body)).toBe('acct-default');
+  });
+
+  it('falls back to the first valid account when no default entry exists', () => {
+    const body = { accounts: {
+      malformed: {},
+      workspace: { account: { account_id: 'acct-workspace' } }
+    } };
+    expect(pickChatgptAccountId(body)).toBe('acct-workspace');
   });
 
   it('returns null for a missing, empty, or malformed accounts map', () => {

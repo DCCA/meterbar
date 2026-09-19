@@ -3,6 +3,47 @@
 Session logbook, newest first. Each entry: where the project was, what the session
 changed (with evidence), and what is still open.
 
+## 2026-09-19 - Workbench redesign, Omarchy companion, provider audit
+
+**Where we were:** The extension worked but its visual system was generic and browser-only.
+The user selected the Workbench Meter direction inspired by Token Monitor and explicitly
+requested a useful local Omarchy surface.
+
+**What we did:**
+- Rebuilt popup, side panel, Settings, and toolbar visuals as the warm graphite Workbench
+  instrument system with fixed provider order and truthful stale/empty states.
+- Added an optional Omarchy bar widget and panel. The Chrome extension remains the
+  authenticated collector; a strict Native Messaging host writes only sanitized usage
+  fields to a private local state file. The Omarchy plugin performs no provider requests.
+- Installed and exercised the companion locally across fresh, stale, and missing-state
+  cases. Main implementation checkpoint: `7d8afb7`.
+- Audited provider acquisition against
+  [Javis603/token-monitor](https://github.com/Javis603/token-monitor) and first-party
+  documentation. Full findings: `docs/research/2026-09-19-provider-data-connections.md`.
+- Kept Claude and ChatGPT/Codex browser-session collection and Gemini status-only.
+  Hardened Claude organization selection, ChatGPT default-account selection, 15-second
+  request timeouts, serialized refreshes, immediate stale marking, and signed-out data
+  clearing.
+- Removed em dash characters flagged by standards review.
+
+**Evidence:** `npm run check` passed 25 test files / 117 tests; `npm run build` passed;
+`omarchy plugin validate companion/omarchy/local.meterbar` passed; `git diff --check`
+passed.
+
+**Decisions:** Token Monitor's Claude Code OAuth, Codex local credentials/app-server, and
+Antigravity collector are desktop/CLI integrations, not safer drop-in replacements for a
+browser extension. The optional companion remains display-only. Antigravity quota is not
+consumer Gemini Apps usage.
+
+**Pending / next:**
+- [ ] Centralize the Workbench palette. The review found duplicated and already-diverging
+      values across CSS, canvas icon code, static icon generation, and QML.
+- [ ] Resolve the review's scope wording by documenting the Omarchy companion as an
+      explicit optional post-MVP surface without weakening the PRD's browser MVP rules.
+- [ ] Run a fresh two-axis branch review after the provider hardening and palette fix.
+- [ ] Re-run visual verification if palette values change.
+- [ ] Commit the follow-up, push `feat/workbench-ui-redesign`, and open the PR.
+
 ## 2026-08-23 - Codex weekly window, PR #25 split, badge picker redesign
 
 **Where we were:** Extension installed on this machine (Chromium, unpacked `dist/`).
@@ -43,7 +84,7 @@ riskiest of its windows, Codex included). Docs PRs are human-reviewed, not auto-
 ## 2026-07-25 - Docs sync, design critique, and two UI overhaul PRs
 
 **Where we were:** MVP + Phase 2 shipped (last activity 2026-06-21); local checkout was
-10 PRs behind — upstream had grown a docs auto-refresh workflow (#11–#20). UI had never
+10 PRs behind - upstream had grown a docs auto-refresh workflow (#11-#20). UI had never
 had a structured design review.
 
 **What we did:**
@@ -68,7 +109,7 @@ reordering); sparklines = one fixed 24h period; dark navy + dot glows + system f
 stack are committed identity, not defects. Recorded as durable constraints in PRODUCT.md.
 
 **Pending / next:**
-- [ ] **Docs bot is broken**: both "Update docs on merge" runs today failed —
+- [ ] **Docs bot is broken**: both "Update docs on merge" runs today failed -
       `OPENROUTER_API_KEY` secret is not set (repo Settings → Secrets → Actions). Until
       it's added, README/CLAUDE.md won't auto-sync; after adding, re-run via
       workflow_dispatch or sync docs manually (they're incomplete, not wrong: no mention

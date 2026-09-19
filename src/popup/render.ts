@@ -41,7 +41,7 @@ export function paceFraction(window: UsageWindow, resetsAt: string | undefined, 
   return (total - remaining) / total;
 }
 
-/** Snapshots worth rendering as numbers — mirrors the badge/icon filter for 'unavailable'. */
+/** Snapshots worth rendering as numbers - mirrors the badge/icon filter for 'unavailable'. */
 export function renderableSnapshots(snapshots: UsageSnapshot[]): UsageSnapshot[] {
   return snapshots.filter((s) => s.confidence !== 'unavailable');
 }
@@ -142,7 +142,7 @@ export function emptyHint(card: ProviderCardState | undefined): string {
     case 'not_connected':
       return 'Open the provider and sign in to read your usage.';
     case 'stale':
-      return 'Last reading is out of date — reopen the provider.';
+      return 'Last reading is out of date - reopen the provider.';
     default:
       return 'Open the provider and sign in to start tracking.';
   }

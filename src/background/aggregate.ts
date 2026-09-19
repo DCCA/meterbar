@@ -11,9 +11,20 @@ export function aggregateCards(cards: ProviderCardState[], settings: Settings, n
   return cards
     .filter((c) => { const key = ENABLED[c.provider]; return key ? settings[key] : true; })
     .map((c) => {
-      const snapshots = c.snapshots.map((s) => ({ ...s, stale: isStale(s.capturedAt, now) }));
+      const explicitlyStale = c.status === 'stale';
+      const snapshots = c.snapshots.map((s) => ({
+        ...s,
+        stale: explicitlyStale || s.stale || isStale(s.capturedAt, now)
+      }));
       const anyStale = snapshots.some((s) => s.stale);
-      const status: ProviderCardState['status'] = snapshots.length === 0 ? safeProviderStatus(c.status) : anyStale ? 'stale' : 'connected';
+      const status: ProviderCardState['status'] =
+        c.status === 'not_connected' || c.status === 'unsupported'
+          ? c.status
+          : snapshots.length === 0
+            ? safeProviderStatus(c.status)
+            : anyStale
+              ? 'stale'
+              : 'connected';
       return { ...c, snapshots, status };
     });
 }

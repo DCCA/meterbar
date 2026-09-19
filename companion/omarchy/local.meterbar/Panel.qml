@@ -570,7 +570,7 @@ Panel {
       anchors.rightMargin: Style.space(12)
       anchors.verticalCenter: parent.verticalCenter
       width: Style.space(44)
-      text: meterRow.percent >= 0 ? Math.round(meterRow.percent) + "%" : "—"
+      text: meterRow.percent >= 0 ? Math.round(meterRow.percent) + "%" : "-"
       color: meterRow.levelColor
       font.family: root.monoFamily
       font.pixelSize: Style.font.body

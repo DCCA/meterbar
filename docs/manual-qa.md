@@ -1,6 +1,6 @@
 # Manual QA checklist
 
-Things that **can't** be covered by `npm test` — the live provider data path and the
+Things that **can't** be covered by `npm test` - the live provider data path and the
 rendered UI in a real Chrome profile. Run this before shipping a release or after any
 change to `src/popup/`, `src/options/`, `src/background/refresh.ts`, or a provider adapter.
 
@@ -26,7 +26,7 @@ npm run build        # → dist/
 
 ## 1. First-run / empty state
 
-Use a Chrome profile **not** signed into any provider (or clear data first — see §6).
+Use a Chrome profile **not** signed into any provider (or clear data first - see §6).
 
 - [ ] Popup shows the Workbench master readout in its empty state plus the local-only privacy signal.
 - [ ] Each provider renders an empty channel row with truthful status copy (e.g. "Not connected yet").
@@ -42,7 +42,7 @@ Sign into `claude.ai` and/or `chatgpt.com` in the same profile, open the popup, 
 - [ ] Providers stay in their fixed channel order so position identifies the provider; the master readout identifies the most constrained window.
 - [ ] Toolbar **badge** shows the selected fresh % and the right color
       (green <70, amber ≥70, red ≥90).
-- [ ] Per-window risk colors are correct on bar, number, and status dot — and a window's
+- [ ] Per-window risk colors are correct on bar, number, and status dot - and a window's
       number reflects **its own** risk, not the card's peak (e.g. a 78% window stays amber
       even on a card whose other window is 94% red).
 - [ ] `Resets in …` countdown is present and plausible per window; reads
@@ -83,14 +83,14 @@ Right-click the icon → **Options** (or the popup's Settings link).
 - [ ] Toggle switches animate on/off.
 - [ ] Toggling a provider off removes it from the popup after refresh; on restores it.
 - [ ] **Export JSON** and **Export CSV** download files containing only percentages +
-      timestamps (open them and confirm — no prompts/messages/content).
+      timestamps (open them and confirm - no prompts/messages/content).
 - [ ] **Clear local MeterBar data** shows a confirm dialog; cancelling does nothing.
 - [ ] Confirming clears data, shows the green status line, and it auto-clears after ~4s.
 - [ ] After clearing, the popup falls back to the first-run hero (§1).
 
 ## 7. Accessibility & polish
 
-- [ ] Tab through the popup and options — focus rings are visible on buttons, links,
+- [ ] Tab through the popup and options - focus rings are visible on buttons, links,
       toggles, and CTAs.
 - [ ] Each usage bar exposes `role="progressbar"` with `aria-valuenow` (inspect, or a
       screen reader announces the percentage).
@@ -99,7 +99,7 @@ Right-click the icon → **Options** (or the popup's Settings link).
 
 ## 8. Privacy / security spot-check
 
-These guard the PRD's non-negotiables — verify on every release.
+These guard the PRD's non-negotiables - verify on every release.
 
 - [ ] DevTools → Network (popup + a provider tab): the only requests are to the provider
       usage endpoints. **No** request to any MeterBar/third-party backend and authenticated
@@ -107,7 +107,7 @@ These guard the PRD's non-negotiables — verify on every release.
 - [ ] `chrome://extensions` lists host access only for `claude.ai`, `chatgpt.com`, and
       `gemini.google.com`; there is no broad or unused `chat.openai.com` access.
 - [ ] `chrome://extensions` → MeterBar → **Inspect service worker** → Application →
-      Storage: stored keys are `latest:*`, `history:*`, `alertState`, and settings —
+      Storage: stored keys are `latest:*`, `history:*`, `alertState`, and settings -
       containing only metrics/timestamps. No tokens, cookies, account ids, or chat content.
 - [ ] A provider-supplied string with HTML (e.g. a workspace label containing `<`) renders
       as text, not markup (escaping holds).
