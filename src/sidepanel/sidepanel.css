@@ -1,7 +1,21 @@
-/* The side panel reuses the popup's redesigned styles, then relaxes the fixed
-   popup width so it fills whatever width the user gives the docked panel. */
 @import '../popup/popup.css';
 
-body {
-  width: auto;
+body { width: auto; min-width: 320px; }
+.popup { width: 100%; max-width: 680px; margin: 0 auto; }
+footer { grid-template-columns: repeat(2, 1fr); }
+
+@media (min-width: 500px) {
+  .popup { padding-inline: 16px; }
+  .app-header { padding-inline: 5px; }
+  .master-readout { grid-template-columns: minmax(0, 1fr) 104px; min-height: 132px; padding: 17px 18px; }
+  .master-dial { width: 96px; height: 96px; }
+  .master-dial::before { inset: 13px; }
+  .master-dial span::before { height: 32px; }
+  .master-value { font-size: 44px; }
+  .card { padding-inline: 16px; }
+  .channel-rows { margin-inline: -16px; }
+  .row { padding-left: 32px; padding-right: 16px; }
+  .row-main { grid-template-columns: 118px minmax(120px, 1fr) 54px; gap: 14px; }
+  .spark-wrap { margin-left: 132px; }
+  footer { margin-inline: -16px; padding-inline: 16px; }
 }

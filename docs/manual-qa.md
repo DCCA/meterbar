@@ -28,8 +28,8 @@ npm run build        # → dist/
 
 Use a Chrome profile **not** signed into any provider (or clear data first — see §6).
 
-- [ ] Popup shows the **gauge hero**: "No providers connected yet" + the privacy line.
-- [ ] Each provider renders an empty card with status pill (e.g. "Not connected yet").
+- [ ] Popup shows the Workbench master readout in its empty state plus the local-only privacy signal.
+- [ ] Each provider renders an empty channel row with truthful status copy (e.g. "Not connected yet").
 - [ ] Each first-party card shows an **Open <provider> →** CTA.
 - [ ] Clicking a CTA opens the provider site in a new tab (`claude.ai`, `chatgpt.com`, `gemini.google.com`).
 - [ ] Toolbar badge shows `?` in gray (no fresh data).
@@ -39,8 +39,8 @@ Use a Chrome profile **not** signed into any provider (or clear data first — s
 Sign into `claude.ai` and/or `chatgpt.com` in the same profile, open the popup, click **Refresh**.
 
 - [ ] Cards populate with real percentages and window labels ("5-hour limit", "7-day limit").
-- [ ] Providers are ordered **riskiest first** (highest % at top), matching the badge.
-- [ ] Toolbar **badge** shows the single highest fresh % and the right color
+- [ ] Providers stay in their fixed channel order so position identifies the provider; the master readout identifies the most constrained window.
+- [ ] Toolbar **badge** shows the selected fresh % and the right color
       (green <70, amber ≥70, red ≥90).
 - [ ] Per-window risk colors are correct on bar, number, and status dot — and a window's
       number reflects **its own** risk, not the card's peak (e.g. a 78% window stays amber
@@ -79,7 +79,8 @@ Sign into `claude.ai` and/or `chatgpt.com` in the same profile, open the popup, 
 
 Right-click the icon → **Options** (or the popup's Settings link).
 
-- [ ] Dark theme matches the popup; toggle switches animate on/off.
+- [ ] The calibration-bench layout matches the popup's graphite casing, warm enamel strips, and fixed channel language.
+- [ ] Toggle switches animate on/off.
 - [ ] Toggling a provider off removes it from the popup after refresh; on restores it.
 - [ ] **Export JSON** and **Export CSV** download files containing only percentages +
       timestamps (open them and confirm — no prompts/messages/content).
@@ -111,7 +112,18 @@ These guard the PRD's non-negotiables — verify on every release.
 - [ ] A provider-supplied string with HTML (e.g. a workspace label containing `<`) renders
       as text, not markup (escaping holds).
 
-## 9. Regression gate
+## 9. Omarchy companion
+
+Run `./scripts/install-omarchy-companion.sh`, reload the unpacked extension, and refresh usage once.
+
+- [ ] The three-channel MeterBar indicator appears in the right side of the Omarchy bar.
+- [ ] Left-click opens the Workbench panel and right-click opens the extension in Chromium.
+- [ ] The panel shows the same fixed provider order, percentages, reset timing, and connected-only Gemini state as the extension.
+- [ ] Stop refreshing for longer than 10 minutes: last-known readings remain visible but are labeled stale and stop contributing to the master reading.
+- [ ] `~/.local/state/meterbar/state.json` has mode `0600` and contains only provider/status/window/percentage/timestamp/confidence/stale fields. Confirm there are no cookies, tokens, account hashes, endpoint details, prompts, responses, or chat content.
+- [ ] Removing the native host or state file leaves the extension functional and gives the panel a truthful waiting state.
+
+## 10. Regression gate
 
 - [ ] `npm test` → all green.
 - [ ] `npm run typecheck` → clean.

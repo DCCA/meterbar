@@ -76,6 +76,26 @@ export function riskiestPercent(card: ProviderCardState): number {
   return card.snapshots.reduce((max, s) => Math.max(max, s.usedPercent), -1);
 }
 
+export interface ConstraintSummary {
+  provider: ProviderId;
+  providerLabel: string;
+  snapshot: UsageSnapshot;
+}
+
+/** Highest fresh reading across providers for the Workbench master readout. */
+export function mostConstrainedWindow(cards: ProviderCardState[]): ConstraintSummary | undefined {
+  let result: ConstraintSummary | undefined;
+  for (const card of cards) {
+    for (const snapshot of card.snapshots) {
+      if (snapshot.stale || snapshot.confidence === 'unavailable') continue;
+      if (!result || snapshot.usedPercent > result.snapshot.usedPercent) {
+        result = { provider: card.provider, providerLabel: card.label, snapshot };
+      }
+    }
+  }
+  return result;
+}
+
 /**
  * Needle rotation for the live gauge mark: -120deg at 0% used, +120deg at 100%, clamped.
  * Same sweep as the first-run hero gauge, so the logo and the hero read as one instrument.

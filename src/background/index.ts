@@ -1,6 +1,7 @@
 import { calculateBadgeState } from './badge';
 import { iconBars } from './iconModel';
 import { renderIcon } from './icon';
+import { syncCompanion } from './nativeBridge';
 import { aggregateCards, flattenSnapshots } from './aggregate';
 import { refreshClaude, refreshChatgpt, storeSnapshots, storeStatus } from './refresh';
 import { evaluateAndNotify } from './alerts';
@@ -38,6 +39,7 @@ async function recompute(): Promise<void> {
   await chrome.action.setBadgeBackgroundColor({ color: badge.color });
   await renderIcon(iconBars(cards));
   await chrome.action.setTitle({ title: buildTooltip(cards) });
+  await syncCompanion(cards);
   if (settings.notificationsEnabled) await evaluateAndNotify(cards);
 }
 

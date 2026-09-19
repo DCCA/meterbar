@@ -10,6 +10,11 @@ describe('manifest security', () => {
     ]);
   });
 
+  it('requests native messaging only for the local Omarchy companion bridge', () => {
+    expect(manifest.permissions).toContain('nativeMessaging');
+    expect((manifest as { key?: string }).key).toMatch(/^[A-Za-z0-9+/]+=*$/);
+  });
+
   it('does not request broad browsing or credential permissions', () => {
     expect(manifest.permissions).not.toEqual(expect.arrayContaining(['tabs', 'cookies', 'webRequest']));
     expect(manifest.host_permissions).not.toContain('<all_urls>');
