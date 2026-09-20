@@ -26,7 +26,7 @@ It also enables `local.meterbar` in the right side of the Omarchy bar. Left-clic
 
 ## Privacy boundary
 
-The native bridge accepts schema version 1 snapshots only. It writes provider names, display labels, usage windows, percentages, reset and capture timestamps, confidence, stale state, and provider status. It rejects unknown shapes and drops extra keys.
+The native bridge accepts schema version 1 snapshots only. It writes provider names, display labels, usage windows, percentages, reset and capture timestamps, confidence, stale state, provider status, and an optional per-provider `history` of at most 64 `[unix ms, percent]` points from the last 24 hours (the panel's trend line). It rejects unknown shapes and drops extra keys.
 
 Cookies, bearer tokens, account hashes, provider endpoint details, prompts, responses, chat content, and browsing history never cross the native messaging boundary. The state file is written atomically with mode `0600`.
 

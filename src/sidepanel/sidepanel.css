@@ -1,30 +1,16 @@
 @import '../popup/popup.css';
 
 html { width: auto; max-width: none; }
-body { width: auto; min-width: 320px; }
-.popup { width: 100%; max-width: 680px; margin: 0 auto; }
-footer { grid-template-columns: repeat(2, 1fr); }
+body { width: auto; min-width: 320px; min-height: 100vh; }
+/* The pane hugs its content like a window; the ambient field owns the rest of the panel. */
+.shell { width: 100%; max-width: 680px; min-height: 0; max-height: none; margin: 0; border-radius: 0 0 var(--radius) var(--radius); }
+.foot { margin-top: 4px; }
 
 @media (min-width: 500px) {
-  .popup { padding-inline: 16px; }
-  .app-header { padding-inline: 5px; }
-  .channel-console { grid-template-columns: 170px minmax(0, 1fr); min-height: 540px; }
-  .constraint-rail { padding: 20px 18px 286px; }
-  .constraint-value { font-size: 58px; }
-  .constraint-provider { font-size: 9px; }
-  .constraint-copy { font-size: 9px; }
-  .constraint-scale { left: 22px; right: 22px; height: 250px; }
-  .constraint-scale span { top: clamp(0px, var(--marker-position, 100%), 242px); }
-  .card { padding-inline: 16px; }
-  .channel-rows { margin-inline: -16px; }
-  .row { padding-left: 32px; padding-right: 16px; }
-  .row-main { grid-template-columns: 118px minmax(120px, 1fr) 54px; gap: 14px; }
-  .spark-wrap { margin-left: 132px; }
-  .channel-console .row { padding-left: 20px; }
-  .channel-console .row-main { grid-template-columns: 118px minmax(120px, 1fr) 54px; gap: 14px; }
-  .channel-console .row-label { grid-column: 1; grid-row: 1; }
-  .channel-console .bar { grid-column: 2; grid-row: 1; }
-  .channel-console .pct { grid-column: 3; grid-row: 1; }
-  .channel-console .spark-wrap { margin-left: 132px; }
-  footer { margin-inline: -16px; padding-inline: 16px; }
+  body { padding: 14px; }
+  .shell { margin: 0 auto; padding: 16px 18px 18px; border-radius: var(--radius); }
+  .hero-value { font-size: 48px; }
+  .lim-row { grid-template-columns: 110px minmax(0, 1fr); }
+  .lim-wins, .lim-notes { max-width: 440px; }
+  .wins { gap: 10px 20px; }
 }

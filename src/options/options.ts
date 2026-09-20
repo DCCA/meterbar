@@ -1,10 +1,7 @@
-import { getAllCards, loadSettings, saveSettings, type Settings } from '../storage/usageStore';
-import { aggregateCards, flattenSnapshots } from '../background/aggregate';
-import { calculateBadgeState } from '../background/badge';
-import { riskLevel } from '../popup/render';
+import { loadSettings, saveSettings, type Settings } from '../storage/usageStore';
 import { readAllHistory } from '../storage/historyStore';
 import { historyToCsv, historyToJson } from '../shared/exporters';
-import { BADGE_TARGETS, parseBadgeTarget, type BadgeTargetId } from '../shared/badgeTarget';
+import { renderBadgeTargets, wireBadgeTargets } from '../ui/badgeTargetControl';
 import type { ExtensionMessage } from '../shared/messages';
 
 // Only the boolean settings drive the toggle switches.
@@ -35,32 +32,7 @@ function download(filename: string, text: string, type: string): void {
   URL.revokeObjectURL(url);
 }
 
-// Segmented control: one button per target, each previewing exactly what the badge would
-// show right now ("?" when that target has no fresh data). Every target stays selectable
-// so a provider can be pinned before it has reported.
-async function renderBadgeTargets(settings: Settings): Promise<void> {
-  const group = document.querySelector<HTMLDivElement>('#badge-target');
-  if (!group) return;
-  const snapshots = flattenSnapshots(aggregateCards(await getAllCards(), settings));
-  const current = parseBadgeTarget(settings.badgeTarget).id;
-  const hadFocus = group.contains(document.activeElement);
-  group.replaceChildren(...BADGE_TARGETS.map((t) => {
-    const state = calculateBadgeState(snapshots, t.id);
-    const checked = t.id === current;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.role = 'radio';
-    btn.dataset.target = t.id;
-    btn.setAttribute('aria-checked', String(checked));
-    btn.tabIndex = checked ? 0 : -1; // roving tabindex: one tab stop, arrows move within
-    const value = document.createElement('span');
-    value.className = `seg-value ${state.usedPercent === undefined ? 'none' : riskLevel(state.usedPercent)}`;
-    value.textContent = state.text;
-    btn.append(t.label, value);
-    return btn;
-  }));
-  if (hadFocus) group.querySelector<HTMLButtonElement>('[aria-checked="true"]')?.focus();
-}
+const badgeGroup = document.querySelector<HTMLElement>('#badge-target');
 
 async function render(): Promise<void> {
   const settings = await loadSettings();
@@ -68,8 +40,7 @@ async function render(): Promise<void> {
     const el = document.querySelector<HTMLInputElement>(`#${id}`);
     if (el) el.checked = settings[key];
   }
-
-  await renderBadgeTargets(settings);
+  if (badgeGroup) await renderBadgeTargets(badgeGroup, settings, { previews: true });
 }
 
 async function wire(): Promise<void> {
@@ -81,32 +52,7 @@ async function wire(): Promise<void> {
     });
   }
 
-  document.querySelector('#badge-target')?.addEventListener('click', async (event) => {
-    const btn = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-target]');
-    if (!btn) return;
-    const current = await loadSettings();
-    const next = { ...current, badgeTarget: btn.dataset.target as BadgeTargetId };
-    await saveSettings(next);
-    await renderBadgeTargets(next);
-    void chrome.runtime.sendMessage({ type: 'usage:refresh' } as ExtensionMessage);
-  });
-
-  // Arrow keys move the selection like a native radio group.
-  document.querySelector('#badge-target')?.addEventListener('keydown', (event) => {
-    const e = event as KeyboardEvent;
-    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-    if (!step) return;
-    const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('#badge-target button'));
-    const i = buttons.findIndex((b) => b.getAttribute('aria-checked') === 'true');
-    const next = buttons[(i + step + buttons.length) % buttons.length];
-    e.preventDefault();
-    next.click();
-  });
-
-  // Keep the previews (and the checked state) live while the worker writes new data.
-  chrome.storage.onChanged.addListener((_changes, area) => {
-    if (area === 'local') void loadSettings().then(renderBadgeTargets);
-  });
+  if (badgeGroup) wireBadgeTargets(badgeGroup, { previews: true });
 
   const date = new Date().toISOString().slice(0, 10);
   document.querySelector('#export-json')?.addEventListener('click', async () => {

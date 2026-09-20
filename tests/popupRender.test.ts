@@ -17,6 +17,7 @@ import {
   timeAgo,
   resetLabel,
   safeProviderStatus,
+  shortWindowLabel,
   PROVIDER_HOMES
 } from '../src/popup/render';
 import type { ProviderCardState, UsageSnapshot } from '../src/shared/types';
@@ -58,6 +59,14 @@ describe('humanWindowLabel', () => {
     expect(humanWindowLabel('seven_day')).toBe('7-day limit');
     expect(humanWindowLabel('daily')).toBe('Daily');
     expect(humanWindowLabel('monthly')).toBe('Monthly');
+  });
+});
+
+describe('shortWindowLabel', () => {
+  it('shortens window names for side-by-side dashboard columns', () => {
+    expect(shortWindowLabel('five_hour')).toBe('5-hour');
+    expect(shortWindowLabel('seven_day')).toBe('Weekly');
+    expect(shortWindowLabel('custom')).toBe('Usage');
   });
 });
 

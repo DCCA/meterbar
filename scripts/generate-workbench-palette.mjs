@@ -1,4 +1,4 @@
-// Generates the CSS and QML adapters for the shared Workbench palette.
+// Generates the CSS and QML adapters for the shared glass palette.
 // Run with --check to verify generated files without modifying them.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -14,19 +14,34 @@ const CHECK = process.argv.includes('--check');
 const HEX_COLOR = /^#[0-9a-f]{6}$/;
 
 const palette = JSON.parse(readFileSync(SOURCE, 'utf8'));
-const entries = [...Object.entries(palette.colors), ...Object.entries(palette.icon).map(([key, value]) => [`icon${capitalize(key)}`, value])];
+const iconEntries = Object.entries(palette.icon).map(([key, value]) => [`icon${capitalize(key)}`, value]);
+const themes = { dark: Object.entries(palette.dark), light: Object.entries(palette.light) };
 
-for (const [name, value] of entries) {
+for (const [name, value] of [...themes.dark, ...themes.light, ...iconEntries]) {
   if (typeof value !== 'string' || !HEX_COLOR.test(value)) {
-    throw new Error(`Invalid Workbench color ${name}: ${String(value)}`);
+    throw new Error(`Invalid palette color ${name}: ${String(value)}`);
   }
 }
+const darkKeys = themes.dark.map(([name]) => name).join(',');
+const lightKeys = themes.light.map(([name]) => name).join(',');
+if (darkKeys !== lightKeys) throw new Error('dark and light palettes must define the same tokens');
+
+const cssVars = (entries, indent = '  ') => entries.map(([name, value]) => `${indent}--${kebabCase(name)}: ${value};`);
+const qmlObject = (entries) => `({\n${entries.map(([name, value]) => `    ${name}: "${value}"`).join(',\n')}\n  })`;
 
 const generated = {
   css: `${[
     '/* Generated from workbenchPalette.json by scripts/generate-workbench-palette.mjs. */',
     ':root {',
-    ...entries.map(([name, value]) => `  --${kebabCase(name)}: ${value};`),
+    ...cssVars([...themes.dark, ...iconEntries]),
+    '}',
+    ':root[data-theme="light"] {',
+    ...cssVars(themes.light),
+    '}',
+    '@media (prefers-color-scheme: light) {',
+    '  :root:not([data-theme="dark"]) {',
+    ...cssVars(themes.light, '    '),
+    '  }',
     '}',
     ''
   ].join('\n')}`,
@@ -35,7 +50,8 @@ const generated = {
     '',
     '// Generated from src/ui/workbenchPalette.json by scripts/generate-workbench-palette.mjs.',
     'QtObject {',
-    ...entries.map(([name, value]) => `  readonly property string ${name}: "${value}"`),
+    `  readonly property var dark: ${qmlObject(themes.dark)}`,
+    `  readonly property var light: ${qmlObject(themes.light)}`,
     '}',
     ''
   ].join('\n')}`
@@ -62,9 +78,7 @@ function capitalize(value) {
 }
 
 function kebabCase(value) {
-  return value
-    .replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
-    .replace(/([a-z])(\d+)/g, '$1-$2');
+  return value.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 }
 
 function readExisting(path) {

@@ -8,112 +8,95 @@
   </head>
   <body>
     <!--
-      THESIS: MeterBar settings are a calibration bench, refusing a loose stack of generic preference cards.
-      OWN-WORLD: Graphite casing, warm enamel labels, engraved dividers, square tactile controls, and signal colors used only for state.
-      STORY: Configure alerts, the toolbar instrument, provider channels, and local records in one continuous, inspectable console.
-      FIRST VIEWPORT: The identity plate and privacy status lead into a single ruled control surface with compact labeled sections.
-      FORM: Workbench Meter, grounded direction 1, seed eed6ca1c.
-      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+      THESIS: MeterBar settings are the same glass pane as the dashboard, one column of hairline sections, nothing that looks like a preference card.
+      OWN-WORLD: Frosted glass tint over an ambient light field, monospace readouts, hairline sections, sunken tracks, risk carried by color and number.
+      STORY: Decide alerts, what the toolbar shows, which providers are read, and what stays on this device.
+      FIRST VIEWPORT: Mark and local-only status, then Alerts, Toolbar, Providers, and Local record as ruled sections.
+      FORM: Token Monitor grammar (user-pinned reference), seed 9983660a canon.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md.
     -->
-    <main>
-      <header class="page-head">
-        <span class="brand-instrument" aria-hidden="true">
-          <svg viewBox="0 0 34 34" role="presentation">
-            <rect x="1" y="1" width="32" height="32" rx="7"></rect>
-            <path d="M7 25V18M13 25V11M20 25V15M27 25V8"></path>
-          </svg>
-        </span>
-        <div class="page-title">
-          <h1>MeterBar settings</h1>
-          <p>Local control bench · nothing leaves this device</p>
-        </div>
-        <span class="device-status"><i aria-hidden="true"></i>Local only</span>
+    <main class="shell">
+      <header class="top">
+        <span class="mark"><h1>MeterBar</h1><i aria-hidden="true"></i></span>
+        <span class="local"><i aria-hidden="true"></i>Local only</span>
       </header>
+      <p class="lede">Settings and usage history stay in this browser profile. Nothing leaves this device.</p>
 
-      <div class="settings-console">
-        <section class="console-section">
-          <div class="section-label"><span>Alert circuit</span><small>Threshold signals</small></div>
-          <label class="setting-row switch">
-            <span class="switch-text">
-              <span class="switch-title">Local notifications</span>
-              <span class="switch-desc">Warn at 70%, 90%, and when a usage window resets.</span>
-            </span>
-            <input id="notifications" type="checkbox" />
-            <span class="track" aria-hidden="true"></span>
-          </label>
-        </section>
+      <section class="sec">
+        <div class="sec-head"><h2>Alerts</h2><span>Threshold signals</span></div>
+        <label class="row switch">
+          <span class="row-text">
+            <span class="row-title">Local notifications</span>
+            <span class="row-desc">Warn at 70%, 90%, and when a usage window resets.</span>
+          </span>
+          <input id="notifications" type="checkbox" />
+          <span class="track" aria-hidden="true"></span>
+        </label>
+      </section>
 
-        <section class="console-section toolbar-section">
-          <div class="section-label"><span>Toolbar instrument</span><small>Fixed provider channels</small></div>
-          <div class="icon-bench" aria-hidden="true">
-            <div class="icon-shell">
-              <span class="legend-bar" style="--fill: 40%"></span>
-              <span class="legend-bar" style="--fill: 75%; --bar-color: var(--warn)"></span>
-              <span class="legend-bar" style="--fill: 55%"></span>
-              <span class="legend-bar" style="--fill: 0%; --bar-color: var(--faint)"></span>
-              <b>82</b>
-            </div>
-            <div class="icon-copy">
-              <strong>Position identifies provider</strong>
-              <span>Claude, ChatGPT, Codex, and Gemini keep the same left-to-right slot. Color shows risk.</span>
-            </div>
+      <section class="sec">
+        <div class="sec-head"><h2>Toolbar</h2><span>Fixed provider slots</span></div>
+        <div class="icon-bench">
+          <div class="icon-shell" aria-hidden="true">
+            <span class="legend-bar" style="--fill: 40%"></span>
+            <span class="legend-bar" style="--fill: 75%; --bar-color: var(--warn)"></span>
+            <span class="legend-bar" style="--fill: 55%"></span>
+            <span class="legend-bar" style="--fill: 0%; --bar-color: var(--muted)"></span>
+            <b>82</b>
           </div>
-          <div class="readout-row" id="badge-target-label">
-            <span class="switch-text">
-              <span class="switch-title">Badge readout</span>
-              <span class="switch-desc">Choose which live percentage appears over the toolbar instrument.</span>
-            </span>
+          <div class="row-text">
+            <span class="row-title">Position identifies the provider</span>
+            <span class="row-desc">Claude, ChatGPT, Codex, and Gemini keep the same left-to-right slot. Color shows risk.</span>
           </div>
-          <div id="badge-target" class="seg" role="radiogroup" aria-labelledby="badge-target-label"></div>
-        </section>
+        </div>
+        <div class="row" id="badge-target-label">
+          <span class="row-text">
+            <span class="row-title">Badge shows</span>
+            <span class="row-desc">Which live percentage sits over the toolbar icon. Also switchable from the popup.</span>
+          </span>
+        </div>
+        <div id="badge-target" class="seg seg-previews" role="radiogroup" aria-labelledby="badge-target-label"></div>
+      </section>
 
-        <section class="console-section">
-          <div class="section-label"><span>Provider channels</span><small>Signed-in sessions</small></div>
-          <label class="setting-row switch">
-            <span class="channel-id"><i style="--channel-color:var(--ok)"></i><b>01</b></span>
-            <span class="switch-text">
-              <span class="switch-title">Claude</span>
-              <span class="switch-desc">Reads claude.ai subscription usage from your signed-in session.</span>
-            </span>
-            <input id="claude" type="checkbox" />
-            <span class="track" aria-hidden="true"></span>
-          </label>
-          <label class="setting-row switch">
-            <span class="channel-id"><i style="--channel-color:var(--warn)"></i><b>02</b></span>
-            <span class="switch-text">
-              <span class="switch-title">ChatGPT / Codex</span>
-              <span class="switch-desc">Reads chatgpt.com rate-limit windows from your signed-in session.</span>
-            </span>
-            <input id="chatgpt" type="checkbox" />
-            <span class="track" aria-hidden="true"></span>
-          </label>
-          <label class="setting-row switch">
-            <span class="channel-id"><i style="--channel-color:var(--faint)"></i><b>03</b></span>
-            <span class="switch-text">
-              <span class="switch-title">Gemini</span>
-              <span class="switch-desc">Shows connected status only. No unverified usage number is inferred.</span>
-            </span>
-            <input id="gemini" type="checkbox" />
-            <span class="track" aria-hidden="true"></span>
-          </label>
-        </section>
+      <section class="sec">
+        <div class="sec-head"><h2>Providers</h2><span>Signed-in sessions</span></div>
+        <label class="row switch">
+          <span class="row-text">
+            <span class="row-title">Claude</span>
+            <span class="row-desc">Reads claude.ai subscription usage from your signed-in session.</span>
+          </span>
+          <input id="claude" type="checkbox" />
+          <span class="track" aria-hidden="true"></span>
+        </label>
+        <label class="row switch">
+          <span class="row-text">
+            <span class="row-title">ChatGPT / Codex</span>
+            <span class="row-desc">Reads chatgpt.com rate-limit windows from your signed-in session.</span>
+          </span>
+          <input id="chatgpt" type="checkbox" />
+          <span class="track" aria-hidden="true"></span>
+        </label>
+        <label class="row switch">
+          <span class="row-text">
+            <span class="row-title">Gemini</span>
+            <span class="row-desc">Shows connected status only. No unverified usage number is inferred.</span>
+          </span>
+          <input id="gemini" type="checkbox" />
+          <span class="track" aria-hidden="true"></span>
+        </label>
+      </section>
 
-        <section class="console-section local-record">
-          <div class="section-label"><span>Local record</span><small>Usage metrics only</small></div>
-          <div class="record-layout">
-            <div class="privacy-plate">
-              <strong>Your data stays here.</strong>
-              <p>MeterBar stores percentages, reset timestamps, provider names, and settings. It never stores prompts, responses, uploaded files, cookies, tokens, or chat content.</p>
-            </div>
-            <div class="record-actions">
-              <button id="export-json" type="button" class="btn">Export JSON</button>
-              <button id="export-csv" type="button" class="btn">Export CSV</button>
-              <button id="clear" type="button" class="btn btn-danger">Clear local data</button>
-            </div>
-          </div>
-          <p id="status" role="status" class="status"></p>
-        </section>
-      </div>
+      <section class="sec">
+        <div class="sec-head"><h2>Local record</h2><span>Usage metrics only</span></div>
+        <p class="privacy"><b>Your data stays here.</b> MeterBar stores percentages, reset timestamps, provider names, and settings. It never stores prompts, responses, uploaded files, cookies, tokens, or chat content.</p>
+        <div class="actions">
+          <button id="export-json" type="button" class="btn">Export JSON</button>
+          <button id="export-csv" type="button" class="btn">Export CSV</button>
+          <span class="spacer"></span>
+          <button id="clear" type="button" class="btn btn-danger">Clear local data</button>
+        </div>
+        <p id="status" role="status" class="status"></p>
+      </section>
 
       <p class="version">MeterBar 0.1.0 · local-first · Apache-2.0</p>
     </main>

@@ -26,7 +26,7 @@ describe('calculateBadgeState', () => {
   it('selects highest non-stale usage percentage', () => {
     expect(calculateBadgeState([snapshot('claude', 42), snapshot('gemini', 81)])).toEqual({
       text: '81',
-      color: '#e49350',
+      color: '#f1d973',
       provider: 'gemini',
       usedPercent: 81
     });
@@ -35,7 +35,7 @@ describe('calculateBadgeState', () => {
   it('returns unknown when no fresh snapshots exist', () => {
     expect(calculateBadgeState([])).toEqual({
       text: '?',
-      color: '#7f7a6f'
+      color: '#a3adbb'
     });
   });
 
@@ -54,7 +54,7 @@ describe('calculateBadgeState', () => {
     ];
     expect(calculateBadgeState(snapshots, 'claude')).toEqual({
       text: '60',
-      color: '#7fad87',
+      color: '#b7ead4',
       provider: 'claude',
       usedPercent: 60
     });
@@ -69,24 +69,24 @@ describe('calculateBadgeState', () => {
     expect(calculateBadgeState(snapshots, 'chatgpt')).toMatchObject({
       text: '88',
       provider: 'codex',
-      color: '#e49350'
+      color: '#f1d973'
     });
   });
 
   it('accepts a legacy provider:window id and treats it as the provider', () => {
     const snapshots = [snapshot('chatgpt', 40, 'seven_day'), snapshot('chatgpt', 88, 'custom')];
-    expect(calculateBadgeState(snapshots, 'chatgpt:five_hour' as BadgeTargetId)).toMatchObject({ text: '88', color: '#e49350' });
+    expect(calculateBadgeState(snapshots, 'chatgpt:five_hour' as BadgeTargetId)).toMatchObject({ text: '88', color: '#f1d973' });
   });
 
   it('shows ? when the pinned provider has no snapshot', () => {
     expect(calculateBadgeState([snapshot('chatgpt', 95)], 'claude')).toEqual({
       text: '?',
-      color: '#7f7a6f'
+      color: '#a3adbb'
     });
   });
 
   it('shows ? when the pinned provider exists only as a stale snapshot', () => {
     const stale = snapshot('claude', 80, 'five_hour', { stale: true });
-    expect(calculateBadgeState([stale], 'claude')).toEqual({ text: '?', color: '#7f7a6f' });
+    expect(calculateBadgeState([stale], 'claude')).toEqual({ text: '?', color: '#a3adbb' });
   });
 });

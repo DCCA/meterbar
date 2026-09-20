@@ -2,9 +2,9 @@ import palette from '../ui/workbenchPalette.json';
 import type { IconBar, IconLevel } from './iconModel';
 
 const BAR_COLOR: Record<IconLevel, string> = {
-  ok: palette.colors.ok,
-  warn: palette.colors.warn,
-  crit: palette.colors.crit
+  ok: palette.dark.ok,
+  warn: palette.dark.warn,
+  crit: palette.dark.crit
 };
 const CASING_COLOR = palette.icon.casing;
 const CASING_BORDER = palette.icon.border;

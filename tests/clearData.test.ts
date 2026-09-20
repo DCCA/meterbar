@@ -30,7 +30,7 @@ describe('clearMeterbarData', () => {
       schemaVersion: 1
     });
     expect(setBadgeText).toHaveBeenCalledWith({ text: '?' });
-    expect(setBadgeBackgroundColor).toHaveBeenCalledWith({ color: '#7f7a6f' });
+    expect(setBadgeBackgroundColor).toHaveBeenCalledWith({ color: '#a3adbb' });
     expect(setIcon).toHaveBeenCalledWith({ path: STATIC_ICON });
     expect(setTitle).toHaveBeenCalledWith({ title: 'MeterBar · no usage data yet' });
   });

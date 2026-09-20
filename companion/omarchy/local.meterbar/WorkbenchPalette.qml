@@ -2,38 +2,46 @@ import QtQml
 
 // Generated from src/ui/workbenchPalette.json by scripts/generate-workbench-palette.mjs.
 QtObject {
-  readonly property string bg: "#11120f"
-  readonly property string bgDeep: "#0c0d0b"
-  readonly property string surface: "#1a1b17"
-  readonly property string surface2: "#20211c"
-  readonly property string surface3: "#272820"
-  readonly property string enamel: "#e8dfca"
-  readonly property string enamel2: "#d7cdb7"
-  readonly property string enamelInk: "#1d1c17"
-  readonly property string border: "#4a493f"
-  readonly property string borderSoft: "#37372f"
-  readonly property string text: "#eee8da"
-  readonly property string muted: "#aaa293"
-  readonly property string faint: "#7f7a6f"
-  readonly property string track: "#10110f"
-  readonly property string ok: "#7fad87"
-  readonly property string warn: "#e49350"
-  readonly property string crit: "#d9614d"
-  readonly property string accent: "#e49350"
-  readonly property string instrumentLabel: "#675f50"
-  readonly property string sectionLabel: "#6d6557"
-  readonly property string enamelCopy: "#625b4f"
-  readonly property string dialTrack: "#a49a86"
-  readonly property string meterBorder: "#4d4c43"
-  readonly property string emptyBorder: "#756e60"
-  readonly property string emptyBarBorder: "#716a5d"
-  readonly property string emptyBar: "#b9af9b"
-  readonly property string controlBorder: "#5c5a4e"
-  readonly property string iconShellBorder: "#5a584e"
-  readonly property string legendBorder: "#59574c"
-  readonly property string danger: "#ed9585"
-  readonly property string iconCasing: "#1a1b17"
-  readonly property string iconBorder: "#6a6659"
-  readonly property string iconTrack: "#403f37"
-  readonly property string iconAccent: "#e49350"
+  readonly property var dark: ({
+    bgDeep: "#0e111a",
+    ambientA: "#2a3b66",
+    ambientB: "#3b2450",
+    surface: "#303438",
+    surfaceStrong: "#1f2329",
+    overlay: "#ffffff",
+    line: "#e8eef4",
+    sunken: "#04080d",
+    text: "#eef5fb",
+    muted: "#a3adbb",
+    number: "#f3fbf7",
+    accent: "#b7ead4",
+    ok: "#b7ead4",
+    warn: "#f1d973",
+    crit: "#f47788",
+    seriesClaude: "#d9702f",
+    seriesOpenai: "#35a577",
+    seriesCodex: "#4189cf",
+    shadow: "#000000"
+  })
+  readonly property var light: ({
+    bgDeep: "#e6ebf2",
+    ambientA: "#cfe3ff",
+    ambientB: "#f4d9e8",
+    surface: "#eceff3",
+    surfaceStrong: "#f7f9fb",
+    overlay: "#000000",
+    line: "#141c24",
+    sunken: "#141c24",
+    text: "#141c24",
+    muted: "#5b6673",
+    number: "#0f171f",
+    accent: "#146e45",
+    ok: "#146e45",
+    warn: "#7d5e00",
+    crit: "#b5283f",
+    seriesClaude: "#8e3417",
+    seriesOpenai: "#127a5a",
+    seriesCodex: "#1f64a3",
+    shadow: "#000000"
+  })
 }

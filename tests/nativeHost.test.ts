@@ -87,6 +87,7 @@ describe('native messaging host', () => {
         provider: 'claude',
         label: 'Claude',
         status: 'connected',
+        history: [[1789000000000, 40.4], [1789003600000, 62]],
         snapshots: [{
           provider: 'claude',
           window: 'five_hour',
@@ -118,6 +119,7 @@ describe('native messaging host', () => {
         provider: 'claude',
         label: 'Claude',
         status: 'connected',
+        history: [[1789000000000, 40], [1789003600000, 62]],
         snapshots: [{
           provider: 'claude',
           window: 'five_hour',

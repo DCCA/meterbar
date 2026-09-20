@@ -53,9 +53,21 @@ function validateRow(value, provider) {
   };
 }
 
+function validateHistory(value) {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length > 64) throw new Error('invalid history');
+  return value.map((point) => {
+    if (!Array.isArray(point) || point.length !== 2) throw new Error('invalid history point');
+    const [t, p] = point;
+    if (!Number.isFinite(t) || t < 0 || !Number.isFinite(p) || p < 0 || p > 100) throw new Error('invalid history point');
+    return [Math.round(t), Math.round(p)];
+  });
+}
+
 function validateCard(value) {
   if (!value || typeof value !== 'object' || !PROVIDERS.has(value.provider)) throw new Error('invalid provider');
   if (!Array.isArray(value.snapshots) || value.snapshots.length > 32) throw new Error('invalid card');
+  const history = validateHistory(value.history);
   const status = STATUSES.has(value.status) ? value.status : undefined;
   if (status === undefined && (value.status !== undefined || value.snapshots.length > 0)) throw new Error('invalid card');
   const lastUpdatedAt = optionalIso(value.lastUpdatedAt);
@@ -66,6 +78,7 @@ function validateCard(value) {
     ...(status !== undefined ? { status } : {}),
     ...(lastUpdatedAt !== undefined ? { lastUpdatedAt } : {}),
     ...(message !== undefined ? { message } : {}),
+    ...(history !== undefined ? { history } : {}),
     snapshots: value.snapshots.map((row) => validateRow(row, value.provider))
   };
 }

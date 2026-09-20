@@ -19,6 +19,19 @@ export function humanWindowLabel(window: UsageWindow): string {
   return windowLongLabel(window);
 }
 
+// Dashboard column labels: short enough for two windows side by side at 376px.
+const SHORT: Partial<Record<UsageWindow, string>> = {
+  five_hour: '5-hour',
+  seven_day: 'Weekly',
+  daily: 'Daily',
+  monthly: 'Monthly',
+  api_billing: 'API billing'
+};
+
+export function shortWindowLabel(window: UsageWindow): string {
+  return SHORT[window] ?? 'Usage';
+}
+
 // Wall-clock length of each rolling window; windows without a fixed length get no pace tick.
 const WINDOW_MS: Partial<Record<UsageWindow, number>> = {
   five_hour: 5 * 60 * 60 * 1000,

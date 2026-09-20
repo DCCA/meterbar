@@ -3,6 +3,54 @@
 Session logbook, newest first. Each entry: where the project was, what the session
 changed (with evidence), and what is still open.
 
+## 2026-09-20 - Glass dashboard (Token Monitor grammar), 24h trend, Omarchy parity
+
+**Where we were:** PR #33 (Workbench redesign) was open and unmerged. The user judged the
+Workbench and Channel Rail craft poor, rejected three rendered directions (transparent
+hardware, frosted pane, neumorphic instrument), and pinned
+[Javis603/token-monitor](https://github.com/Javis603/token-monitor) as the reference.
+
+**What we did:**
+- Read Token Monitor's renderer stylesheet and replicated its structure and material, not
+  only its colors: glass tint over an ambient field, 11px monospace, hairline sections, hero
+  number, 6px sunken meters, 7px controls, footer view switcher. Rendered three variants
+  (provider hue / risk hue / light) and two trend layouts; the user picked risk hue with
+  "% used" (PRD semantics) and the Home view with an inline 24-hour trend (no daily bars).
+- Rebuilt the popup, side panel, and options page on `src/ui/cardsView.ts` +
+  `src/popup/popup.css`. Home = hero + trend + compact limits; Limits = full provider
+  sections. View persists in `localStorage` (`meterbar:view`). Badge-target control moved
+  into the popup/side panel header via the shared `src/ui/badgeTargetControl.ts`.
+- New pure module `src/shared/trendChart.ts` (SVG lines, 70/90 guides, direct labels,
+  legend, hover readings) fed by the existing history store. Series hues validated with the
+  dataviz palette checker on both surfaces.
+- Palette source now carries dark + light; the generator emits `:root`, `[data-theme]`, and
+  `prefers-color-scheme` blocks plus QML `dark`/`light` objects. Toolbar icons regenerated.
+- Companion snapshot gains an optional bounded `history` (24h, <= 64 points, tightest
+  window); the native host validates it. `Panel.qml` rewritten: bar widget = four mini
+  meters + tightest percent; panel = hero, Canvas trend, compact limits, palette chosen by
+  the theme's popup luminance.
+- Countdowns are day-aware (`2d 13h`); dashboard uses short window labels.
+
+**Evidence:** `npm run check` 30 files / 154 tests; `npm run build`; `npm run assets:check`;
+`git diff --check`; `omarchy plugin validate` OK; headless captures of popup (home/limits,
+dark/light, empty/stale), side panel (680 and 360 wide), options (dark/light); Omarchy
+panel and bar widget captured after `omarchy restart shell` with a synthetic state file
+(removed afterwards). Impeccable detector ran degraded (no HTML parser modules). Impeccable
+finish review: first pass `fix` with 8 material findings (bar widget legibility, light-theme
+contrast, note truncation, chart artifacts, hero orphan, side panel void, missing Omarchy
+marks, flat glass); all fixed, second verdict pass `ship` on every scored item.
+
+**Decisions:** Token Monitor grammar is the committed world; risk colors and "% used" stay
+(PRD); no token/cost figures (MeterBar never sees tokens); no daily consumption bars; the
+Omarchy glass follows the theme's popup alpha (no Hyprland layerrule edits from the product).
+
+**Pending / next:**
+- [ ] Ship this branch as a PR that supersedes #33 (finish review passed; DESIGN.md written by
+      the impeccable documenter).
+- [ ] Reload the unpacked extension in Chromium so nativeMessaging syncs a real snapshot to
+      the reinstalled companion (`~/.local/state/meterbar/state.json` is currently absent).
+- [ ] Install the detector's parser modules or run it elsewhere for a non-degraded pass.
+
 ## 2026-09-19 - Workbench redesign, Omarchy companion, provider audit
 
 **Where we were:** The extension worked but its visual system was generic and browser-only.

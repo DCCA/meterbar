@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { clearCompanion, COMPANION_HOST, syncCompanion, toCompanionSnapshot } from '../src/background/nativeBridge';
+import { clearCompanion, COMPANION_HOST, HISTORY_MAX_POINTS, sampleHistory, syncCompanion, toCompanionSnapshot } from '../src/background/nativeBridge';
 import type { ProviderCardState } from '../src/shared/types';
 
 const capturedAt = '2026-09-19T18:00:00.000Z';
@@ -65,6 +65,27 @@ describe('native companion bridge', () => {
     expect(serialized).not.toContain('must-not-leave-the-extension');
     expect(serialized).not.toContain('private-endpoint-name');
     expect(serialized).not.toContain('usedRatio');
+  });
+
+  it('attaches a bounded 24-hour history of the tightest window, and nothing older', () => {
+    const now = Date.parse(capturedAt);
+    const hour = 60 * 60 * 1000;
+    const history = {
+      'history:claude:five_hour': [[now - 30 * hour, 5], [now - 2 * hour, 40], [now - hour, 55], [now, 62]] as Array<[number, number]>,
+      'history:claude:seven_day': [[now - hour, 10], [now, 12]] as Array<[number, number]>
+    };
+    const snapshot = toCompanionSnapshot(cards, capturedAt, history);
+    expect(snapshot.cards[0].history).toEqual([[now - 2 * hour, 40], [now - hour, 55], [now, 62]]);
+    expect(snapshot.cards[1].history).toBeUndefined();
+  });
+
+  it('thins long histories to the cap while keeping the newest point', () => {
+    const now = 1_800_000_000_000;
+    const points = Array.from({ length: 300 }, (_, i) => [now - (299 - i) * 60_000, i % 100] as [number, number]);
+    const sampled = sampleHistory(points, now);
+    expect(sampled).toHaveLength(HISTORY_MAX_POINTS);
+    expect(sampled[0]).toEqual(points[0]);
+    expect(sampled[sampled.length - 1]).toEqual([now, 99]);
   });
 
   it('publishes companion cards in the fixed provider order', () => {

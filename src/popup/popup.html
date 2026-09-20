@@ -8,44 +8,34 @@
   </head>
   <body>
     <!--
-      THESIS: MeterBar is a precision workbench for subscription limits, refusing the stacked SaaS-card dashboard.
-      OWN-WORLD: Graphite casing, warm enamel readouts, engraved dividers, square tactile controls, and signal colors used only for risk.
-      STORY: See the tightest live limit first, scan providers in fixed order, then refresh, dock, or configure without losing context.
-      FIRST VIEWPORT: A compact instrument header leads into one master constraint readout and a continuous provider channel bank; actions stay docked below.
-      FORM: Workbench Meter, grounded direction 1, seed eed6ca1c.
-      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+      THESIS: MeterBar is one glass pane over the desk that answers "which limit stops me first" before any card is read.
+      OWN-WORLD: Frosted glass tint over an ambient light field, monospace readouts, hairline sections, sunken 6px meters, risk carried by color and number.
+      STORY: Read the tightest limit, glance the 24-hour trend, scan providers in fixed order, then refresh, dock, or configure.
+      FIRST VIEWPORT: Mark and badge-target control, one hero number, the trend, compact limits, and a footer view switcher.
+      FORM: Token Monitor grammar (user-pinned reference), seed 9983660a canon.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md.
     -->
-    <main class="popup">
-      <header class="app-header">
-        <div class="brand">
-          <span class="brand-instrument gauge-mark" aria-hidden="true">
-            <svg viewBox="0 0 28 28" role="presentation">
-              <rect x="1" y="1" width="26" height="26" rx="6"></rect>
-              <path d="M6 20V15M11 20V10M16 20V13M21 20V7"></path>
-            </svg>
-            <span class="needle"></span>
-          </span>
-          <span class="brand-copy">
-            <h1>MeterBar</h1>
-            <span class="tagline">Local usage instrument</span>
-          </span>
-        </div>
-        <span class="local-status"><i aria-hidden="true"></i>Local</span>
+    <main class="shell">
+      <header class="top">
+        <span class="mark"><h1>MeterBar</h1><i aria-hidden="true"></i></span>
+        <div id="badge-target" class="seg seg-compact" role="radiogroup" aria-label="Toolbar badge shows"></div>
       </header>
-      <section id="cards" class="cards" aria-live="polite"></section>
-      <footer>
-        <button id="refresh" type="button">
+      <section id="cards" class="dashboard" aria-live="polite"></section>
+      <footer class="foot">
+        <span id="view-switcher" class="vs">
+          <button type="button" class="btn vs-current">Home</button>
+          <button type="button" class="btn vs-toggle" aria-label="Switch view"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10.5l4-4"/></svg></button>
+        </span>
+        <span class="spacer"></span>
+        <button id="open-sidepanel" type="button" class="btn icon" title="Dock MeterBar to the side panel so it stays visible" aria-label="Open side panel">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2" width="13" height="12" rx="2"></rect><path d="M10 2v12"></path></svg>
+        </button>
+        <button id="refresh" type="button" class="btn icon" title="Refresh usage now" aria-label="Refresh">
           <span class="spinner" aria-hidden="true"></span>
-          <svg class="button-icon refresh-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 5.2V1.8m0 0h-3.4m3.4 0-2.1 2.1a5 5 0 1 0 1.1 5.5"></path></svg>
-          <span class="label">Refresh</span>
+          <svg class="refresh-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 5.2V1.8m0 0h-3.4m3.4 0-2.1 2.1a5 5 0 1 0 1.1 5.5"></path></svg>
         </button>
-        <button id="open-sidepanel" type="button" title="Dock MeterBar to the side panel so it stays visible">
-          <svg class="button-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2" width="13" height="12" rx="2"></rect><path d="M10 2v12"></path></svg>
-          Side panel
-        </button>
-        <a href="../options/options.html" target="_blank" rel="noopener">
-          <svg class="button-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2"></circle><path d="M8 1.5v2M8 12.5v2M14.5 8h-2M3.5 8h-2M12.6 3.4 11.2 4.8M4.8 11.2l-1.4 1.4M12.6 12.6l-1.4-1.4M4.8 4.8 3.4 3.4"></path></svg>
-          Settings
+        <a href="../options/options.html" target="_blank" rel="noopener" class="btn icon" title="Settings" aria-label="Settings">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2"></circle><path d="M8 1.5v2M8 12.5v2M14.5 8h-2M3.5 8h-2M12.6 3.4 11.2 4.8M4.8 11.2l-1.4 1.4M12.6 12.6l-1.4-1.4M4.8 4.8 3.4 3.4"></path></svg>
         </a>
       </footer>
     </main>

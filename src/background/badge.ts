@@ -9,7 +9,7 @@ export interface BadgeState {
   usedPercent?: number;
 }
 
-const UNKNOWN: BadgeState = { text: '?', color: palette.colors.faint };
+const UNKNOWN: BadgeState = { text: '?', color: palette.dark.muted };
 
 export function calculateBadgeState(snapshots: UsageSnapshot[], targetId: BadgeTargetId = 'riskiest'): BadgeState {
   const fresh = snapshots.filter((snapshot) => !snapshot.stale && snapshot.confidence !== 'unavailable');
@@ -31,7 +31,7 @@ export function calculateBadgeState(snapshots: UsageSnapshot[], targetId: BadgeT
 }
 
 export function colorForPercent(percent: number): string {
-  if (percent >= 90) return palette.colors.crit;
-  if (percent >= 70) return palette.colors.warn;
-  return palette.colors.ok;
+  if (percent >= 90) return palette.dark.crit;
+  if (percent >= 70) return palette.dark.warn;
+  return palette.dark.ok;
 }

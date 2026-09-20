@@ -28,7 +28,7 @@ npm run build        # → dist/
 
 Use a Chrome profile **not** signed into any provider (or clear data first - see §6).
 
-- [ ] Popup shows the Workbench master readout in its empty state plus the local-only privacy signal.
+- [ ] Popup shows the glass hero in its idle state (`--% used`, sign-in hint) and the header mark's dot is neutral.
 - [ ] Each provider renders an empty channel row with truthful status copy (e.g. "Not connected yet").
 - [ ] Each first-party card shows an **Open <provider> →** CTA.
 - [ ] Clicking a CTA opens the provider site in a new tab (`claude.ai`, `chatgpt.com`, `gemini.google.com`).
@@ -39,7 +39,10 @@ Use a Chrome profile **not** signed into any provider (or clear data first - see
 Sign into `claude.ai` and/or `chatgpt.com` in the same profile, open the popup, click **Refresh**.
 
 - [ ] Cards populate with real percentages and window labels ("5-hour limit", "7-day limit").
-- [ ] Providers stay in their fixed channel order so position identifies the provider; the master readout identifies the most constrained window.
+- [ ] Providers stay in their fixed order so position identifies the provider; the hero names the tightest limit with its reset countdown and any uncertainty note.
+- [ ] Footer view switcher toggles Home (hero, 24-hour trend, compact limits) and Limits (per-provider sections with 6px meters and pace ticks); the choice persists after reopening the popup and is shared with the side panel.
+- [ ] Trend draws one line per provider with history, direct end labels, a legend, and a hover crosshair with readings; with fewer than two readings it says the trend appears after a few readings.
+- [ ] Header segmented control (Auto / Claude / OpenAI) changes the toolbar badge target and mirrors the Settings control.
 - [ ] Toolbar **badge** shows the selected fresh % and the right color
       (green <70, amber ≥70, red ≥90).
 - [ ] Per-window risk colors are correct on bar, number, and status dot - and a window's
@@ -79,7 +82,7 @@ Sign into `claude.ai` and/or `chatgpt.com` in the same profile, open the popup, 
 
 Right-click the icon → **Options** (or the popup's Settings link).
 
-- [ ] The calibration-bench layout matches the popup's graphite casing, warm enamel strips, and fixed channel language.
+- [ ] Settings uses the same glass shell as the popup: hairline sections, sunken toggles, the badge-target control with live previews, and both light and dark themes follow the system.
 - [ ] Toggle switches animate on/off.
 - [ ] Toggling a provider off removes it from the popup after refresh; on restores it.
 - [ ] **Export JSON** and **Export CSV** download files containing only percentages +
@@ -118,7 +121,7 @@ These guard the PRD's non-negotiables - verify on every release.
 Run `./scripts/install-omarchy-companion.sh`, reload the unpacked extension, and refresh usage once.
 
 - [ ] The four-channel MeterBar indicator appears in the right side of the Omarchy bar.
-- [ ] Left-click opens the Workbench panel and right-click opens the extension in Chromium.
+- [ ] Left-click opens the glass panel (hero, trend, compact limits) and right-click opens the extension in Chromium; the bar widget shows four mini meters and the tightest percent.
 - [ ] The panel shows the same fixed provider order, percentages, reset timing, and connected-only Gemini state as the extension.
 - [ ] Claude and ChatGPT/Codex readings are labeled **Unofficial source** in the extension and companion because their usage endpoints are undocumented.
 - [ ] Stop refreshing for longer than 10 minutes: last-known readings remain visible but are labeled stale and stop contributing to the master reading.
