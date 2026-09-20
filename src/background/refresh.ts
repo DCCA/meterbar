@@ -48,27 +48,17 @@ export async function storeStatus(provider: ProviderId, label: string, status: P
   });
 }
 
-const OPENAI_CARDS: Array<{ provider: 'chatgpt' | 'codex'; label: string }> = [
-  { provider: 'chatgpt', label: 'ChatGPT' },
-  { provider: 'codex', label: 'Codex' }
-];
-
+// ChatGPT and Codex share one subscription and one endpoint, so they are one card.
 async function storeOpenAiSnapshots(snapshots: UsageSnapshot[]): Promise<void> {
-  await Promise.all(OPENAI_CARDS.map(({ provider, label }) =>
-    storeSnapshots(
-      provider,
-      label,
-      snapshots.filter((snapshot) => snapshot.provider === provider),
-      {
-        emptyStatus: 'connected',
-        emptyMessage: `Connected - no ${label} usage window reported.`
-      }
-    )
-  ));
+  const { provider, label } = chatgptAdapter;
+  await storeSnapshots(provider, label, snapshots, {
+    emptyStatus: 'connected',
+    emptyMessage: `Connected - no ${label} usage window reported.`
+  });
 }
 
 async function storeOpenAiStatus(status: ProviderCardState['status'], message?: string): Promise<void> {
-  await Promise.all(OPENAI_CARDS.map(({ provider, label }) => storeStatus(provider, label, status, message)));
+  await storeStatus(chatgptAdapter.provider, chatgptAdapter.label, status, message);
 }
 
 const SESSION_FETCH: RequestInit = {

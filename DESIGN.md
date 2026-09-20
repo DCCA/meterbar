@@ -19,7 +19,6 @@ colors:
   crit: "#f47788"
   series-claude: "#d9702f"
   series-openai: "#35a577"
-  series-codex: "#4189cf"
   shadow: "#000000"
   glass: "rgb(48 52 56 / 0.56)"
   hairline: "rgb(232 238 244 / 0.14)"
@@ -46,7 +45,6 @@ colors:
   crit-light: "#b5283f"
   series-claude-light: "#8e3417"
   series-openai-light: "#127a5a"
-  series-codex-light: "#1f64a3"
   glass-light: "rgb(236 239 243 / 0.56)"
   hairline-light: "rgb(20 28 36 / 0.14)"
   hairline-strong-light: "rgb(20 28 36 / 0.24)"
@@ -285,7 +283,7 @@ The system is honest at the pixel level, which is the one place a usage tool can
 - Exactly one hero number per view; everything else is inline at 10 to 11px
 - Hairline sections instead of cards; nothing inside the pane floats
 - 6px sunken meters with a 1px pace tick, risk-colored, animated on fill only
-- Fixed provider order (Claude, ChatGPT, Codex, Gemini) on every surface
+- Fixed provider order (Claude, OpenAI, Gemini) on every surface
 - Uncertainty is a word in the row, never a missing value or a rounded guess
 
 ## Colors
@@ -305,7 +303,6 @@ The risk triad. These three, and only these three, express how close a limit is 
 Three series hues for the 24-hour trend, one per provider with usage history. They are separated for color-vision legibility (warm orange, green, blue are distinguishable under deuteranopia and protanopia) and darkened in the light theme to hold contrast against a pale pane.
 - **Ember** (`series-claude` / `series-claude-light`): Claude's line.
 - **Jade** (`series-openai` / `series-openai-light`): ChatGPT's line.
-- **Azure** (`series-codex` / `series-codex-light`): Codex's line.
 
 ### Neutral
 - **Abyss** (`bg-deep` / `bg-deep-light`): the page under the ambient field and the pane. The Chrome popup window is opaque, so the page paints this itself.
@@ -376,7 +373,7 @@ One column, always. There is no grid system, only a stack of hairline-separated 
 
 ### Named Rules
 
-**The Fixed Order Rule.** Claude, ChatGPT, Codex, Gemini, in that order, in the compact limits, the Limits view, the chart legend, the toolbar icon bars, the Omarchy widget pills and the Omarchy panel. Never sorted by value, never reordered by risk. Position is how the user identifies a provider at a glance; sorting destroys the only memory the toolbar icon has.
+**The Fixed Order Rule.** Claude, OpenAI, Gemini, in that order, in the compact limits, the Limits view, the chart legend, the toolbar icon bars, the Omarchy widget pills and the Omarchy panel. Never sorted by value, never reordered by risk. Position is how the user identifies a provider at a glance; sorting destroys the only memory the toolbar icon has.
 
 **The No-Card Rule.** Structure comes from hairlines and vertical rhythm, never from nested boxes. There is one container in the product and it is the pane.
 
@@ -408,7 +405,7 @@ Corners step down with importance: 14px on the pane, 9px on a segmented control'
 
 Borders are hairlines or nothing. A border at rest is `line` at 14%; on hover it firms to 24%; a section divider is 12%. The palette's `line` value never appears at full strength anywhere in the product.
 
-Icons are authored, not imported. Every glyph is an inline SVG on a 16-unit viewBox with `fill: none`, `stroke: currentColor`, `stroke-width: 1.6`, and round caps and joins, rendered at 12px in rows and 13px in buttons. The four provider marks (a Claude burst, a ChatGPT spoked circle, a Codex bracketed square, a Gemini four-point star) are drawn from the same 16-unit paths in the browser's SVG and in the Omarchy panel's Canvas, so the glyph and its slot agree across runtimes.
+Icons are authored, not imported. Every glyph is an inline SVG on a 16-unit viewBox with `fill: none`, `stroke: currentColor`, `stroke-width: 1.6`, and round caps and joins, rendered at 12px in rows and 13px in buttons. The three provider marks (a Claude burst, an OpenAI spoked circle, a Gemini four-point star) are drawn from the same 16-unit paths in the browser's SVG and in the Omarchy panel's Canvas, so the glyph and its slot agree across runtimes.
 
 The toolbar icon is its own geometry and the product's only pixel art: a rounded casing (20% radius, 4.5% border) holding one vertical sunken well per provider with a risk-colored fill rising from the bottom, drawn at 16px and 32px into an OffscreenCanvas and falling back to the bundled static PNG when nobody has data.
 
@@ -476,7 +473,7 @@ Controls transition color, background and border over 140ms ease; the toggle mov
 ### Do:
 - **Do** read every color through a token. `var(--crit)`, never a hex, so the light theme and the Omarchy companion stay correct for free.
 - **Do** paint the ambient field on any surface that renders the pane. A backdrop-filter with nothing behind it is a gray rectangle.
-- **Do** keep the fixed provider order (Claude, ChatGPT, Codex, Gemini) in every list, legend, icon and widget. Position is the user's memory.
+- **Do** keep the fixed provider order (Claude, OpenAI, Gemini) in every list, legend, icon and widget. Position is the user's memory.
 - **Do** write usage as "N% used", in every surface, including tooltips and notifications.
 - **Do** label a non-exact reading with one short word in the row ("inferred", "estimated") and keep the full phrase ("unofficial source") for tooltips and alerts.
 - **Do** gray a stale reading, its meter fill and its number together, and say how long ago it was captured.

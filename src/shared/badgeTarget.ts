@@ -12,18 +12,18 @@ export interface BadgeTarget {
 }
 
 // Single source of truth for the options control AND the background lookup, so they
-// cannot drift. Gemini is omitted — it is status-only and has no numeric usage.
+// cannot drift. Gemini is omitted - it is status-only and has no numeric usage.
 export const BADGE_TARGETS: BadgeTarget[] = [
   { id: 'riskiest', label: 'Auto' },
   { id: 'claude', label: 'Claude', providers: ['claude'] },
-  { id: 'chatgpt', label: 'OpenAI', providers: ['chatgpt', 'codex'] }
+  { id: 'chatgpt', label: 'OpenAI', providers: ['chatgpt'] }
 ];
 
 const RISKIEST = BADGE_TARGETS[0];
 
 /**
- * Resolve a stored id to a target. Legacy `provider:window` ids (pre-2026-08) migrate to
- * their provider; unknown ids fall back to 'riskiest'.
+ * Resolve a stored id to a target. Legacy `provider:window` ids (pre-2026-08) and the
+ * retired separate `codex` id migrate to OpenAI; unknown ids fall back to 'riskiest'.
  */
 export function parseBadgeTarget(id: string): BadgeTarget {
   const storedProvider = id.split(':')[0];

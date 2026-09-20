@@ -3,6 +3,20 @@
 Session logbook, newest first. Each entry: where the project was, what the session
 changed (with evidence), and what is still open.
 
+## 2026-09-20 (later) - One OpenAI card for ChatGPT and Codex
+
+**Where we were:** the glass dashboard had shipped with four slots; the user noted ChatGPT and
+Codex are the same subscription and asked whether the split made sense.
+
+**What we did:** investigated (`wham/usage` is one pool plus optional per-model caps; the live
+Codex card was empty while the "ChatGPT" card showed the Codex pool) and, on the user's call,
+merged them into one **OpenAI** card: three fixed slots everywhere, per-model cap as a named extra
+window, `codex` removed from `ProviderId`, stale stored Codex cards dropped, PRD 5/6.4 updated.
+Record: `docs/superpowers/specs/2026-09-20-openai-single-card.md`.
+
+**Evidence:** `npm run check` 29 files / 149 tests; build; assets regenerated (three-bar icons);
+`omarchy plugin validate`; popup, options, and Omarchy recaptured with three slots.
+
 ## 2026-09-20 - Glass dashboard (Token Monitor grammar), 24h trend, Omarchy parity
 
 **Where we were:** PR #33 (Workbench redesign) was open and unmerged. The user judged the

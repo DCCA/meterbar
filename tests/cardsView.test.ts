@@ -53,11 +53,10 @@ const claude: ProviderCardState = {
 };
 
 describe('provider slots', () => {
-  it('keeps the user-confirmed Claude, ChatGPT, Codex, Gemini order', () => {
+  it('keeps the user-confirmed Claude, OpenAI, Gemini order (ChatGPT and Codex are one subscription)', () => {
     expect(KNOWN).toEqual([
       { provider: 'claude', label: 'Claude' },
-      { provider: 'chatgpt', label: 'ChatGPT' },
-      { provider: 'codex', label: 'Codex' },
+      { provider: 'chatgpt', label: 'OpenAI' },
       { provider: 'gemini', label: 'Gemini' }
     ]);
   });
@@ -78,9 +77,8 @@ describe('home view', () => {
     expect(html).toContain('<h2>Limits</h2>');
     expect(html).toContain('72% used');
     expect(html).toContain('38% used');
-    expect(html.indexOf('Claude</span>')).toBeLessThan(html.indexOf('ChatGPT</span>'));
-    expect(html.indexOf('ChatGPT</span>')).toBeLessThan(html.indexOf('Codex</span>'));
-    expect(html.indexOf('Codex</span>')).toBeLessThan(html.indexOf('Gemini</span>'));
+    expect(html.indexOf('Claude</span>')).toBeLessThan(html.indexOf('OpenAI</span>'));
+    expect(html.indexOf('OpenAI</span>')).toBeLessThan(html.indexOf('Gemini</span>'));
   });
 
   it('states honestly when the trend has too few readings', async () => {
@@ -118,6 +116,7 @@ describe('limits view', () => {
     expect(html).toContain('Signed in');
     expect(html).toContain('data-provider="claude" data-status="unsupported"');
     expect(html).toContain('href="https://claude.ai"');
+    expect(html).toContain('Open claude.ai');
   });
 
   it('labels a fully stale provider instead of rendering it as live', async () => {

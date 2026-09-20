@@ -30,8 +30,7 @@ export type DashboardView = 'home' | 'limits';
 
 export const KNOWN: Array<{ provider: ProviderId; label: string }> = [
   { provider: 'claude', label: 'Claude' },
-  { provider: 'chatgpt', label: 'ChatGPT' },
-  { provider: 'codex', label: 'Codex' },
+  { provider: 'chatgpt', label: 'OpenAI' },
   { provider: 'gemini', label: 'Gemini' }
 ];
 
@@ -40,7 +39,6 @@ export const KNOWN: Array<{ provider: ProviderId; label: string }> = [
 const MARK: Record<string, string> = {
   claude: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M3.4 3.4l9.2 9.2M12.6 3.4l-9.2 9.2"/></svg>',
   chatgpt: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 2v3.2M8 10.8V14M2.8 5l2.8 1.6M10.4 9.4l2.8 1.6M2.8 11l2.8-1.6M10.4 6.6l2.8-1.6"/></svg>',
-  codex: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="3"/><path d="M6 6l-2 2 2 2M10 6l2 2-2 2"/></svg>',
   gemini: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5C8 5.5 10.5 8 14.5 8 10.5 8 8 10.5 8 14.5 8 10.5 5.5 8 1.5 8 5.5 8 8 5.5 8 1.5z"/></svg>'
 };
 
@@ -237,7 +235,7 @@ function providerHtml(provider: ProviderId, label: string, card: ProviderCardSta
     </section>`;
     }
     const home = providerHome(provider);
-    const cta = home ? `<a class="cta" href="${home}" target="_blank" rel="noopener">Open ${escapeHtml(label)}</a>` : '';
+    const cta = home ? `<a class="cta" href="${home}" target="_blank" rel="noopener">Open ${escapeHtml(new URL(home).host)}</a>` : '';
     return `
     <section class="prov prov-empty" data-provider="${provider}" data-status="${escapeHtml(status)}">
       ${head(escapeHtml(STATUS_TEXT[status]))}

@@ -31,7 +31,7 @@ const ADAPTERS_BY_ID: Partial<Record<ProviderId, (typeof ADAPTERS)[number]>> =
 
 function isEnabled(provider: ProviderId, settings: Settings): boolean {
   if (provider === 'claude') return settings.claudeEnabled;
-  if (provider === 'chatgpt' || provider === 'codex') return settings.chatgptEnabled;
+  if (provider === 'chatgpt') return settings.chatgptEnabled;
   if (provider === 'gemini') return settings.geminiEnabled;
   return true;
 }
@@ -52,7 +52,7 @@ let clearInProgress = false;
 const refreshAll = createCoalescedRefresh(async () => {
   if (clearInProgress) return;
   const settings = await loadSettings();
-  // Claude and ChatGPT/Codex are background-fetch providers; Gemini reports via a content script.
+  // Claude and OpenAI (ChatGPT/Codex) are background-fetch providers; Gemini reports via a content script.
   await Promise.all([
     isEnabled('claude', settings) ? refreshClaude() : Promise.resolve(),
     isEnabled('chatgpt', settings) ? refreshChatgpt() : Promise.resolve()

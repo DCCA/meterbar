@@ -3,12 +3,11 @@ import { readAllHistory, type Point } from '../storage/historyStore';
 
 export const COMPANION_HOST = 'com.meterbar.bridge';
 
-const COMPANION_ORDER: ProviderId[] = ['claude', 'chatgpt', 'codex', 'gemini'];
+const COMPANION_ORDER: ProviderId[] = ['claude', 'chatgpt', 'gemini'];
 const COMPANION_PROVIDERS = new Set(COMPANION_ORDER);
 const COMPANION_LABELS: Partial<Record<ProviderId, string>> = {
   claude: 'Claude',
-  chatgpt: 'ChatGPT',
-  codex: 'Codex',
+  chatgpt: 'OpenAI',
   gemini: 'Gemini'
 };
 

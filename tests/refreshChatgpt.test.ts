@@ -31,19 +31,13 @@ describe('refreshChatgpt', () => {
       'latest:chatgpt': expect.objectContaining({
         status: 'connected',
         snapshots: [],
-        message: 'Connected - no ChatGPT usage window reported.'
+        message: 'Connected - no OpenAI usage window reported.'
       })
     });
-    expect(set).toHaveBeenCalledWith({
-      'latest:codex': expect.objectContaining({
-        status: 'connected',
-        snapshots: [],
-        message: 'Connected - no Codex usage window reported.'
-      })
-    });
+    expect(set).not.toHaveBeenCalledWith(expect.objectContaining({ 'latest:codex': expect.anything() }));
   });
 
-  it('stores ChatGPT and Codex as separate fixed provider cards', async () => {
+  it('stores the pool windows and the named model cap on one OpenAI card', async () => {
     const set = vi.fn(async () => undefined);
     vi.stubGlobal('chrome', {
       storage: { local: { get: vi.fn(async () => ({})), set } }
@@ -64,23 +58,20 @@ describe('refreshChatgpt', () => {
     expect(set).toHaveBeenCalledWith({
       'latest:chatgpt': expect.objectContaining({
         provider: 'chatgpt',
-        label: 'ChatGPT',
-        snapshots: [expect.objectContaining({ provider: 'chatgpt', usedPercent: 30 })]
+        label: 'OpenAI',
+        snapshots: [
+          expect.objectContaining({ provider: 'chatgpt', window: 'seven_day', usedPercent: 30 }),
+          expect.objectContaining({ provider: 'chatgpt', window: 'custom', workspaceLabel: 'Codex', usedPercent: 80 })
+        ]
       })
     });
-    expect(set).toHaveBeenCalledWith({
-      'latest:codex': expect.objectContaining({
-        provider: 'codex',
-        label: 'Codex',
-        snapshots: [expect.objectContaining({ provider: 'codex', usedPercent: 80 })]
-      })
-    });
+    expect(set).not.toHaveBeenCalledWith(expect.objectContaining({ 'latest:codex': expect.anything() }));
   });
 
   it('clears old usage when the browser session is signed out', async () => {
     const previous: ProviderCardState = {
       provider: 'chatgpt',
-      label: 'ChatGPT / Codex',
+      label: 'OpenAI',
       status: 'connected',
       lastUpdatedAt: '2026-09-19T18:00:00.000Z',
       snapshots: [{
@@ -107,7 +98,7 @@ describe('refreshChatgpt', () => {
   it('keeps a failed refresh last-good reading but marks it stale immediately', async () => {
     const previous: ProviderCardState = {
       provider: 'chatgpt',
-      label: 'ChatGPT / Codex',
+      label: 'OpenAI',
       status: 'connected',
       lastUpdatedAt: '2026-09-19T18:00:00.000Z',
       snapshots: [{

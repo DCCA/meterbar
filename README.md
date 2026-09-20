@@ -66,7 +66,7 @@ MeterBar is local-first: there is no backend, no cloud sync, and no analytics. I
 | `sidePanel` | Keep the usage instrument docked while you browse. |
 | `nativeMessaging` | Send a sanitized usage snapshot to the optional experimental Omarchy preview. No credential or chat data is included. |
 | `host_permissions: https://claude.ai/*` | Read your Claude usage from your logged-in session. |
-| `host_permissions: https://chatgpt.com/*` | Read ChatGPT and Codex usage surfaced to the page. |
+| `host_permissions: https://chatgpt.com/*` | Read OpenAI usage (ChatGPT and Codex share one subscription) surfaced to the page. |
 | `host_permissions: https://gemini.google.com/*` | Read Gemini usage surfaced to the page. |
 
 Use **Settings → Clear local MeterBar data** to erase browser storage and ask the installed companion host to remove its snapshot. If the host is unavailable, use the companion removal steps to delete its local state file.

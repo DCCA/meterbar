@@ -22,8 +22,7 @@ Item {
     var rows = snapshot && Array.isArray(snapshot.cards) ? snapshot.cards.slice() : []
     var slots = [
       { provider: "claude", label: "Claude" },
-      { provider: "chatgpt", label: "ChatGPT" },
-      { provider: "codex", label: "Codex" },
+      { provider: "chatgpt", label: "OpenAI" },
       { provider: "gemini", label: "Gemini" }
     ]
     var result = []

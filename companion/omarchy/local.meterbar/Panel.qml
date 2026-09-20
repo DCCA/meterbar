@@ -96,7 +96,6 @@ Panel {
 
   function seriesColor(provider) {
     if (provider === "claude") return tone.seriesClaude
-    if (provider === "codex") return tone.seriesCodex
     return tone.seriesOpenai
   }
 
@@ -229,7 +228,7 @@ Panel {
             spacing: 2
 
             Repeater {
-              model: root.cards.length > 0 ? root.cards : [{ provider: "claude" }, { provider: "chatgpt" }, { provider: "codex" }, { provider: "gemini" }]
+              model: root.cards.length > 0 ? root.cards : [{ provider: "claude" }, { provider: "chatgpt" }, { provider: "gemini" }]
 
               Rectangle {
                 required property var modelData
@@ -628,10 +627,6 @@ Panel {
         ctx.moveTo(1.5 * k, 8 * k); ctx.lineTo(14.5 * k, 8 * k)
         ctx.moveTo(3.4 * k, 3.4 * k); ctx.lineTo(12.6 * k, 12.6 * k)
         ctx.moveTo(12.6 * k, 3.4 * k); ctx.lineTo(3.4 * k, 12.6 * k)
-      } else if (mark.provider === "codex") {
-        ctx.roundedRect(2 * k, 2 * k, 12 * k, 12 * k, 3 * k, 3 * k)
-        ctx.moveTo(6 * k, 6 * k); ctx.lineTo(4 * k, 8 * k); ctx.lineTo(6 * k, 10 * k)
-        ctx.moveTo(10 * k, 6 * k); ctx.lineTo(12 * k, 8 * k); ctx.lineTo(10 * k, 10 * k)
       } else if (mark.provider === "gemini") {
         ctx.moveTo(8 * k, 1.5 * k)
         ctx.bezierCurveTo(8 * k, 5.5 * k, 10.5 * k, 8 * k, 14.5 * k, 8 * k)

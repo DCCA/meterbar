@@ -9,7 +9,7 @@ export interface IconBar {
 }
 
 // Fixed left-to-right order on the icon, so a bar's position identifies its provider.
-const ORDER: ProviderId[] = ['claude', 'chatgpt', 'codex', 'gemini'];
+const ORDER: ProviderId[] = ['claude', 'chatgpt', 'gemini'];
 
 function levelFor(percent: number): IconLevel {
   if (percent >= 90) return 'crit';

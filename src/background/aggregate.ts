@@ -4,11 +4,13 @@ import type { Settings } from '../storage/usageStore';
 import { safeProviderStatus } from '../shared/messages';
 
 const ENABLED: Record<ProviderId, keyof Settings | null> = {
-  claude: 'claudeEnabled', chatgpt: 'chatgptEnabled', gemini: 'geminiEnabled', codex: 'chatgptEnabled', unknown: null
+  claude: 'claudeEnabled', chatgpt: 'chatgptEnabled', gemini: 'geminiEnabled', unknown: null
 };
 
 export function aggregateCards(cards: ProviderCardState[], settings: Settings, now: Date = new Date()): ProviderCardState[] {
   return cards
+    // Cards stored by older builds under retired provider ids (e.g. a separate Codex card) are dropped.
+    .filter((c) => c.provider in ENABLED)
     .filter((c) => { const key = ENABLED[c.provider]; return key ? settings[key] : true; })
     .map((c) => {
       const explicitlyStale = c.status === 'stale';

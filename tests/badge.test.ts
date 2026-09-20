@@ -60,15 +60,15 @@ describe('calculateBadgeState', () => {
     });
   });
 
-  it('treats ChatGPT and Codex as one OpenAI badge target', () => {
+  it('treats every OpenAI window, including a per-model cap, as one badge target', () => {
     const snapshots = [
       snapshot('claude', 95),
       snapshot('chatgpt', 40, 'seven_day'),
-      snapshot('codex', 88, 'custom')
+      snapshot('chatgpt', 88, 'custom')
     ];
     expect(calculateBadgeState(snapshots, 'chatgpt')).toMatchObject({
       text: '88',
-      provider: 'codex',
+      provider: 'chatgpt',
       color: '#f1d973'
     });
   });

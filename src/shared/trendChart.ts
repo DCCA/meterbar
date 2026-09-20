@@ -19,8 +19,7 @@ export interface TrendOptions {
 
 export const SERIES_COLOR: Partial<Record<ProviderId, string>> = {
   claude: 'var(--series-claude)',
-  chatgpt: 'var(--series-openai)',
-  codex: 'var(--series-codex)'
+  chatgpt: 'var(--series-openai)'
 };
 
 const PAD = { left: 26, right: 24, top: 6, bottom: 12 };

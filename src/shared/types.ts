@@ -1,4 +1,4 @@
-export type ProviderId = 'claude' | 'chatgpt' | 'codex' | 'gemini' | 'unknown';
+export type ProviderId = 'claude' | 'chatgpt' | 'gemini' | 'unknown';
 export type UsageWindow = 'five_hour' | 'seven_day' | 'daily' | 'monthly' | 'api_billing' | 'custom';
 export type Confidence = 'exact' | 'estimated' | 'inferred' | 'unavailable';
 export type ProviderStatus = 'connected' | 'not_connected' | 'stale' | 'unsupported';
