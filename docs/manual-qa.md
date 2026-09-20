@@ -50,8 +50,7 @@ Sign into `claude.ai` and/or `chatgpt.com` in the same profile, open the popup, 
       even on a card whose other window is 94% red).
 - [ ] `Resets in …` countdown is present and plausible per window; reads
       "Reset time unknown" only when the provider gave no reset time.
-- [ ] Sparkline appears once ≥2 data points exist (refresh a few times / wait for the
-      10-min alarm); it is tinted to the window's risk level.
+- [ ] Trend appears in the Home view once a provider window has 2 or more readings inside the last 24 hours; before that the section says the trend appears after a few readings.
 - [ ] Confidence note (e.g. "estimated") shows **only** when confidence ≠ exact.
 - [ ] "<time> ago" updated stamp is sensible after a refresh.
 
