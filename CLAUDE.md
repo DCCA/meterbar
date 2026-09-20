@@ -19,26 +19,27 @@ TypeScript + Vite + Vitest:
 
 ```bash
 npm install
-npm run build       # vite build → dist/ (the unpacked extension)
+npm run build       # vite build → dist/ (prebuild runs assets:check first)
 npm test            # vitest run (all tests)
 npm test -- tests/badge.test.ts   # run a single test file
 npm run test:watch  # vitest watch mode
 npm run typecheck   # tsc --noEmit
 npm run check       # typecheck + test (convenience)
+npm run assets:generate  # regenerate palette CSS/QML + icons from source JSON
 ```
 
 Load in Chrome: `chrome://extensions` → enable Developer mode → **Load unpacked** → select `dist/`.
 
-Build plumbing: every entry surface (page or content script) is a named rollup input in `vite.config.ts`, which pins deterministic `assets/[name].js` output names that `manifest.json` references; a build plugin copies the manifest into `dist/`. Adding a surface means touching both files.
+Build plumbing: every entry surface (page or content script) is a named rollup input in `vite.config.ts`, which pins deterministic `assets/[name].js` output names that `manifest.json` references; a build plugin copies the manifest into `dist/`. Adding a surface means touching both files. A `prebuild` hook runs `assets:check` to verify that generated files (palette CSS/QML from `workbenchPalette.json`, icons) match their source; if editing the palette, run `npm run assets:generate` to regenerate.
 
-Development is **test-first**: write the Vitest spec, watch it fail, then implement. Pure logic (badge math, time helpers, alert de-dup, provider parsers, tooltip summary) is unit-tested in `node` environment; `chrome.*` APIs are only touched in the background/popup/options/side-panel entry points, not in testable logic.
+Development is **test-first**: write the Vitest spec, watch it fail, then implement. Pure logic (badge math, time helpers, alert de-dup, provider parsers, tooltip summary, trend chart, mutation gate, coalesced refresh) is unit-tested in `node` environment; `chrome.*` APIs are only touched in the background/popup/options/side-panel entry points, not in testable logic.
 
 ## Architecture (the big picture)
 
 Five runtime surfaces coordinate through `chrome.storage.local` - there is no shared in-memory state:
 
-- **Background service worker** (`src/background/`) - `index.ts` owns the lifecycle: a `chrome.alarms` loop (`meterbar-refresh`, every 10 min) drives `refresh.ts`, then `recompute()` aggregates cards and updates every always-visible surface in one pass: badge text/color, the multi-bar icon, the hover tooltip, and notifications. It also routes `ExtensionMessage`s from the popup, side panel, and content scripts.
-- **Popup** (`src/popup/`) - sends `state:get`/`usage:refresh`, renders per-provider cards with trend sparklines, and offers a **Side panel** button. Vanilla HTML/CSS/TS, no framework. Card rendering is shared with the side panel via `src/ui/cardsView.ts` (the DOM layer); pure presentational helpers stay in `src/popup/render.ts` (node-env tested).
+- **Background service worker** (`src/background/`) - `index.ts` owns the lifecycle: a `chrome.alarms` loop (`meterbar-refresh`, every 10 min) drives a coalesced refresh (`refreshRunner.ts`), then `recompute()` aggregates cards and updates every always-visible surface in one pass: badge text/color, the multi-bar icon, the hover tooltip, companion sync (`nativeBridge.ts`), and notifications. A `mutationGate.ts` serializes concurrent writes so destructive ops (clear data via `clearData.ts`) can pause and drain before proceeding. It also routes `ExtensionMessage`s from the popup, side panel, options, and content scripts.
+- **Popup** (`src/popup/`) - sends `state:get`/`usage:refresh`, renders per-provider cards with trend sparklines, and offers a **Side panel** button. A segmented radiogroup (`src/ui/badgeTargetControl.ts`) lets users pick which provider's number shows on the badge. Vanilla HTML/CSS/TS, no framework. Card rendering is shared with the side panel via `src/ui/cardsView.ts` (the DOM layer); pure presentational helpers stay in `src/popup/render.ts` (node-env tested).
 - **Side panel** (`src/sidepanel/`) - `chrome.sidePanel` docks a persistent, auto-updating view that reuses the popup's `cardsView` rendering. It opens from the popup button or Chrome's side-panel toolbar button and re-renders on `chrome.storage.onChanged` (local area) so it stays live while browsing.
 - **Options page** (`src/options/`) - per-provider toggles, badge-number picker, privacy explanation, CSV/JSON export, and "clear local data".
 - **Content scripts** (`src/content/`) - `gemini.ts` runs on `gemini.google.com` and posts a `status:report` (see strategy split below).
@@ -57,9 +58,13 @@ Key patterns:
    - **Icon** (`src/background/iconModel.ts` + `icon.ts`) - repainted each recompute as one vertical risk-colored bar per provider with fresh data, in fixed left-to-right order so position identifies the provider. `iconModel.ts` is the pure model (node-tested); `icon.ts` is the only module touching `OffscreenCanvas`/`chrome.action.setIcon` and restores the static logo when no provider has data.
    - **Hover tooltip** - `buildTooltip` (`src/shared/summary.ts`) renders a per-provider, per-window text summary via `chrome.action.setTitle`.
 
-5. **Message protocol.** `src/shared/messages.ts` defines the `ExtensionMessage` union wiring the surfaces: `usage:report` / `status:report` (content/refresh → bg), `usage:refresh` / `state:get` (popup/side panel → bg), `state:result` (bg → popup/side panel).
+5. **Message protocol.** `src/shared/messages.ts` defines the `ExtensionMessage` union wiring the surfaces: `usage:report` / `status:report` (content/refresh → bg), `usage:refresh` / `state:get` / `data:clear` (popup/side panel/options → bg), `state:result` (bg → popup/side panel).
 
-6. **History & alerts.** Each refresh appends a point per `provider:window` (full-res for 24h, older collapsed hourly, capped at 500 points - `historyStore.ts`), feeding popup sparklines (`src/shared/sparkline.ts`) and CSV/JSON export (`src/shared/exporters.ts`). Staleness threshold is 10 min (`isStale`, `src/shared/time.ts`). Alerts fire at 70/90%, de-duped by `provider:window:threshold:resetsAt` (`src/background/alerts.ts`).
+6. **History & alerts.** Each refresh appends a point per `provider:window` (full-res for 24h, older collapsed hourly, capped at 500 points - `historyStore.ts`), feeding popup sparklines (`src/shared/sparkline.ts`), 24-hour trend charts (`src/shared/trendChart.ts`), and CSV/JSON export (`src/shared/exporters.ts`). Staleness threshold is 10 min (`isStale`, `src/shared/time.ts`). Alerts fire at 70/90%, de-duped by `provider:window:threshold:resetsAt` (`src/background/alerts.ts`).
+
+7. **Native messaging bridge.** `nativeBridge.ts` sends a sanitized `CompanionSnapshot` (schema v1) to the optional Omarchy companion via `chrome.runtime.sendNativeMessage`. The bridge strips account IDs, tokens, and endpoint details; it never sends credentials. Failures are best-effort and don't block extension function. `clearData.ts` erases both `chrome.storage.local` and the companion snapshot, using the mutation gate to pause in-flight writes first.
+
+8. **Refresh concurrency control.** `refreshRunner.ts` coalesces refresh requests: if a refresh is active when another arrives, it queues exactly one follow-up instead of N concurrent runs. `mutationGate.ts` tracks in-flight mutations so `clearData` can `pauseAndWait()` for writers to drain, then `resume()` after the destructive op completes.
 
 `src/providers/mock/mockAdapter.ts` supplies deterministic fixture cards for building/testing the UI pipeline without a live endpoint.
 

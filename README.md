@@ -27,6 +27,7 @@ npm test            # vitest run (all suites)
 npm run typecheck   # tsc --noEmit
 npm run check       # typecheck + test
 npm run build       # vite build → dist/ (the unpacked extension)
+npm run assets:generate  # regenerate palette + icons from source JSON
 ```
 
 Run a single test file:
