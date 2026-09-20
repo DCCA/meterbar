@@ -175,34 +175,34 @@ async function cardHtml(
   `;
 }
 
-function masterReadoutHtml(cards: ProviderCardState[]): string {
+function constraintRailHtml(cards: ProviderCardState[]): string {
   const summary = mostConstrainedWindow(cards);
   if (!summary) {
     return `
-      <section class="master-readout master-idle" aria-label="No live usage windows">
-        <div class="master-copy">
-          <span class="instrument-label">Most constrained window</span>
-          <strong class="master-value">--<span>%</span></strong>
-          <p>Waiting for a fresh provider reading.</p>
-        </div>
-        <div class="master-dial" aria-hidden="true"><span></span></div>
-      </section>
+      <aside class="constraint-rail constraint-idle" aria-label="No live usage windows">
+        <span class="instrument-label">Tightest limit</span>
+        <strong class="constraint-value">--<span>%</span></strong>
+        <span class="constraint-provider">No live limit</span>
+        <p class="constraint-copy">No live usage window reported.</p>
+        <div class="constraint-scale" aria-hidden="true"><span></span></div>
+      </aside>
     `;
   }
 
   const { snapshot, providerLabel } = summary;
   const pct = Math.max(0, Math.min(100, snapshot.usedPercent));
   const meta = constraintMeta(providerLabel, snapshot);
+  const detail = [resetLabel(snapshot.resetsAt), confidenceNote(snapshot)].filter(Boolean).join(' · ');
   const level = riskLevel(pct);
   return `
-    <section class="master-readout level-${level}" aria-label="Most constrained window: ${escapeHtml(meta)}, ${pct}% used">
-      <div class="master-copy">
-        <span class="instrument-label">Most constrained window</span>
-        <strong class="master-value">${pct}<span>% used</span></strong>
-        <p>${escapeHtml(meta)}</p>
-      </div>
-      <div class="master-dial" style="--needle-angle:${needleAngle(pct)}deg;--dial-fill:${pct * 2.4}deg" aria-hidden="true"><span></span></div>
-    </section>
+    <aside class="constraint-rail level-${level}" style="--marker-position:${100 - pct}%"
+      aria-label="Most constrained window: ${escapeHtml(meta)}, ${pct}% used">
+      <span class="instrument-label">Tightest limit</span>
+      <strong class="constraint-value">${pct}<span>%</span></strong>
+      <span class="constraint-provider">${escapeHtml(providerLabel)} · ${escapeHtml(humanWindowLabel(snapshot.window))}</span>
+      <p class="constraint-copy">${escapeHtml(detail)}</p>
+      <div class="constraint-scale" aria-hidden="true"><span></span></div>
+    </aside>
   `;
 }
 
@@ -236,7 +236,10 @@ export async function renderCardsInto(container: HTMLElement): Promise<void> {
   const cardsHtml = (
     await Promise.all(KNOWN.map(({ provider, label }) => cardHtml(provider, label, byId.get(provider), anyLive)))
   ).join('');
-  container.innerHTML = `${anyLive ? masterReadoutHtml(cards) : heroEmptyHtml()}<div class="instrument-bank">${cardsHtml}</div>`;
+  const bank = `<div class="instrument-bank">${cardsHtml}</div>`;
+  container.innerHTML = anyLive
+    ? `<section class="channel-console">${constraintRailHtml(cards)}${bank}</section>`
+    : `${heroEmptyHtml()}${bank}`;
   updateGaugeMark(cards);
 }
 

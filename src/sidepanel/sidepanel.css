@@ -8,15 +8,23 @@ footer { grid-template-columns: repeat(2, 1fr); }
 @media (min-width: 500px) {
   .popup { padding-inline: 16px; }
   .app-header { padding-inline: 5px; }
-  .master-readout { grid-template-columns: minmax(0, 1fr) 104px; min-height: 132px; padding: 17px 18px; }
-  .master-dial { width: 96px; height: 96px; }
-  .master-dial::before { inset: 13px; }
-  .master-dial span::before { height: 32px; }
-  .master-value { font-size: 44px; }
+  .channel-console { grid-template-columns: 170px minmax(0, 1fr); min-height: 540px; }
+  .constraint-rail { padding: 20px 18px 286px; }
+  .constraint-value { font-size: 58px; }
+  .constraint-provider { font-size: 9px; }
+  .constraint-copy { font-size: 9px; }
+  .constraint-scale { left: 22px; right: 22px; height: 250px; }
+  .constraint-scale span { top: clamp(0px, var(--marker-position, 100%), 242px); }
   .card { padding-inline: 16px; }
   .channel-rows { margin-inline: -16px; }
   .row { padding-left: 32px; padding-right: 16px; }
   .row-main { grid-template-columns: 118px minmax(120px, 1fr) 54px; gap: 14px; }
   .spark-wrap { margin-left: 132px; }
+  .channel-console .row { padding-left: 20px; }
+  .channel-console .row-main { grid-template-columns: 118px minmax(120px, 1fr) 54px; gap: 14px; }
+  .channel-console .row-label { grid-column: 1; grid-row: 1; }
+  .channel-console .bar { grid-column: 2; grid-row: 1; }
+  .channel-console .pct { grid-column: 3; grid-row: 1; }
+  .channel-console .spark-wrap { margin-left: 132px; }
   footer { margin-inline: -16px; padding-inline: 16px; }
 }
