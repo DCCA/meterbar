@@ -108,6 +108,42 @@ typography:
     fontWeight: 400
     lineHeight: 1.4
     letterSpacing: "normal"
+  displayWide:
+    fontFamily: "{typography.display.fontFamily}"
+    fontSize: "48px"
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: "-0.02em"
+  unit:
+    fontFamily: "{typography.display.fontFamily}"
+    fontSize: "16px"
+    fontWeight: 500
+    lineHeight: 1
+    letterSpacing: "normal"
+  preview:
+    fontFamily: "{typography.display.fontFamily}"
+    fontSize: "14px"
+    fontWeight: 600
+    lineHeight: 1
+    letterSpacing: "normal"
+  pageHeadline:
+    fontFamily: "{typography.display.fontFamily}"
+    fontSize: "22px"
+    fontWeight: 800
+    lineHeight: 1
+    letterSpacing: "-0.02em"
+  pageTitle:
+    fontFamily: "{typography.display.fontFamily}"
+    fontSize: "13px"
+    fontWeight: 600
+    lineHeight: 1.35
+    letterSpacing: "normal"
+  pageBody:
+    fontFamily: "{typography.display.fontFamily}"
+    fontSize: "12px"
+    fontWeight: 400
+    lineHeight: 1.45
+    letterSpacing: "normal"
 rounded:
   pane: "14px"
   control: "7px"
@@ -116,6 +152,7 @@ rounded:
   badge: "5px"
   meter: "3px"
   casing: "10px"
+  swatch: "1px"
   dot: "50%"
 spacing:
   2xs: "2px"

@@ -47,9 +47,10 @@ Omarchy glass follows the theme's popup alpha (no Hyprland layerrule edits from 
 **Pending / next:**
 - [ ] Ship this branch as a PR that supersedes #33 (finish review passed; DESIGN.md written by
       the impeccable documenter).
-- [ ] Reload the unpacked extension in Chromium so nativeMessaging syncs a real snapshot to
-      the reinstalled companion (`~/.local/state/meterbar/state.json` is currently absent).
-- [ ] Install the detector's parser modules or run it elsewhere for a non-degraded pass.
+- [x] Extension reloaded; the companion received a real snapshot with history.
+- [x] Detector run non-degraded (scratchpad copy with parser modules): 0 findings after raising
+      the Settings type scale (12px body, 13px titles, 22px wordmark) and recording the
+      intentional 14/16/48px steps and 1px swatch radius in DESIGN.md.
 
 ## 2026-09-19 - Workbench redesign, Omarchy companion, provider audit
 
