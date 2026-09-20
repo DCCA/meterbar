@@ -33,7 +33,7 @@ An optional Omarchy companion is an experimental display preview, not a stable p
 - Truthful uncertainty: inferred, estimated, stale, unavailable, and undocumented readings must be labeled rather than presented as exact.
 - Fixed provider order everywhere: Claude, ChatGPT, Codex, Gemini. Position identifies the provider; color, pulse, and the badge number express risk. (Confirmed 2026-07-25.)
 - ChatGPT and Codex have separate cards and history while sharing one OpenAI enablement setting and badge target.
-- Sparklines use one labeled 24-hour span and appear only on warning or critical rows. (Confirmed 2026-07-25.)
+- The 24-hour trend is the only history chart: one line per provider (its tightest window) over one labeled 24-hour span, in fixed provider hues, with direct labels and a legend. No daily consumption bars, token counts, or cost. (Confirmed 2026-09-20; replaces the 2026-07-25 sparkline rule.)
 - No routing, failover, local proxy, CLI collection, or shell configuration editing in the Chrome product.
 - Clearing MeterBar data removes browser-local state and requests deletion of the experimental companion snapshot when the host is installed.
 
