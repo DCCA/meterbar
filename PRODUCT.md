@@ -8,43 +8,51 @@ web
 
 ## Users
 
-Primary: the AI power user / builder who works across Claude, ChatGPT/Codex, and Gemini in the same workday, has paid plans but still hits caps, and wants a quick glance before starting a session. Privacy-sensitive: will not accept prompt/chat collection. Checks the surface many times a day, usually mid-task. (Source: docs/PRD.md §3.)
+Primary: the AI power user or builder who works across Claude, ChatGPT/Codex, and Gemini in the same workday, has paid plans but still hits caps, and wants a quick glance before starting or continuing a session. This user is privacy-sensitive, will not accept prompt or chat collection, and checks MeterBar repeatedly while working. (Source: docs/PRD.md §3.)
 
-Secondary (future, not current UI scope): small AI-heavy team leads wanting lightweight cross-team visibility. Explicit non-persona: enterprises needing billing integrations/SSO, and API-only teams. (Inferred from PRD §3; not user-confirmed.)
+MeterBar is deliberately a personal, single-user product. Team dashboards, cross-member visibility, enterprise administration, and API-only billing workflows are not target use cases. (Confirmed 2026-09-19.)
 
 ## Product Purpose
 
-Show AI subscription usage limits before they stop the user's work — a quota surprise mid-session is the pain being removed. Success is glanceable: useful from the toolbar badge/icon alone before any dashboard is opened. (Source: PRD §1–2, §5.3.)
+Show AI subscription usage limits before they stop the user's work. A quota surprise mid-session is the pain being removed. Success is glanceable: the toolbar instrument should be useful before the popup or side panel is opened. (Source: docs/PRD.md §1-2, §5.3.)
 
 ## Positioning
 
-"One bar for all your AI limits." Sits between single-provider trackers (deep but not unified) and local proxy tools (powerful but heavy): lightweight unified visibility, local-first, no server. A neighboring product cannot truthfully copy the combination of multi-provider unification + nothing-leaves-the-device. (Source: PRD §4.)
+"One bar for all your AI limits." MeterBar sits between single-provider trackers, which are deep but fragmented, and local proxy tools, which are powerful but heavy. Its distinct mechanism is unified multi-provider visibility from the user's own browser sessions, with usage data kept on the user's device and no MeterBar backend. (Source: docs/PRD.md §4.)
 
 ## Operating Context
 
-Chrome MV3 extension. Five surfaces: toolbar badge + dynamically painted multi-bar icon (always visible), hover tooltip, popup (Chrome caps at 600px height), dockable side panel, options page. Usage is read from the user's own logged-in provider sessions via undocumented endpoints; Gemini reports connection status only. Refresh loop every 10 minutes; data can go stale.
+MeterBar is a Chrome Manifest V3 extension with five browser surfaces: the toolbar badge and four-channel icon, hover tooltip, popup, dockable side panel, and options page. The popup is constrained by Chrome's 600px height. A 10-minute refresh loop reads the user's logged-in provider sessions; undocumented provider sources can change, and data can become stale. Gemini reports connection status only because no stable, verified consumer usage source is available.
+
+An optional Omarchy companion is an experimental display preview, not a stable product surface. It renders a sanitized local snapshot through Native Messaging. Chrome remains the sole provider collector; the preview performs no provider requests and adds no CLI tracking, proxy, routing, or failover. (Confirmed 2026-09-19.)
 
 ## Capabilities and Constraints
 
-- Never collect chat content; store only usage metrics, reset timestamps, provider names, settings. Local-first, no backend, least-privilege permissions. (PRD §5.1–5.2, non-negotiable.)
-- Truthful uncertainty: estimated/inferred/stale values must say so in the UI; never present a guess as exact. (PRD §5.5.)
-- No routing/failover in the Chrome MVP. (PRD §5.6.)
-- Canonical schema: `UsageSnapshot` (PRD §10); provider adapters isolated behind it.
-- **Confirmed 2026-07-25 (user decision): position means provider.** Fixed provider order everywhere — icon bars and popup/side-panel cards share the order Claude, ChatGPT, Codex, Gemini. Risk is expressed through color/pulse/badge number, never through reordering.
-- **Confirmed 2026-07-25 (user decision): sparklines draw a fixed 24-hour span**, labeled, so identical shapes mean identical periods. Shown only on warn/crit rows.
+- Never collect chat content. Store only usage metrics, reset timestamps, provider names, local history, and settings. Raw cookies, tokens, API keys, prompts, completions, files, screenshots, and browsing history are prohibited. (PRD §11, non-negotiable.)
+- Local-first and personal-only: no MeterBar backend, cloud sync, remote analytics, account system, or team dashboard.
+- Truthful uncertainty: inferred, estimated, stale, unavailable, and undocumented readings must be labeled rather than presented as exact.
+- Fixed provider order everywhere: Claude, ChatGPT, Codex, Gemini. Position identifies the provider; color, pulse, and the badge number express risk. (Confirmed 2026-07-25.)
+- ChatGPT and Codex have separate cards and history while sharing one OpenAI enablement setting and badge target.
+- Sparklines use one labeled 24-hour span and appear only on warning or critical rows. (Confirmed 2026-07-25.)
+- No routing, failover, local proxy, CLI collection, or shell configuration editing in the Chrome product.
+- Clearing MeterBar data removes browser-local state and requests deletion of the experimental companion snapshot when the host is installed.
 
 ## Brand Commitments
 
-Name: MeterBar. Tagline: "One bar for all your AI limits." Voice: specific and unhedged, especially about privacy ("locally, never leaving your device"); errors name the problem and the recovery. Visual world (incumbent, documented nowhere else yet): permanently dark navy, green/amber/red risk semantics from one `riskLevel()` source, tabular-numeral percent typography. (Inferred from shipped UI; treat as binding until a redesign says otherwise.)
+Name: MeterBar. Tagline: "One bar for all your AI limits." Voice: specific, calm, and unhedged about privacy and uncertainty. Privacy copy says what stays local; error copy names the problem and the recovery. Provider trademarks identify the services MeterBar reads and never imply affiliation or endorsement.
 
 ## Evidence on Hand
 
-docs/PRD.md (authoritative product requirements, §10 data model, privacy rules — wins all conflicts). docs/superpowers/plans+specs (historical build records). `.impeccable/critique/` (scored design critiques; 2026-07-25: 20/40 before fix pass). No testimonials, benchmarks, or customer evidence exist — do not fabricate any.
+- `docs/PRD.md` is the authoritative requirements and privacy record; its security rules win every conflict.
+- `README.md` documents the shipped browser and experimental companion behavior.
+- `docs/PROJECT_STATUS.md` records implementation history and product decisions.
+- `docs/superpowers/plans/` and `docs/superpowers/specs/` are historical implementation records, not active requirements.
+- No testimonials, customer logos, benchmarks, pricing proof, or adoption evidence exists. Future work must not fabricate them.
 
 ## Product Principles
 
-1. Glanceable before detailed — the badge/icon must carry the product alone.
-2. Truthful uncertainty — staleness and estimation are rendered, not hidden.
-3. Privacy is the moat — every surface reinforces nothing-leaves-the-device.
-4. Position means provider; color means risk — spatial memory is never sacrificed to sorting.
-5. Time makes percentages meaningful — a number without its reset countdown/pace is half a fact.
+1. Glanceable before detailed: the toolbar instrument must carry useful risk information by itself.
+2. Truthful uncertainty: freshness, source confidence, and unavailable data are rendered, not hidden.
+3. Privacy is the moat: provider collection stays in Chrome and usage data stays on the user's device.
+4. Position means provider; color means risk: spatial memory is never sacrificed to sorting.
+5. Time makes percentages meaningful: a usage value needs its reset timing, pacing, or explicit absence.

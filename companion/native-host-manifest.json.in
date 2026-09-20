@@ -1,0 +1,7 @@
+{
+  "name": "com.meterbar.bridge",
+  "description": "Writes sanitized MeterBar usage snapshots for the local Omarchy companion.",
+  "path": "__HOST_PATH__",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://gfihfehckcbnmklfojnhnindphonbhhp/"]
+}

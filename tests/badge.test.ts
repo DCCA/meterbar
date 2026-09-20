@@ -26,7 +26,7 @@ describe('calculateBadgeState', () => {
   it('selects highest non-stale usage percentage', () => {
     expect(calculateBadgeState([snapshot('claude', 42), snapshot('gemini', 81)])).toEqual({
       text: '81',
-      color: '#f59e0b',
+      color: '#f1d973',
       provider: 'gemini',
       usedPercent: 81
     });
@@ -35,7 +35,7 @@ describe('calculateBadgeState', () => {
   it('returns unknown when no fresh snapshots exist', () => {
     expect(calculateBadgeState([])).toEqual({
       text: '?',
-      color: '#6b7280'
+      color: '#a3adbb'
     });
   });
 
@@ -54,26 +54,39 @@ describe('calculateBadgeState', () => {
     ];
     expect(calculateBadgeState(snapshots, 'claude')).toEqual({
       text: '60',
-      color: '#22c55e',
+      color: '#b7ead4',
       provider: 'claude',
       usedPercent: 60
     });
   });
 
+  it('treats ChatGPT and Codex as one OpenAI badge target', () => {
+    const snapshots = [
+      snapshot('claude', 95),
+      snapshot('chatgpt', 40, 'seven_day'),
+      snapshot('codex', 88, 'custom')
+    ];
+    expect(calculateBadgeState(snapshots, 'chatgpt')).toMatchObject({
+      text: '88',
+      provider: 'codex',
+      color: '#f1d973'
+    });
+  });
+
   it('accepts a legacy provider:window id and treats it as the provider', () => {
     const snapshots = [snapshot('chatgpt', 40, 'seven_day'), snapshot('chatgpt', 88, 'custom')];
-    expect(calculateBadgeState(snapshots, 'chatgpt:five_hour' as BadgeTargetId)).toMatchObject({ text: '88', color: '#f59e0b' });
+    expect(calculateBadgeState(snapshots, 'chatgpt:five_hour' as BadgeTargetId)).toMatchObject({ text: '88', color: '#f1d973' });
   });
 
   it('shows ? when the pinned provider has no snapshot', () => {
     expect(calculateBadgeState([snapshot('chatgpt', 95)], 'claude')).toEqual({
       text: '?',
-      color: '#6b7280'
+      color: '#a3adbb'
     });
   });
 
   it('shows ? when the pinned provider exists only as a stale snapshot', () => {
     const stale = snapshot('claude', 80, 'five_hour', { stale: true });
-    expect(calculateBadgeState([stale], 'claude')).toEqual({ text: '?', color: '#6b7280' });
+    expect(calculateBadgeState([stale], 'claude')).toEqual({ text: '?', color: '#a3adbb' });
   });
 });

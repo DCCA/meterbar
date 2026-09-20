@@ -1,30 +1,37 @@
-/* Shared design tokens for every MeterBar surface. Single source of truth —
-   popup.css and options.css import this file; never redeclare palette vars locally.
-   color-scheme keeps native widgets (select dropdown, confirm dialog, scrollbars)
-   in the dark scheme instead of punching white holes in the UI. */
+/* Glass dashboard visual system shared by the popup, side panel, and options page.
+   Colors come from workbenchPalette.css (generated); everything here derives from them. */
+@import './workbenchPalette.css';
+
 :root {
-  color-scheme: dark;
+  color-scheme: dark light;
 
-  --bg: #0a0f1c;
-  --bg-glow: #16233f;
-  --surface: #111a2e;
-  --surface-2: #16213a;
-  --border: #243149;
-  --border-soft: #1c283e;
-  --text: #eaf0fb;
-  --muted: #8a9bb8;
-  /* Non-text graphics only (sparklines, idle dots, spinner track): >=3:1 on surfaces.
-     Text never uses --faint — use --muted, which passes 4.5:1. */
-  --faint: #6b7d9c;
-  --track: #1d2940;
+  --mono: "JetBrains Mono", "JetBrainsMono Nerd Font", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 
-  --ok: #34d399;
-  --warn: #fbbf24;
-  --crit: #fb7185;
-  --accent: #60a5fa;
+  /* Glass material (Token Monitor grammar): tinted pane, hairlines, sunken tracks. */
+  --glass: color-mix(in srgb, var(--surface) 56%, transparent);
+  --glass-filter: blur(32px) saturate(115%);
+  --hairline: color-mix(in srgb, var(--line) 14%, transparent);
+  --hairline-strong: color-mix(in srgb, var(--line) 24%, transparent);
+  --hairline-soft: color-mix(in srgb, var(--line) 12%, transparent);
+  --control: color-mix(in srgb, var(--overlay) 5%, transparent);
+  --control-hover: color-mix(in srgb, var(--overlay) 7%, transparent);
+  --control-active: color-mix(in srgb, var(--overlay) 10%, transparent);
+  --control-highlight: color-mix(in srgb, var(--overlay) 8%, transparent);
+  --track: color-mix(in srgb, var(--sunken) 44%, transparent);
+  --shell-shadow: 0 22px 55px color-mix(in srgb, var(--shadow) 36%, transparent);
+  --focus: color-mix(in srgb, var(--accent) 70%, transparent);
 
-  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
-  --radius: 16px;
+  --radius: 14px;
+  --radius-control: 7px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+/* On the light pane the sunken track must stay a recess, not a dark bar competing with short fills. */
+:root[data-theme="light"] { --track: color-mix(in srgb, var(--sunken) 12%, transparent); }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) { --track: color-mix(in srgb, var(--sunken) 12%, transparent); }
+}
+
+/* The pages the browser draws for us still carry the design. */
+::selection { color: var(--surface); background: var(--accent); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }

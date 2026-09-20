@@ -23,26 +23,25 @@ function windowOf(w: ChatgptWindow, fallback: UsageWindow): UsageWindow {
   return WINDOW_BY_SECONDS[secs] ?? 'custom';
 }
 
-function snapshot(window: UsageWindow, w: ChatgptWindow, capturedAt: string, workspaceLabel?: string): UsageSnapshot | null {
+function snapshot(provider: UsageSnapshot['provider'], window: UsageWindow, w: ChatgptWindow, capturedAt: string): UsageSnapshot | null {
   if (typeof w.used_percent !== 'number') return null;
   return {
-    provider: 'chatgpt',
+    provider,
     window,
-    ...(workspaceLabel ? { workspaceLabel } : {}),
     usedRatio: w.used_percent / 100,
     usedPercent: Math.round(w.used_percent),
     resetsAt: epochToIso(w.reset_at),
     capturedAt,
     source: 'chatgpt-wham-usage',
-    confidence: 'exact',
+    confidence: 'inferred',
     stale: false
   };
 }
 
 /**
- * Pure parser (no I/O). `used_percent` is already a 0-100 percent. Confidence is
- * `exact`: clean structured JSON from a usage endpoint, validated against a real
- * logged-in response on 2026-06-20 (the captured fixture in the test file).
+ * Pure parser (no I/O). `used_percent` is already a 0-100 percent in the structured
+ * response, but the endpoint is undocumented, so confidence remains `inferred`.
+ * A sanitized live response captured on 2026-06-20 is checked in as parser evidence.
  */
 export function parseChatgptUsage(payload: ChatgptUsageResponse, now: Date = new Date()): UsageSnapshot[] {
   const capturedAt = now.toISOString();
@@ -50,8 +49,12 @@ export function parseChatgptUsage(payload: ChatgptUsageResponse, now: Date = new
 
   // Account-wide usage pool (Codex / Work / agents; chat conversations excluded).
   const main = payload.rate_limit ?? {};
-  const primary = main.primary_window ? snapshot(windowOf(main.primary_window, 'five_hour'), main.primary_window, capturedAt) : null;
-  const secondary = main.secondary_window ? snapshot(windowOf(main.secondary_window, 'seven_day'), main.secondary_window, capturedAt) : null;
+  const primary = main.primary_window
+    ? snapshot('chatgpt', windowOf(main.primary_window, 'five_hour'), main.primary_window, capturedAt)
+    : null;
+  const secondary = main.secondary_window
+    ? snapshot('chatgpt', windowOf(main.secondary_window, 'seven_day'), main.secondary_window, capturedAt)
+    : null;
   if (primary) out.push(primary);
   if (secondary) out.push(secondary);
 
@@ -67,7 +70,7 @@ export function parseChatgptUsage(payload: ChatgptUsageResponse, now: Date = new
     }
   }
   if (riskiest) {
-    const codex = snapshot('custom', riskiest, capturedAt, 'Codex');
+    const codex = snapshot('codex', 'custom', riskiest, capturedAt);
     if (codex) out.push(codex);
   }
 
@@ -84,12 +87,14 @@ interface ChatgptAccountsCheck { accounts?: Record<string, { account?: { account
 
 /**
  * Choose the account whose usage to read from the `/backend-api/accounts/check`
- * response (the first account with an id). Pure: the response is fetched by the
- * background worker. The id is used only to build the request header, never stored.
+ * response. Prefer the response's explicit `default` entry, then fall back to the
+ * first account with an id. The id is used only as a request header, never stored.
  */
 export function pickChatgptAccountId(body: unknown): string | null {
   const accounts = (body as ChatgptAccountsCheck | null)?.accounts;
   if (!accounts || typeof accounts !== 'object') return null;
+  const defaultId = accounts.default?.account?.account_id;
+  if (typeof defaultId === 'string' && defaultId) return defaultId;
   for (const entry of Object.values(accounts)) {
     const id = entry?.account?.account_id;
     if (typeof id === 'string' && id) return id;
@@ -99,7 +104,7 @@ export function pickChatgptAccountId(body: unknown): string | null {
 
 export const chatgptAdapter: ProviderAdapter = {
   provider: 'chatgpt',
-  label: 'ChatGPT / Codex',
+  label: 'ChatGPT',
   // `fetch` strategy via the background worker (Bearer token minted from the session
   // cookie); nothing is stored. `endpoint` documents the usage call.
   collection: { strategy: 'fetch', endpoint: chatgptUsageUrl(), init: { headers: { accept: 'application/json' } } },

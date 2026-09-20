@@ -8,15 +8,15 @@ export type BadgeTargetId = 'riskiest' | 'claude' | 'chatgpt';
 export interface BadgeTarget {
   id: BadgeTargetId;
   label: string;
-  provider?: ProviderId;
+  providers?: ProviderId[];
 }
 
 // Single source of truth for the options control AND the background lookup, so they
 // cannot drift. Gemini is omitted — it is status-only and has no numeric usage.
 export const BADGE_TARGETS: BadgeTarget[] = [
   { id: 'riskiest', label: 'Auto' },
-  { id: 'claude', label: 'Claude', provider: 'claude' },
-  { id: 'chatgpt', label: 'OpenAI', provider: 'chatgpt' }
+  { id: 'claude', label: 'Claude', providers: ['claude'] },
+  { id: 'chatgpt', label: 'OpenAI', providers: ['chatgpt', 'codex'] }
 ];
 
 const RISKIEST = BADGE_TARGETS[0];
@@ -26,6 +26,7 @@ const RISKIEST = BADGE_TARGETS[0];
  * their provider; unknown ids fall back to 'riskiest'.
  */
 export function parseBadgeTarget(id: string): BadgeTarget {
-  const key = id.split(':')[0];
-  return BADGE_TARGETS.find((t) => t.id === key) ?? RISKIEST;
+  const storedProvider = id.split(':')[0];
+  const key = storedProvider === 'codex' ? 'chatgpt' : storedProvider;
+  return BADGE_TARGETS.find((target) => target.id === key) ?? RISKIEST;
 }

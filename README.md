@@ -1,20 +1,23 @@
 # MeterBar
 
-A privacy-first Chrome extension that shows AI subscription usage limits in one real-time bar.
+A privacy-first Chrome extension for personal AI subscription usage limits, plus an optional experimental Omarchy display preview.
 
 ## Product thesis
 
-AI power users increasingly juggle Claude, ChatGPT/Codex, Gemini, and other AI subscriptions without a single place to see remaining limits. MeterBar starts as a Chrome extension that surfaces usage caps before they interrupt work, then can evolve into a local companion for CLI/coding-agent quota awareness.
+AI power users increasingly juggle Claude, ChatGPT/Codex, Gemini, and other AI subscriptions without a single place to see remaining limits. MeterBar is a personal Chrome extension that surfaces usage caps before they interrupt work. It has no account system, cloud sync, or team dashboard.
 
 ## Status
 
-MVP + Phase 2 implemented. The extension builds and loads: the toolbar icon shows a risk-colored bar per connected provider plus a badge number you can pin to a provider (Auto, Claude, or OpenAI), a popup and side panel render per-provider cards with trend sparklines, and settings allow per-provider toggles and CSV/JSON export. Claude and ChatGPT/Codex read live usage via background fetches of your logged-in sessions; Gemini reports connected-status via a content script. The exact provider endpoints/DOM hooks are validated by live inspection — until validated, a provider reports "not connected" rather than showing unverified numbers.
+The Chrome MVP and Phase 2 browser tracking are implemented. The Workbench interface spans the toolbar, popup, side panel, and settings. The toolbar icon shows a risk-colored bar per connected provider plus a badge number you can pin to a provider (Auto, Claude, or OpenAI). Claude and ChatGPT/Codex read live usage via background fetches of your logged-in sessions; Gemini reports connected-status via a content script. The exact provider endpoints/DOM hooks are validated by live inspection - until validated, a provider reports "not connected" rather than showing unverified numbers.
+
+An optional experimental Omarchy preview adds the same four-channel indicator and a click-open desktop panel using a sanitized local snapshot. It is display-only and not a stable product surface: the Chrome extension remains the only collector, and no CLI tracking, local proxy, routing, or failover is included.
 
 ### Viewing your usage without clicking
 
-- **Badge** — the pinned toolbar icon always shows your single riskiest percentage, color-coded.
-- **Hover tooltip** — hover the icon for a full per-provider, per-window summary, no click needed.
-- **Side panel** — open it once (the **Side panel** button in the popup, or Chrome's side-panel toolbar button) and it stays docked and glanceable while you browse, refreshing itself as new usage arrives.
+- **Badge** - the pinned toolbar icon always shows your single riskiest percentage, color-coded.
+- **Hover tooltip** - hover the icon for a full per-provider, per-window summary, no click needed.
+- **Side panel** - open it once (the **Side panel** button in the popup, or Chrome's side-panel toolbar button) and it stays docked and glanceable while you browse, refreshing itself as new usage arrives.
+- **Omarchy bar preview** - install the optional [experimental display preview](companion/README.md) for an always-visible shell indicator and click-open Workbench panel.
 
 ## Local development
 
@@ -40,6 +43,16 @@ npm test -- tests/badge.test.ts
 4. Click **Load unpacked** and select the `dist/` folder.
 5. Pin MeterBar to the toolbar.
 
+### Try the experimental Omarchy display preview
+
+This optional display-only preview is not a stable product surface, is not part of the Chrome MVP, and does not change its browser-only collection model.
+
+```bash
+./scripts/install-omarchy-companion.sh
+```
+
+Reload the unpacked extension after installation, then open MeterBar once to publish the first local snapshot. See [companion/README.md](companion/README.md) for architecture, privacy guarantees, and removal instructions.
+
 ## Permissions and privacy
 
 MeterBar is local-first: there is no backend, no cloud sync, and no analytics. It stores **only** usage metrics (percentages, reset timestamps, provider names, and your settings) in `chrome.storage.local`. It never reads or stores prompts, responses, uploaded files, or chat content.
@@ -49,11 +62,13 @@ MeterBar is local-first: there is no backend, no cloud sync, and no analytics. I
 | `storage` | Save usage snapshots, history, and settings locally. |
 | `alarms` | Refresh usage on a periodic schedule. |
 | `notifications` | Warn at 70% / 90% and when a window resets. |
+| `sidePanel` | Keep the usage instrument docked while you browse. |
+| `nativeMessaging` | Send a sanitized usage snapshot to the optional experimental Omarchy preview. No credential or chat data is included. |
 | `host_permissions: https://claude.ai/*` | Read your Claude usage from your logged-in session. |
 | `host_permissions: https://chatgpt.com/*` | Read ChatGPT/Codex usage surfaced to the page. |
 | `host_permissions: https://gemini.google.com/*` | Read Gemini usage surfaced to the page. |
 
-Use **Settings → Clear local MeterBar data** to erase everything at any time.
+Use **Settings → Clear local MeterBar data** to erase browser storage and ask the installed companion host to remove its snapshot. If the host is unavailable, use the companion removal steps to delete its local state file.
 
 ## Disclaimer
 

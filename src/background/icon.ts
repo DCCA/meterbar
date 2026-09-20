@@ -1,12 +1,14 @@
+import palette from '../ui/workbenchPalette.json';
 import type { IconBar, IconLevel } from './iconModel';
 
-// Palette matches the badge / popup risk colors.
 const BAR_COLOR: Record<IconLevel, string> = {
-  ok: '#22c55e',
-  warn: '#f59e0b',
-  crit: '#ef4444'
+  ok: palette.dark.ok,
+  warn: palette.dark.warn,
+  crit: palette.dark.crit
 };
-const TRACK_COLOR = 'rgba(148, 163, 184, 0.35)';
+const CASING_COLOR = palette.icon.casing;
+const CASING_BORDER = palette.icon.border;
+const TRACK_COLOR = palette.icon.track;
 
 const STATIC_ICON = { 16: 'assets/icon16.png', 48: 'assets/icon48.png', 128: 'assets/icon128.png' };
 
@@ -17,21 +19,29 @@ function drawBars(bars: IconBar[], size: number): ImageData {
   if (!ctx) throw new Error('2d context unavailable');
   ctx.clearRect(0, 0, size, size);
 
-  const pad = Math.max(1, Math.round(size * 0.12));
-  const gap = bars.length > 1 ? Math.max(1, Math.round(size * 0.1)) : 0;
+  const caseInset = Math.max(1, Math.round(size * 0.05));
+  const caseRadius = Math.max(2, Math.round(size * 0.2));
+  ctx.fillStyle = CASING_COLOR;
+  roundRect(ctx, caseInset, caseInset, size - caseInset * 2, size - caseInset * 2, caseRadius);
+  ctx.fill();
+  ctx.strokeStyle = CASING_BORDER;
+  ctx.lineWidth = Math.max(1, Math.round(size * 0.045));
+  ctx.stroke();
+
+  const pad = Math.max(3, Math.round(size * 0.2));
+  const gap = bars.length > 1 ? Math.max(1, Math.round(size * 0.07)) : 0;
   const top = pad;
   const bottom = size - pad;
   const trackH = bottom - top;
   const slot = (size - 2 * pad - gap * (bars.length - 1)) / bars.length;
-  const radius = Math.min(slot, trackH) * 0.18;
+  const radius = Math.min(slot, trackH) * 0.12;
 
   bars.forEach((bar, i) => {
     const x = pad + i * (slot + gap);
-    // track
     ctx.fillStyle = TRACK_COLOR;
     roundRect(ctx, x, top, slot, trackH, radius);
     ctx.fill();
-    // fill from the bottom up
+
     const fillH = Math.max(bar.fillRatio > 0 ? size * 0.08 : 0, trackH * bar.fillRatio);
     if (fillH > 0) {
       ctx.fillStyle = BAR_COLOR[bar.level];

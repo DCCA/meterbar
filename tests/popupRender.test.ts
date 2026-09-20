@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   cardAllStale,
   confidenceNote,
+  constraintMeta,
   escapeHtml,
   humanWindowLabel,
   isCompactRow,
+  mostConstrainedWindow,
   needleAngle,
   paceFraction,
   renderableSnapshots,
@@ -15,6 +17,7 @@ import {
   timeAgo,
   resetLabel,
   safeProviderStatus,
+  shortWindowLabel,
   PROVIDER_HOMES
 } from '../src/popup/render';
 import type { ProviderCardState, UsageSnapshot } from '../src/shared/types';
@@ -59,6 +62,14 @@ describe('humanWindowLabel', () => {
   });
 });
 
+describe('shortWindowLabel', () => {
+  it('shortens window names for side-by-side dashboard columns', () => {
+    expect(shortWindowLabel('five_hour')).toBe('5-hour');
+    expect(shortWindowLabel('seven_day')).toBe('Weekly');
+    expect(shortWindowLabel('custom')).toBe('Usage');
+  });
+});
+
 describe('safeProviderStatus', () => {
   it('falls back for corrupted or untrusted stored status values', () => {
     expect(safeProviderStatus('connected')).toBe('connected');
@@ -86,6 +97,43 @@ describe('riskiestPercent', () => {
   it('returns the highest snapshot percent, or -1 with no snapshots', () => {
     expect(riskiestPercent(card({ snapshots: [snap({ usedPercent: 30 }), snap({ usedPercent: 80 })] }))).toBe(80);
     expect(riskiestPercent(card({ snapshots: [] }))).toBe(-1);
+  });
+});
+
+describe('constraintMeta', () => {
+  it('includes truthful uncertainty in the aggregate readout copy', () => {
+    const now = new Date('2026-06-20T12:00:00Z');
+    expect(constraintMeta('Claude', snap({
+      confidence: 'inferred',
+      resetsAt: '2026-06-20T14:00:00Z'
+    }), now)).toBe('Claude · 5-hour limit · Resets in 2h 0m · unofficial source');
+  });
+});
+
+describe('mostConstrainedWindow', () => {
+  it('returns the highest fresh, available window with its provider label', () => {
+    const result = mostConstrainedWindow([
+      card({ label: 'Claude', snapshots: [snap({ usedPercent: 62 })] }),
+      {
+        provider: 'chatgpt',
+        label: 'ChatGPT / Codex',
+        status: 'connected',
+        snapshots: [snap({ provider: 'chatgpt', window: 'seven_day', usedPercent: 82 })]
+      }
+    ]);
+
+    expect(result).toEqual({
+      provider: 'chatgpt',
+      providerLabel: 'ChatGPT / Codex',
+      snapshot: expect.objectContaining({ window: 'seven_day', usedPercent: 82 })
+    });
+  });
+
+  it('ignores stale and unavailable readings and returns undefined without a live window', () => {
+    expect(mostConstrainedWindow([
+      card({ snapshots: [snap({ usedPercent: 95, stale: true })] }),
+      card({ snapshots: [snap({ usedPercent: 90, confidence: 'unavailable' })] })
+    ])).toBeUndefined();
   });
 });
 
@@ -180,6 +228,6 @@ describe('confidenceNote', () => {
     expect(confidenceNote(snap({}))).toBeUndefined();
     expect(confidenceNote(snap({ confidence: 'unavailable' }))).toBeUndefined();
     expect(confidenceNote(snap({ confidence: 'estimated' }))).toBe('estimated');
-    expect(confidenceNote(snap({ confidence: 'inferred' }))).toBe('approximate');
+    expect(confidenceNote(snap({ confidence: 'inferred' }))).toBe('unofficial source');
   });
 });

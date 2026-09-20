@@ -17,8 +17,8 @@ describe('parseClaudeUsageResponse', () => {
     }, NOW);
 
     expect(snapshots).toMatchObject([
-      { provider: 'claude', window: 'five_hour', usedPercent: 15, usedRatio: 0.15, confidence: 'exact', stale: false },
-      { provider: 'claude', window: 'seven_day', usedPercent: 8, usedRatio: 0.08, confidence: 'exact', stale: false }
+      { provider: 'claude', window: 'five_hour', usedPercent: 15, usedRatio: 0.15, confidence: 'inferred', stale: false },
+      { provider: 'claude', window: 'seven_day', usedPercent: 8, usedRatio: 0.08, confidence: 'inferred', stale: false }
     ]);
   });
 
@@ -38,9 +38,9 @@ describe('parseClaudeUsageResponse', () => {
     expect(first.resetsAt).toBeUndefined();
   });
 
-  // Validation evidence for confidence: 'exact' — a real, sanitized response captured from
-  // a logged-in claude.ai session on 2026-06-20. The parser must surface the two windows we
-  // support and ignore the surrounding billing/limits/spend fields without error.
+  // Validation evidence for the parser - a real, sanitized response captured from a
+  // logged-in claude.ai session on 2026-06-20. The source remains undocumented, so the
+  // snapshots stay `inferred`; the parser still ignores unrelated billing/limits fields.
   it('parses the captured live response, ignoring non-window fields', () => {
     const captured = {
       five_hour: { utilization: 15, resets_at: '2026-06-20T22:29:59.870472+00:00', limit_dollars: null, used_dollars: null },
@@ -54,24 +54,31 @@ describe('parseClaudeUsageResponse', () => {
     };
     const snapshots = parseClaudeUsageResponse(captured, NOW);
     expect(snapshots.map((s) => [s.window, s.usedPercent, s.confidence])).toEqual([
-      ['five_hour', 15, 'exact'],
-      ['seven_day', 8, 'exact']
+      ['five_hour', 15, 'inferred'],
+      ['seven_day', 8, 'inferred']
     ]);
   });
 });
 
 describe('pickClaudeOrgUuid', () => {
-  it('prefers an org exposing a Claude consumer capability', () => {
+  it('prefers the chat-capable organization over API-only or plan-only organizations', () => {
     const body = [
-      { uuid: 'team-org', capabilities: ['api'] },
-      { uuid: 'max-org', capabilities: ['claude_max', 'chat'] }
+      { uuid: 'api-org', capabilities: ['api'] },
+      { uuid: 'plan-org', capabilities: ['claude_max'] },
+      { uuid: 'chat-org', capabilities: ['chat'] }
     ];
-    expect(pickClaudeOrgUuid(body)).toBe('max-org');
+    expect(pickClaudeOrgUuid(body)).toBe('chat-org');
   });
 
-  it('falls back to the first org when none expose a claude_* capability', () => {
-    const body = [{ uuid: 'first' }, { uuid: 'second', capabilities: ['api'] }];
-    expect(pickClaudeOrgUuid(body)).toBe('first');
+  it('falls back to a non-API-only organization, then the first valid organization', () => {
+    expect(pickClaudeOrgUuid([
+      { uuid: 'api-org', capabilities: ['api'] },
+      { uuid: 'workspace-org', capabilities: ['raven'] }
+    ])).toBe('workspace-org');
+    expect(pickClaudeOrgUuid([
+      { uuid: 'first-api', capabilities: ['api'] },
+      { uuid: 'second-api', capabilities: ['api'] }
+    ])).toBe('first-api');
   });
 
   it('returns null for an empty list, a non-array body, or an org without a uuid', () => {

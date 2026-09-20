@@ -7,22 +7,36 @@
     <link rel="stylesheet" href="./popup.css" />
   </head>
   <body>
-    <main class="popup">
-      <header>
-        <div class="brand">
-          <span class="mark gauge-mark" aria-hidden="true"><span class="needle"></span></span>
-          <h1>MeterBar</h1>
-        </div>
-        <p class="tagline">One bar for all your AI limits.</p>
+    <!--
+      THESIS: MeterBar is one glass pane over the desk that answers "which limit stops me first" before any card is read.
+      OWN-WORLD: Frosted glass tint over an ambient light field, monospace readouts, hairline sections, sunken 6px meters, risk carried by color and number.
+      STORY: Read the tightest limit, glance the 24-hour trend, scan providers in fixed order, then refresh, dock, or configure.
+      FIRST VIEWPORT: Mark and badge-target control, one hero number, the trend, compact limits, and a footer view switcher.
+      FORM: Token Monitor grammar (user-pinned reference), seed 9983660a canon.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md.
+    -->
+    <main class="shell">
+      <header class="top">
+        <span class="mark"><h1>MeterBar</h1><i aria-hidden="true"></i></span>
+        <div id="badge-target" class="seg seg-compact" role="radiogroup" aria-label="Toolbar badge shows"></div>
       </header>
-      <section id="cards" class="cards" aria-live="polite"></section>
-      <footer>
-        <button id="refresh" type="button">
-          <span class="spinner" aria-hidden="true"></span>
-          <span class="label">Refresh</span>
+      <section id="cards" class="dashboard" aria-live="polite"></section>
+      <footer class="foot">
+        <span id="view-switcher" class="vs">
+          <button type="button" class="btn vs-current">Home</button>
+          <button type="button" class="btn vs-toggle" aria-label="Switch view"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10.5l4-4"/></svg></button>
+        </span>
+        <span class="spacer"></span>
+        <button id="open-sidepanel" type="button" class="btn icon" title="Dock MeterBar to the side panel so it stays visible" aria-label="Open side panel">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2" width="13" height="12" rx="2"></rect><path d="M10 2v12"></path></svg>
         </button>
-        <button id="open-sidepanel" type="button" title="Dock MeterBar to the side panel so it stays visible">Side panel</button>
-        <a href="../options/options.html" target="_blank" rel="noopener">Settings</a>
+        <button id="refresh" type="button" class="btn icon" title="Refresh usage now" aria-label="Refresh">
+          <span class="spinner" aria-hidden="true"></span>
+          <svg class="refresh-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 5.2V1.8m0 0h-3.4m3.4 0-2.1 2.1a5 5 0 1 0 1.1 5.5"></path></svg>
+        </button>
+        <a href="../options/options.html" target="_blank" rel="noopener" class="btn icon" title="Settings" aria-label="Settings">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2"></circle><path d="M8 1.5v2M8 12.5v2M14.5 8h-2M3.5 8h-2M12.6 3.4 11.2 4.8M4.8 11.2l-1.4 1.4M12.6 12.6l-1.4-1.4M4.8 4.8 3.4 3.4"></path></svg>
+        </a>
       </footer>
     </main>
     <script type="module" src="./popup.ts"></script>

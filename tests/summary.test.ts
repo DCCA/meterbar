@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { buildTooltip, windowShortLabel } from '../src/shared/summary';
-import type { ProviderCardState } from '../src/shared/types';
+import type { Confidence, ProviderCardState } from '../src/shared/types';
 
-function card(label: string, windows: Array<['five_hour' | 'seven_day', number]>, stale = false): ProviderCardState {
+function card(
+  label: string,
+  windows: Array<['five_hour' | 'seven_day', number]>,
+  stale = false,
+  confidence: Confidence = 'exact'
+): ProviderCardState {
   return {
     provider: 'claude', label, status: 'connected',
     snapshots: windows.map(([window, usedPercent]) => ({
       provider: 'claude', window, usedRatio: usedPercent / 100, usedPercent,
-      capturedAt: '2026-06-20T12:00:00Z', source: 't', confidence: 'exact', stale
+      capturedAt: '2026-06-20T12:00:00Z', source: 't', confidence, stale
     }))
   };
 }
@@ -16,6 +21,11 @@ describe('buildTooltip', () => {
   it('summarizes fresh windows per provider and names the direction of the number', () => {
     expect(buildTooltip([card('Claude', [['five_hour', 62], ['seven_day', 41]])]))
       .toBe('MeterBar · % of limit used\nClaude: 5h 62% · 7d 41%');
+  });
+
+  it('labels readings from undocumented provider sources', () => {
+    expect(buildTooltip([card('Claude', [['five_hour', 62]], false, 'inferred')]))
+      .toBe('MeterBar · % of limit used\nClaude: 5h 62% (unofficial source)');
   });
 
   it('falls back when there is no fresh data', () => {

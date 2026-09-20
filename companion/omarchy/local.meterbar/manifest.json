@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "local.meterbar",
+  "name": "MeterBar",
+  "version": "0.1.0",
+  "author": "MeterBar",
+  "license": "Apache-2.0",
+  "description": "Local AI subscription limits in the Omarchy bar and a click-open Workbench panel.",
+  "kinds": ["bar-widget"],
+  "activation": "on-demand",
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "MeterBar",
+    "description": "Shows sanitized MeterBar usage snapshots written by the browser extension.",
+    "category": "AI",
+    "aliases": ["meterbar", "ai-limits", "usage-limits"],
+    "allowMultiple": false,
+    "defaults": {
+      "statePath": "",
+      "staleAfterMinutes": 10
+    },
+    "schema": [
+      {
+        "key": "statePath",
+        "type": "path",
+        "label": "Snapshot path",
+        "defaultValue": "",
+        "description": "Optional. Defaults to $XDG_STATE_HOME/meterbar/state.json."
+      },
+      {
+        "key": "staleAfterMinutes",
+        "type": "integer",
+        "label": "Stale after (minutes)",
+        "min": 1,
+        "max": 120,
+        "step": 1,
+        "defaultValue": 10
+      }
+    ]
+  }
+}

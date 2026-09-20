@@ -31,7 +31,8 @@ export function getMockCards(): ProviderCardState[] {
         }
       ]
     },
-    { provider: 'chatgpt', label: 'ChatGPT / Codex', status: 'unsupported', snapshots: [], message: 'Adapter coming next.' },
+    { provider: 'chatgpt', label: 'ChatGPT', status: 'unsupported', snapshots: [], message: 'Adapter coming next.' },
+    { provider: 'codex', label: 'Codex', status: 'unsupported', snapshots: [], message: 'Adapter coming next.' },
     { provider: 'gemini', label: 'Gemini', status: 'unsupported', snapshots: [], message: 'Adapter coming next.' }
   ];
 }

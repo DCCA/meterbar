@@ -18,6 +18,15 @@ describe('aggregateCards', () => {
     expect(c.status).toBe('stale');
   });
 
+  it('marks retained last-good data stale immediately after a failed refresh', () => {
+    const now = new Date('2026-06-20T12:00:10Z');
+    const failed = { ...card('claude', 50, '2026-06-20T12:00:00Z'), status: 'stale' as const };
+    const [result] = aggregateCards([failed], DEFAULT_SETTINGS, now);
+
+    expect(result.status).toBe('stale');
+    expect(result.snapshots[0].stale).toBe(true);
+  });
+
   it('drops providers disabled in settings', () => {
     const now = new Date('2026-06-20T12:00:10Z');
     const cards = aggregateCards([card('gemini', 20, '2026-06-20T12:00:00Z')], { ...DEFAULT_SETTINGS, geminiEnabled: false }, now);

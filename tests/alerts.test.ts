@@ -26,6 +26,17 @@ describe('alertCopy', () => {
     expect(copy.message).toBe('Resets in 46m.');
   });
 
+  it('labels inferred readings as an unofficial source', () => {
+    const copy = alertCopy({
+      kind: 'threshold',
+      label: 'Claude',
+      window: 'five_hour',
+      usedPercent: 91,
+      confidence: 'inferred'
+    }, now);
+    expect(copy.title).toBe('Claude: 5-hour limit at 91% used (unofficial source)');
+  });
+
   it('is honest when the reset time is unknown', () => {
     const copy = alertCopy({ kind: 'threshold', label: 'Claude', window: 'seven_day', usedPercent: 72 }, now);
     expect(copy.title).toBe('Claude: 7-day limit at 72% used');
@@ -35,6 +46,6 @@ describe('alertCopy', () => {
   it('announces resets with the fresh usage level', () => {
     const copy = alertCopy({ kind: 'reset', label: 'Claude', window: 'five_hour', usedPercent: 3 }, now);
     expect(copy.title).toBe('Claude: 5-hour limit reset');
-    expect(copy.message).toBe('Fresh window — back to 3% used.');
+    expect(copy.message).toBe('Fresh window - back to 3% used.');
   });
 });

@@ -4,6 +4,7 @@ export type ExtensionMessage =
   | { type: 'usage:report'; provider: ProviderId; raw: unknown; capturedAt: string } // content -> bg
   | { type: 'status:report'; provider: ProviderId; status: ProviderCardState['status']; message?: string } // content -> bg
   | { type: 'usage:refresh' }                                                         // extension page -> bg
+  | { type: 'data:clear' }                                                            // options -> bg
   | { type: 'state:get' }                                                             // extension page -> bg
   | { type: 'state:result'; cards: ProviderCardState[] };                             // bg -> extension page
 
@@ -32,7 +33,7 @@ function knownProvider(value: unknown): value is ProviderId {
   return typeof value === 'string' && REPORT_PROVIDERS.has(value as ProviderId);
 }
 
-function exactTypeMessage(value: unknown, type: 'usage:refresh' | 'state:get'): boolean {
+function exactTypeMessage(value: unknown, type: 'usage:refresh' | 'data:clear' | 'state:get'): boolean {
   const message = record(value);
   return !!message && message.type === type && Object.keys(message).length === 1;
 }
@@ -68,6 +69,10 @@ export function isStatusReport(value: unknown): value is Extract<ExtensionMessag
 
 export function isUsageRefresh(value: unknown): value is Extract<ExtensionMessage, { type: 'usage:refresh' }> {
   return exactTypeMessage(value, 'usage:refresh');
+}
+
+export function isDataClear(value: unknown): value is Extract<ExtensionMessage, { type: 'data:clear' }> {
+  return exactTypeMessage(value, 'data:clear');
 }
 
 export function isStateGet(value: unknown): value is Extract<ExtensionMessage, { type: 'state:get' }> {

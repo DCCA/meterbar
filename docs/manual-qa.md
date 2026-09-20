@@ -1,6 +1,6 @@
 # Manual QA checklist
 
-Things that **can't** be covered by `npm test` — the live provider data path and the
+Things that **can't** be covered by `npm test` - the live provider data path and the
 rendered UI in a real Chrome profile. Run this before shipping a release or after any
 change to `src/popup/`, `src/options/`, `src/background/refresh.ts`, or a provider adapter.
 
@@ -26,10 +26,10 @@ npm run build        # → dist/
 
 ## 1. First-run / empty state
 
-Use a Chrome profile **not** signed into any provider (or clear data first — see §6).
+Use a Chrome profile **not** signed into any provider (or clear data first - see §6).
 
-- [ ] Popup shows the **gauge hero**: "No providers connected yet" + the privacy line.
-- [ ] Each provider renders an empty card with status pill (e.g. "Not connected yet").
+- [ ] Popup shows the glass hero in its idle state (`--% used`, sign-in hint) and the header mark's dot is neutral.
+- [ ] Each provider renders an empty channel row with truthful status copy (e.g. "Not connected yet").
 - [ ] Each first-party card shows an **Open <provider> →** CTA.
 - [ ] Clicking a CTA opens the provider site in a new tab (`claude.ai`, `chatgpt.com`, `gemini.google.com`).
 - [ ] Toolbar badge shows `?` in gray (no fresh data).
@@ -39,10 +39,13 @@ Use a Chrome profile **not** signed into any provider (or clear data first — s
 Sign into `claude.ai` and/or `chatgpt.com` in the same profile, open the popup, click **Refresh**.
 
 - [ ] Cards populate with real percentages and window labels ("5-hour limit", "7-day limit").
-- [ ] Providers are ordered **riskiest first** (highest % at top), matching the badge.
-- [ ] Toolbar **badge** shows the single highest fresh % and the right color
+- [ ] Providers stay in their fixed order so position identifies the provider; the hero names the tightest limit with its reset countdown and any uncertainty note.
+- [ ] Footer view switcher toggles Home (hero, 24-hour trend, compact limits) and Limits (per-provider sections with 6px meters and pace ticks); the choice persists after reopening the popup and is shared with the side panel.
+- [ ] Trend draws one line per provider with history, direct end labels, a legend, and a hover crosshair with readings; with fewer than two readings it says the trend appears after a few readings.
+- [ ] Header segmented control (Auto / Claude / OpenAI) changes the toolbar badge target and mirrors the Settings control.
+- [ ] Toolbar **badge** shows the selected fresh % and the right color
       (green <70, amber ≥70, red ≥90).
-- [ ] Per-window risk colors are correct on bar, number, and status dot — and a window's
+- [ ] Per-window risk colors are correct on bar, number, and status dot - and a window's
       number reflects **its own** risk, not the card's peak (e.g. a 78% window stays amber
       even on a card whose other window is 94% red).
 - [ ] `Resets in …` countdown is present and plausible per window; reads
@@ -79,17 +82,18 @@ Sign into `claude.ai` and/or `chatgpt.com` in the same profile, open the popup, 
 
 Right-click the icon → **Options** (or the popup's Settings link).
 
-- [ ] Dark theme matches the popup; toggle switches animate on/off.
+- [ ] Settings uses the same glass shell as the popup: hairline sections, sunken toggles, the badge-target control with live previews, and both light and dark themes follow the system.
+- [ ] Toggle switches animate on/off.
 - [ ] Toggling a provider off removes it from the popup after refresh; on restores it.
 - [ ] **Export JSON** and **Export CSV** download files containing only percentages +
-      timestamps (open them and confirm — no prompts/messages/content).
+      timestamps (open them and confirm - no prompts/messages/content).
 - [ ] **Clear local MeterBar data** shows a confirm dialog; cancelling does nothing.
 - [ ] Confirming clears data, shows the green status line, and it auto-clears after ~4s.
 - [ ] After clearing, the popup falls back to the first-run hero (§1).
 
 ## 7. Accessibility & polish
 
-- [ ] Tab through the popup and options — focus rings are visible on buttons, links,
+- [ ] Tab through the popup and options - focus rings are visible on buttons, links,
       toggles, and CTAs.
 - [ ] Each usage bar exposes `role="progressbar"` with `aria-valuenow` (inspect, or a
       screen reader announces the percentage).
@@ -98,20 +102,34 @@ Right-click the icon → **Options** (or the popup's Settings link).
 
 ## 8. Privacy / security spot-check
 
-These guard the PRD's non-negotiables — verify on every release.
+These guard the PRD's non-negotiables - verify on every release.
 
 - [ ] DevTools → Network (popup + a provider tab): the only requests are to the provider
       usage endpoints. **No** request to any MeterBar/third-party backend and authenticated
       requests use `cache: no-store`.
 - [ ] `chrome://extensions` lists host access only for `claude.ai`, `chatgpt.com`, and
-      `gemini.google.com`; there is no broad or unused `chat.openai.com` access.
+      `gemini.google.com`; there is no broad or unused `chat.openai.com` access. The
+      `nativeMessaging` permission is used only for the optional local companion bridge.
 - [ ] `chrome://extensions` → MeterBar → **Inspect service worker** → Application →
-      Storage: stored keys are `latest:*`, `history:*`, `alertState`, and settings —
+      Storage: stored keys are `latest:*`, `history:*`, `alertState`, and settings -
       containing only metrics/timestamps. No tokens, cookies, account ids, or chat content.
 - [ ] A provider-supplied string with HTML (e.g. a workspace label containing `<`) renders
       as text, not markup (escaping holds).
 
-## 9. Regression gate
+## 9. Omarchy companion
+
+Run `./scripts/install-omarchy-companion.sh`, reload the unpacked extension, and refresh usage once.
+
+- [ ] The four-channel MeterBar indicator appears in the right side of the Omarchy bar.
+- [ ] Left-click opens the glass panel (hero, trend, compact limits) and right-click opens the extension in Chromium; the bar widget shows four mini meters and the tightest percent.
+- [ ] The panel shows the same fixed provider order, percentages, reset timing, and connected-only Gemini state as the extension.
+- [ ] Claude and ChatGPT/Codex readings are labeled **Unofficial source** in the extension and companion because their usage endpoints are undocumented.
+- [ ] Stop refreshing for longer than 10 minutes: last-known readings remain visible but are labeled stale and stop contributing to the master reading.
+- [ ] `~/.local/state/meterbar/state.json` has mode `0600` and contains only provider/status/window/percentage/timestamp/confidence/stale fields. Confirm there are no cookies, tokens, account hashes, endpoint details, prompts, responses, or chat content.
+- [ ] **Settings → Clear local MeterBar data** removes both browser storage and `~/.local/state/meterbar/state.json` when the companion host is installed.
+- [ ] Removing the native host or state file leaves the extension functional and gives the panel a truthful waiting state.
+
+## 10. Regression gate
 
 - [ ] `npm test` → all green.
 - [ ] `npm run typecheck` → clean.

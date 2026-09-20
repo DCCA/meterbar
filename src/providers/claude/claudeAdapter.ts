@@ -16,11 +16,9 @@ interface ClaudeUsageResponse {
 }
 
 /**
- * Pure parser (no I/O). Confidence is `exact` because the live claude.ai usage
- * endpoint returns a clean JSON document of percentages + reset timestamps, manually
- * validated against a real logged-in response on 2026-06-20 — that captured response
- * is checked in as the fixture in tests/claudeAdapter.test.ts (the plan's required
- * validation evidence before shipping `exact`).
+ * Pure parser (no I/O). Values come directly from a structured usage response, but the
+ * endpoint is undocumented, so confidence remains `inferred`. A sanitized live response
+ * captured on 2026-06-20 is checked in as parser validation evidence.
  */
 export function parseClaudeUsageResponse(payload: ClaudeUsageResponse, now: Date = new Date()): UsageSnapshot[] {
   const capturedAt = now.toISOString();
@@ -40,7 +38,7 @@ export function parseClaudeUsageResponse(payload: ClaudeUsageResponse, now: Date
       resetsAt: value.resets_at ?? undefined,
       capturedAt,
       source: 'claude-usage-response',
-      confidence: 'exact',
+      confidence: 'inferred',
       stale: false
     }];
   });
@@ -69,13 +67,20 @@ export function claudeUsageUrl(orgUuid: string): string {
 
 /**
  * Choose which organization's usage to read from the org list the logged-in UI already
- * fetches. Prefers an org exposing a Claude consumer plan (`claude_*` capability),
- * falling back to the first org. Returns null when nothing usable is present.
+ * fetches. Prefer a chat-capable organization, then any organization that is not API-only.
+ * This avoids selecting a developer API organization on multi-workspace accounts.
  */
 export function pickClaudeOrgUuid(body: unknown): string | null {
-  const orgs: ClaudeOrganization[] = Array.isArray(body) ? body : [];
-  const org = orgs.find((o) => (o.capabilities ?? []).some((c) => c.startsWith('claude_'))) ?? orgs[0];
-  return org?.uuid ?? null;
+  const orgs: ClaudeOrganization[] = (Array.isArray(body) ? body : [])
+    .filter((org): org is ClaudeOrganization & { uuid: string } => typeof org?.uuid === 'string' && org.uuid.length > 0);
+  const capabilities = (org: ClaudeOrganization): Set<string> =>
+    new Set((org.capabilities ?? []).map((capability) => capability.toLowerCase()));
+  const chatOrg = orgs.find((org) => capabilities(org).has('chat'));
+  const nonApiOnlyOrg = orgs.find((org) => {
+    const values = capabilities(org);
+    return !(values.size === 1 && values.has('api'));
+  });
+  return chatOrg?.uuid ?? nonApiOnlyOrg?.uuid ?? orgs[0]?.uuid ?? null;
 }
 
 export const claudeAdapter: ProviderAdapter = {
@@ -83,7 +88,7 @@ export const claudeAdapter: ProviderAdapter = {
   label: 'Claude',
   // `fetch` strategy: the background worker reads usage with the logged-in session
   // cookie (credentials: 'include'); no token or key is stored. `endpoint` is the
-  // org-discovery entrypoint — the per-org usage URL is resolved at refresh time.
+  // org-discovery entrypoint - the per-org usage URL is resolved at refresh time.
   collection: { strategy: 'fetch', endpoint: claudeOrgsUrl(), init: { headers: { accept: 'application/json' } } },
   parse: (raw) => parseClaudeUsageResponse(raw as ClaudeUsageResponse)
 };

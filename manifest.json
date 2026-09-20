@@ -2,13 +2,14 @@
   "manifest_version": 3,
   "name": "MeterBar",
   "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqdlQe1Ng0P/Unjpqz5PcJtIDSoyoYYe+rNLhbM1c04tCBghDqHMdC59L7a4Tq4ki4pNhOpfmVAYypnLro34E/AjUVGmDJvbvtS+soRk37xf0gSO0Ctrecg+Iv1Oxa9Ku3kEWpWlN+ZhjhRAOiXbR/nk6MQDW1mRc8SUM7if7GXKrYyjDonWN6YhE+PxYIf25X/C0KKqLcWy0C2WOKzUwX/9+XxU29mcUXD3TJfva+SCr6bb5Bl2Y87J+82SoWqj0dHkfySaN2VGU378tAJrI1fH3AG+FkkC4ccyooVpUb3Gou+1Z5fUR8oWGBxkbmtn7n5WhydjIdKAb5TT7awiKWwIDAQAB",
   "description": "One bar for all your AI limits.",
   "icons": {
     "16": "assets/icon16.png",
     "48": "assets/icon48.png",
     "128": "assets/icon128.png"
   },
-  "permissions": ["storage", "alarms", "notifications", "sidePanel"],
+  "permissions": ["storage", "alarms", "notifications", "sidePanel", "nativeMessaging"],
   "commands": {
     "_execute_action": {
       "suggested_key": { "default": "Alt+Shift+M" },

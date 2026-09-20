@@ -7,92 +7,94 @@
     <link rel="stylesheet" href="./options.css" />
   </head>
   <body>
-    <main>
-      <header class="page-head">
-        <span class="mark" aria-hidden="true"></span>
-        <div>
-          <h1>MeterBar Settings</h1>
-          <p class="sub">Local-first. Everything stays on this device.</p>
-        </div>
+    <!--
+      THESIS: MeterBar settings are the same glass pane as the dashboard, one column of hairline sections, nothing that looks like a preference card.
+      OWN-WORLD: Frosted glass tint over an ambient light field, monospace readouts, hairline sections, sunken tracks, risk carried by color and number.
+      STORY: Decide alerts, what the toolbar shows, which providers are read, and what stays on this device.
+      FIRST VIEWPORT: Mark and local-only status, then Alerts, Toolbar, Providers, and Local record as ruled sections.
+      FORM: Token Monitor grammar (user-pinned reference), seed 9983660a canon.
+      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md.
+    -->
+    <main class="shell">
+      <header class="top">
+        <span class="mark"><h1>MeterBar</h1><i aria-hidden="true"></i></span>
+        <span class="local"><i aria-hidden="true"></i>Local only</span>
       </header>
+      <p class="lede">Settings and usage history stay in this browser profile. Nothing leaves this device.</p>
 
-      <section class="panel">
-        <h2>Notifications</h2>
-        <label class="switch">
-          <span class="switch-text">
-            <span class="switch-title">Enable local notifications</span>
-            <span class="switch-desc">Get a heads-up at 70% and 90% of a limit, and when a window resets.</span>
+      <section class="sec">
+        <div class="sec-head"><h2>Alerts</h2><span>Threshold signals</span></div>
+        <label class="row switch">
+          <span class="row-text">
+            <span class="row-title">Local notifications</span>
+            <span class="row-desc">Warn at 70%, 90%, and when a usage window resets.</span>
           </span>
           <input id="notifications" type="checkbox" />
           <span class="track" aria-hidden="true"></span>
         </label>
       </section>
 
-      <section class="panel">
-        <h2>Toolbar icon</h2>
-        <div class="icon-legend" aria-hidden="true">
-          <span class="legend-item"><span class="legend-bar" style="--fill: 40%"></span>Claude</span>
-          <span class="legend-item"><span class="legend-bar" style="--fill: 75%; --bar-color: var(--warn)"></span>ChatGPT</span>
-          <span class="legend-item"><span class="legend-bar" style="--fill: 92%; --bar-color: var(--crit)"></span>Codex</span>
-          <span class="legend-item"><span class="legend-bar" style="--fill: 0%"></span>Gemini</span>
+      <section class="sec">
+        <div class="sec-head"><h2>Toolbar</h2><span>Fixed provider slots</span></div>
+        <div class="icon-bench">
+          <div class="icon-shell" aria-hidden="true">
+            <span class="legend-bar" style="--fill: 40%"></span>
+            <span class="legend-bar" style="--fill: 75%; --bar-color: var(--warn)"></span>
+            <span class="legend-bar" style="--fill: 55%"></span>
+            <span class="legend-bar" style="--fill: 0%; --bar-color: var(--muted)"></span>
+            <b>82</b>
+          </div>
+          <div class="row-text">
+            <span class="row-title">Position identifies the provider</span>
+            <span class="row-desc">Claude, ChatGPT, Codex, and Gemini keep the same left-to-right slot. Color shows risk.</span>
+          </div>
         </div>
-        <p class="legend-note">
-          The icon draws one bar per provider in this fixed left-to-right order, so a bar's position always
-          identifies its provider. A bar appears once a provider has reported at least once.
-        </p>
-        <div class="select-row">
-          <span class="switch-text" id="badge-target-label">
-            <span class="switch-title">Number shown on the toolbar icon</span>
-            <span class="switch-desc">The bars always show every reporting provider; this picks which number sits on top. Each choice previews its current value.</span>
+        <div class="row" id="badge-target-label">
+          <span class="row-text">
+            <span class="row-title">Badge shows</span>
+            <span class="row-desc">Which live percentage sits over the toolbar icon. Also switchable from the popup.</span>
           </span>
         </div>
-        <div id="badge-target" class="seg" role="radiogroup" aria-labelledby="badge-target-label"></div>
+        <div id="badge-target" class="seg seg-previews" role="radiogroup" aria-labelledby="badge-target-label"></div>
       </section>
 
-      <section class="panel">
-        <h2>Providers</h2>
-        <label class="switch">
-          <span class="switch-text">
-            <span class="switch-title">Claude</span>
-            <span class="switch-desc">Reads claude.ai subscription usage from your signed-in session.</span>
+      <section class="sec">
+        <div class="sec-head"><h2>Providers</h2><span>Signed-in sessions</span></div>
+        <label class="row switch">
+          <span class="row-text">
+            <span class="row-title">Claude</span>
+            <span class="row-desc">Reads claude.ai subscription usage from your signed-in session.</span>
           </span>
           <input id="claude" type="checkbox" />
           <span class="track" aria-hidden="true"></span>
         </label>
-        <label class="switch">
-          <span class="switch-text">
-            <span class="switch-title">ChatGPT / Codex</span>
-            <span class="switch-desc">Reads chatgpt.com rate-limit windows from your signed-in session.</span>
+        <label class="row switch">
+          <span class="row-text">
+            <span class="row-title">ChatGPT / Codex</span>
+            <span class="row-desc">Reads chatgpt.com rate-limit windows from your signed-in session.</span>
           </span>
           <input id="chatgpt" type="checkbox" />
           <span class="track" aria-hidden="true"></span>
         </label>
-        <label class="switch">
-          <span class="switch-text">
-            <span class="switch-title">Gemini</span>
-            <span class="switch-desc">Shows connected status; usage isn't exposed by a stable endpoint yet.</span>
+        <label class="row switch">
+          <span class="row-text">
+            <span class="row-title">Gemini</span>
+            <span class="row-desc">Shows connected status only. No unverified usage number is inferred.</span>
           </span>
           <input id="gemini" type="checkbox" />
           <span class="track" aria-hidden="true"></span>
         </label>
       </section>
 
-      <section class="panel">
-        <h2>Usage history</h2>
-        <p class="panel-desc">Export your locally stored usage history — percentages and timestamps only.</p>
-        <div class="btn-row">
+      <section class="sec">
+        <div class="sec-head"><h2>Local record</h2><span>Usage metrics only</span></div>
+        <p class="privacy"><b>Your data stays here.</b> MeterBar stores percentages, reset timestamps, provider names, and settings. It never stores prompts, responses, uploaded files, cookies, tokens, or chat content.</p>
+        <div class="actions">
           <button id="export-json" type="button" class="btn">Export JSON</button>
           <button id="export-csv" type="button" class="btn">Export CSV</button>
+          <span class="spacer"></span>
+          <button id="clear" type="button" class="btn btn-danger">Clear local data</button>
         </div>
-      </section>
-
-      <section class="panel">
-        <h2>Privacy</h2>
-        <p class="panel-desc">
-          MeterBar stores usage percentages, reset timestamps, provider names, and your settings. It never
-          stores prompts, responses, uploaded files, or chat content.
-        </p>
-        <button id="clear" type="button" class="btn btn-danger">Clear local MeterBar data</button>
         <p id="status" role="status" class="status"></p>
       </section>
 

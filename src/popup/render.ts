@@ -19,6 +19,19 @@ export function humanWindowLabel(window: UsageWindow): string {
   return windowLongLabel(window);
 }
 
+// Dashboard column labels: short enough for two windows side by side at 376px.
+const SHORT: Partial<Record<UsageWindow, string>> = {
+  five_hour: '5-hour',
+  seven_day: 'Weekly',
+  daily: 'Daily',
+  monthly: 'Monthly',
+  api_billing: 'API billing'
+};
+
+export function shortWindowLabel(window: UsageWindow): string {
+  return SHORT[window] ?? 'Usage';
+}
+
 // Wall-clock length of each rolling window; windows without a fixed length get no pace tick.
 const WINDOW_MS: Partial<Record<UsageWindow, number>> = {
   five_hour: 5 * 60 * 60 * 1000,
@@ -41,7 +54,7 @@ export function paceFraction(window: UsageWindow, resetsAt: string | undefined, 
   return (total - remaining) / total;
 }
 
-/** Snapshots worth rendering as numbers — mirrors the badge/icon filter for 'unavailable'. */
+/** Snapshots worth rendering as numbers - mirrors the badge/icon filter for 'unavailable'. */
 export function renderableSnapshots(snapshots: UsageSnapshot[]): UsageSnapshot[] {
   return snapshots.filter((s) => s.confidence !== 'unavailable');
 }
@@ -74,6 +87,36 @@ export function riskClass(percent: number): string {
 /** Highest used percent across a card's windows, or -1 when the card has no data. */
 export function riskiestPercent(card: ProviderCardState): number {
   return card.snapshots.reduce((max, s) => Math.max(max, s.usedPercent), -1);
+}
+
+export interface ConstraintSummary {
+  provider: ProviderId;
+  providerLabel: string;
+  snapshot: UsageSnapshot;
+}
+
+/** Human metadata for the master readout, including any uncertainty qualifier. */
+export function constraintMeta(providerLabel: string, snapshot: UsageSnapshot, now: Date = new Date()): string {
+  return [
+    providerLabel,
+    snapshot.workspaceLabel ?? humanWindowLabel(snapshot.window),
+    resetLabel(snapshot.resetsAt, now),
+    confidenceNote(snapshot)
+  ].filter(Boolean).join(' · ');
+}
+
+/** Highest fresh reading across providers for the Workbench master readout. */
+export function mostConstrainedWindow(cards: ProviderCardState[]): ConstraintSummary | undefined {
+  let result: ConstraintSummary | undefined;
+  for (const card of cards) {
+    for (const snapshot of card.snapshots) {
+      if (snapshot.stale || snapshot.confidence === 'unavailable') continue;
+      if (!result || snapshot.usedPercent > result.snapshot.usedPercent) {
+        result = { provider: card.provider, providerLabel: card.label, snapshot };
+      }
+    }
+  }
+  return result;
 }
 
 /**
@@ -122,7 +165,7 @@ export function emptyHint(card: ProviderCardState | undefined): string {
     case 'not_connected':
       return 'Open the provider and sign in to read your usage.';
     case 'stale':
-      return 'Last reading is out of date — reopen the provider.';
+      return 'Last reading is out of date - reopen the provider.';
     default:
       return 'Open the provider and sign in to start tracking.';
   }
@@ -132,6 +175,6 @@ export function emptyHint(card: ProviderCardState | undefined): string {
 // 'unavailable' snapshots never reach the numeric render (renderableSnapshots drops them).
 export function confidenceNote(snapshot: UsageSnapshot): string | undefined {
   if (snapshot.confidence === 'estimated') return 'estimated';
-  if (snapshot.confidence === 'inferred') return 'approximate';
+  if (snapshot.confidence === 'inferred') return 'unofficial source';
   return undefined;
 }

@@ -6,6 +6,7 @@ export function formatCountdown(resetsAtIso: string, now: Date = new Date()): st
   const minutes = totalMinutes % 60;
 
   if (hours <= 0) return `${minutes}m`;
+  if (hours >= 24) return `${Math.floor(hours / 24)}d ${hours % 24}h`;
   return `${hours}h ${minutes}m`;
 }
 

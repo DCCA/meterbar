@@ -1,7 +1,16 @@
-/* The side panel reuses the popup's redesigned styles, then relaxes the fixed
-   popup width so it fills whatever width the user gives the docked panel. */
 @import '../popup/popup.css';
 
-body {
-  width: auto;
+html { width: auto; max-width: none; }
+body { width: auto; min-width: 320px; min-height: 100vh; }
+/* The pane hugs its content like a window; the ambient field owns the rest of the panel. */
+.shell { width: 100%; max-width: 680px; min-height: 0; max-height: none; margin: 0; border-radius: 0 0 var(--radius) var(--radius); }
+.foot { margin-top: 4px; }
+
+@media (min-width: 500px) {
+  body { padding: 14px; }
+  .shell { margin: 0 auto; padding: 16px 18px 18px; border-radius: var(--radius); }
+  .hero-value { font-size: 48px; }
+  .lim-row { grid-template-columns: 110px minmax(0, 1fr); }
+  .lim-wins, .lim-notes { max-width: 440px; }
+  .wins { gap: 10px 20px; }
 }
