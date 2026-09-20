@@ -26,25 +26,30 @@ describe('iconBars', () => {
     expect(iconBars([card('claude', []), card('gemini', [], { status: 'not_connected' })])).toEqual([]);
   });
 
-  it('emits one bar for a single provider with data', () => {
+  it('holds all four fixed slots when only one provider has data', () => {
     const bars = iconBars([card('claude', [snap({ usedPercent: 40 })])]);
-    expect(bars).toEqual([{ provider: 'claude', level: 'ok', fillRatio: 0.4 }]);
+    expect(bars).toEqual([
+      { provider: 'claude', level: 'ok', fillRatio: 0.4 },
+      { provider: 'chatgpt', level: 'ok', fillRatio: 0 },
+      { provider: 'codex', level: 'ok', fillRatio: 0 },
+      { provider: 'gemini', level: 'ok', fillRatio: 0 }
+    ]);
   });
 
-  it('emits one bar per provider with data, in fixed provider order', () => {
-    // pass them out of order; output must be claude before chatgpt
+  it('emits every fixed slot in provider order', () => {
+    // Pass live cards out of order; the four output slots remain stable.
     const bars = iconBars([
       card('chatgpt', [snap({ provider: 'chatgpt', usedPercent: 88 })]),
       card('claude', [snap({ usedPercent: 30 })])
     ]);
-    expect(bars.map((b) => b.provider)).toEqual(['claude', 'chatgpt']);
+    expect(bars.map((b) => b.provider)).toEqual(['claude', 'chatgpt', 'codex', 'gemini']);
   });
 
   it("uses a provider's riskiest window for its bar", () => {
     const bars = iconBars([
       card('claude', [snap({ window: 'seven_day', usedPercent: 35 }), snap({ window: 'five_hour', usedPercent: 82 })])
     ]);
-    expect(bars).toEqual([{ provider: 'claude', level: 'warn', fillRatio: 0.82 }]);
+    expect(bars[0]).toEqual({ provider: 'claude', level: 'warn', fillRatio: 0.82 });
   });
 
   it('maps levels at the badge thresholds (70 warn, 90 crit)', () => {
@@ -63,15 +68,15 @@ describe('iconBars', () => {
     expect(bars).toEqual([]);
   });
 
-  it('holds an empty slot for every known provider once any provider has fresh data', () => {
-    // Position identifies the provider, so a connected-but-dataless provider keeps
-    // its slot (empty track) instead of letting later bars shift left.
+  it('keeps missing and connected-without-data providers as empty tracks', () => {
     const bars = iconBars([
       card('claude', [snap({ usedPercent: 40 })]),
       card('gemini', [], { status: 'connected' })
     ]);
     expect(bars).toEqual([
       { provider: 'claude', level: 'ok', fillRatio: 0.4 },
+      { provider: 'chatgpt', level: 'ok', fillRatio: 0 },
+      { provider: 'codex', level: 'ok', fillRatio: 0 },
       { provider: 'gemini', level: 'ok', fillRatio: 0 }
     ]);
   });

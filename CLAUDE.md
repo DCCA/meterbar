@@ -69,7 +69,7 @@ These are hard product invariants, not style preferences — every change must h
 
 - **Never collect chat content.** No prompts, completions, messages, uploaded files, screenshots, full browsing history, raw session cookies, or API keys. Store **only** usage metrics (percentages, reset timestamps, provider names, optional anonymized account id, settings).
 - **Local-first, no backend.** No cloud sync, no remote analytics, no account system in the MVP. The only permitted network traffic is to the provider pages/endpoints required to read usage.
-- **Least-privilege permissions.** API permissions are `storage`, `alarms`, `notifications`, `sidePanel`; host permissions cover only the read-usage origins (`claude.ai`, `chatgpt.com`, `gemini.google.com`). Add a host only when a provider needs it, and declare permissions plainly.
+- **Least-privilege permissions.** API permissions are `storage`, `alarms`, `notifications`, and `sidePanel`, plus `nativeMessaging` only for the optional post-MVP Omarchy display bridge. Host permissions cover only the read-usage origins (`claude.ai`, `chatgpt.com`, `gemini.google.com`). Add a host only when a provider needs it, and declare permissions plainly.
 - **Truthful uncertainty.** If a value is estimated, inferred, stale, or from an undocumented endpoint, the UI must say so via the `confidence`/`stale` fields — never present a guess as exact. Gemini deliberately reports *connected-status only* (its adapter emits no usage snapshots) because usage sits behind a fragile `batchexecute` RPC — do not "fix" this by scraping an unverified number.
 - **No routing/failover** in the Chrome MVP; that belongs to a future companion app.
 

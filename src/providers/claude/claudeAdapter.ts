@@ -16,11 +16,9 @@ interface ClaudeUsageResponse {
 }
 
 /**
- * Pure parser (no I/O). Confidence is `exact` because the live claude.ai usage
- * endpoint returns a clean JSON document of percentages + reset timestamps, manually
- * validated against a real logged-in response on 2026-06-20 - that captured response
- * is checked in as the fixture in tests/claudeAdapter.test.ts (the plan's required
- * validation evidence before shipping `exact`).
+ * Pure parser (no I/O). Values come directly from a structured usage response, but the
+ * endpoint is undocumented, so confidence remains `inferred`. A sanitized live response
+ * captured on 2026-06-20 is checked in as parser validation evidence.
  */
 export function parseClaudeUsageResponse(payload: ClaudeUsageResponse, now: Date = new Date()): UsageSnapshot[] {
   const capturedAt = now.toISOString();
@@ -40,7 +38,7 @@ export function parseClaudeUsageResponse(payload: ClaudeUsageResponse, now: Date
       resetsAt: value.resets_at ?? undefined,
       capturedAt,
       source: 'claude-usage-response',
-      confidence: 'exact',
+      confidence: 'inferred',
       stale: false
     }];
   });

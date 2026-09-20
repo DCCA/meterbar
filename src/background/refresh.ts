@@ -4,13 +4,27 @@ import { recordPoint } from '../storage/historyStore';
 import { claudeAdapter, claudeOrgsUrl, claudeUsageUrl, pickClaudeOrgUuid } from '../providers/claude/claudeAdapter';
 import { chatgptAdapter, chatgptSessionUrl, chatgptAccountsUrl, chatgptUsageUrl, pickChatgptAccountId } from '../providers/chatgpt/chatgptAdapter';
 
+interface StoreSnapshotsOptions {
+  emptyStatus?: ProviderCardState['status'];
+  emptyMessage?: string;
+}
+
 /** Persist parsed snapshots as the provider's latest card and append history. */
-export async function storeSnapshots(provider: ProviderId, label: string, snapshots: UsageSnapshot[]): Promise<void> {
+export async function storeSnapshots(
+  provider: ProviderId,
+  label: string,
+  snapshots: UsageSnapshot[],
+  options: StoreSnapshotsOptions = {}
+): Promise<void> {
   const now = new Date().toISOString();
+  const empty = snapshots.length === 0;
   const card: ProviderCardState = {
-    provider, label,
-    status: snapshots.length ? 'connected' : 'not_connected',
-    lastUpdatedAt: now, snapshots
+    provider,
+    label,
+    status: empty ? options.emptyStatus ?? 'not_connected' : 'connected',
+    ...(empty && options.emptyMessage ? { message: options.emptyMessage } : {}),
+    lastUpdatedAt: now,
+    snapshots
   };
   await putCard(card);
   for (const s of snapshots) await recordPoint(provider, s.window, Date.parse(s.capturedAt), s.usedPercent);
@@ -32,6 +46,29 @@ export async function storeStatus(provider: ProviderId, label: string, status: P
     snapshots,
     lastUpdatedAt: status === 'connected' ? new Date().toISOString() : prev?.lastUpdatedAt
   });
+}
+
+const OPENAI_CARDS: Array<{ provider: 'chatgpt' | 'codex'; label: string }> = [
+  { provider: 'chatgpt', label: 'ChatGPT' },
+  { provider: 'codex', label: 'Codex' }
+];
+
+async function storeOpenAiSnapshots(snapshots: UsageSnapshot[]): Promise<void> {
+  await Promise.all(OPENAI_CARDS.map(({ provider, label }) =>
+    storeSnapshots(
+      provider,
+      label,
+      snapshots.filter((snapshot) => snapshot.provider === provider),
+      {
+        emptyStatus: 'connected',
+        emptyMessage: `Connected - no ${label} usage window reported.`
+      }
+    )
+  ));
+}
+
+async function storeOpenAiStatus(status: ProviderCardState['status'], message?: string): Promise<void> {
+  await Promise.all(OPENAI_CARDS.map(({ provider, label }) => storeStatus(provider, label, status, message)));
 }
 
 const SESSION_FETCH: RequestInit = {
@@ -102,13 +139,13 @@ export async function refreshClaude(): Promise<void> {
  * I/O and HTTP->status mapping live here; the adapter contributes only pure helpers.
  */
 export async function refreshChatgpt(): Promise<void> {
-  const { provider, label } = chatgptAdapter;
+  const { label } = chatgptAdapter;
   try {
     const sessionRes = await sessionFetch(chatgptSessionUrl());
-    if (isAuthFailure(sessionRes)) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
-    if (!sessionRes.ok) return storeStatus(provider, label, 'stale', fetchFailureMessage(label, sessionRes.status));
+    if (isAuthFailure(sessionRes)) return storeOpenAiStatus('not_connected', SIGNED_OUT);
+    if (!sessionRes.ok) return storeOpenAiStatus('stale', fetchFailureMessage(label, sessionRes.status));
     const token = ((await sessionRes.json()) as { accessToken?: string })?.accessToken;
-    if (!token) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
+    if (!token) return storeOpenAiStatus('not_connected', SIGNED_OUT);
 
     const authInit: RequestInit = {
       ...SESSION_FETCH,
@@ -120,11 +157,11 @@ export async function refreshChatgpt(): Promise<void> {
     const usageHeaders: Record<string, string> = { accept: 'application/json', authorization: `Bearer ${token}` };
     if (accountId) usageHeaders['ChatGPT-Account-Id'] = accountId;
     const usageRes = await sessionFetch(chatgptUsageUrl(), { ...SESSION_FETCH, headers: usageHeaders });
-    if (isAuthFailure(usageRes)) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
-    if (!usageRes.ok) return storeStatus(provider, label, 'stale', fetchFailureMessage(label, usageRes.status));
+    if (isAuthFailure(usageRes)) return storeOpenAiStatus('not_connected', SIGNED_OUT);
+    if (!usageRes.ok) return storeOpenAiStatus('stale', fetchFailureMessage(label, usageRes.status));
 
-    await storeSnapshots(provider, label, chatgptAdapter.parse(await usageRes.json()));
+    await storeOpenAiSnapshots(chatgptAdapter.parse(await usageRes.json()));
   } catch {
-    await storeStatus(provider, label, 'stale', fetchFailureMessage(label));
+    await storeOpenAiStatus('stale', fetchFailureMessage(label));
   }
 }

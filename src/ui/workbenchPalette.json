@@ -1,0 +1,40 @@
+{
+  "colors": {
+    "bg": "#11120f",
+    "bgDeep": "#0c0d0b",
+    "surface": "#1a1b17",
+    "surface2": "#20211c",
+    "surface3": "#272820",
+    "enamel": "#e8dfca",
+    "enamel2": "#d7cdb7",
+    "enamelInk": "#1d1c17",
+    "border": "#4a493f",
+    "borderSoft": "#37372f",
+    "text": "#eee8da",
+    "muted": "#aaa293",
+    "faint": "#7f7a6f",
+    "track": "#10110f",
+    "ok": "#7fad87",
+    "warn": "#e49350",
+    "crit": "#d9614d",
+    "accent": "#e49350",
+    "instrumentLabel": "#675f50",
+    "sectionLabel": "#6d6557",
+    "enamelCopy": "#625b4f",
+    "dialTrack": "#a49a86",
+    "meterBorder": "#4d4c43",
+    "emptyBorder": "#756e60",
+    "emptyBarBorder": "#716a5d",
+    "emptyBar": "#b9af9b",
+    "controlBorder": "#5c5a4e",
+    "iconShellBorder": "#5a584e",
+    "legendBorder": "#59574c",
+    "danger": "#ed9585"
+  },
+  "icon": {
+    "casing": "#1a1b17",
+    "border": "#6a6659",
+    "track": "#403f37",
+    "accent": "#e49350"
+  }
+}

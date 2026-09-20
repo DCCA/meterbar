@@ -20,6 +20,7 @@ export interface FiredAlert {
   threshold?: number;
   usedPercent: number;
   resetsAt?: string;
+  confidence: UsageSnapshot['confidence'];
 }
 const THRESHOLDS = [70, 90];
 
@@ -31,7 +32,10 @@ export function evaluateAlerts(snapshots: UsageSnapshot[], state: AlertState): {
   for (const s of snapshots) {
     const resetKey = `${s.provider}:${s.window}`;
     if (s.resetsAt && lastReset[resetKey] && lastReset[resetKey] !== s.resetsAt) {
-      fired.push({ kind: 'reset', provider: s.provider, window: s.window, usedPercent: s.usedPercent, resetsAt: s.resetsAt });
+      fired.push({
+        kind: 'reset', provider: s.provider, window: s.window, usedPercent: s.usedPercent,
+        resetsAt: s.resetsAt, confidence: s.confidence
+      });
     }
     if (s.resetsAt) lastReset[resetKey] = s.resetsAt;
 
@@ -39,7 +43,10 @@ export function evaluateAlerts(snapshots: UsageSnapshot[], state: AlertState): {
       if (s.usedPercent >= threshold) {
         const key = getAlertKey(s.provider, s.window, threshold, s.resetsAt ?? 'unknown');
         if (shouldAlert(seen, key)) {
-          fired.push({ kind: 'threshold', provider: s.provider, window: s.window, threshold, usedPercent: s.usedPercent, resetsAt: s.resetsAt });
+          fired.push({
+            kind: 'threshold', provider: s.provider, window: s.window, threshold,
+            usedPercent: s.usedPercent, resetsAt: s.resetsAt, confidence: s.confidence
+          });
         }
       }
     }
@@ -58,7 +65,8 @@ export async function evaluateAndNotify(cards: ProviderCardState[]): Promise<voi
       label: labelByProvider.get(f.provider) ?? f.provider,
       window: f.window,
       usedPercent: f.usedPercent,
-      resetsAt: f.resetsAt
+      resetsAt: f.resetsAt,
+      confidence: f.confidence
     });
     chrome.notifications.create(`${f.provider}:${f.window}:${f.kind}:${f.threshold ?? 'r'}`,
       { type: 'basic', iconUrl: chrome.runtime.getURL('assets/icon128.png'), title, message });

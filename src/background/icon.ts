@@ -1,14 +1,14 @@
+import palette from '../ui/workbenchPalette.json';
 import type { IconBar, IconLevel } from './iconModel';
 
-// Workbench palette shared with the popup and Omarchy companion.
 const BAR_COLOR: Record<IconLevel, string> = {
-  ok: '#7fad87',
-  warn: '#e49350',
-  crit: '#d9614d'
+  ok: palette.colors.ok,
+  warn: palette.colors.warn,
+  crit: palette.colors.crit
 };
-const CASING_COLOR = '#1a1b17';
-const CASING_BORDER = '#6a6659';
-const TRACK_COLOR = '#403f37';
+const CASING_COLOR = palette.icon.casing;
+const CASING_BORDER = palette.icon.border;
+const TRACK_COLOR = palette.icon.track;
 
 const STATIC_ICON = { 16: 'assets/icon16.png', 48: 'assets/icon48.png', 128: 'assets/icon128.png' };
 

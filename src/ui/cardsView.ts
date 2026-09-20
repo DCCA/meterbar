@@ -8,6 +8,7 @@ import type { ProviderCardState, ProviderId, UsageSnapshot } from '../shared/typ
 import {
   cardAllStale,
   confidenceNote,
+  constraintMeta,
   emptyHint,
   escapeHtml,
   humanWindowLabel,
@@ -30,7 +31,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const KNOWN: Array<{ provider: ProviderId; label: string }> = [
   { provider: 'claude', label: 'Claude' },
-  { provider: 'chatgpt', label: 'ChatGPT / Codex' },
+  { provider: 'chatgpt', label: 'ChatGPT' },
+  { provider: 'codex', label: 'Codex' },
   { provider: 'gemini', label: 'Gemini' }
 ];
 
@@ -190,14 +192,14 @@ function masterReadoutHtml(cards: ProviderCardState[]): string {
 
   const { snapshot, providerLabel } = summary;
   const pct = Math.max(0, Math.min(100, snapshot.usedPercent));
-  const windowLabel = snapshot.workspaceLabel ?? humanWindowLabel(snapshot.window);
+  const meta = constraintMeta(providerLabel, snapshot);
   const level = riskLevel(pct);
   return `
-    <section class="master-readout level-${level}" aria-label="Most constrained window: ${escapeHtml(providerLabel)}, ${escapeHtml(windowLabel)}, ${pct}% used">
+    <section class="master-readout level-${level}" aria-label="Most constrained window: ${escapeHtml(meta)}, ${pct}% used">
       <div class="master-copy">
         <span class="instrument-label">Most constrained window</span>
         <strong class="master-value">${pct}<span>% used</span></strong>
-        <p>${escapeHtml(providerLabel)} · ${escapeHtml(windowLabel)} · ${escapeHtml(resetLabel(snapshot.resetsAt))}</p>
+        <p>${escapeHtml(meta)}</p>
       </div>
       <div class="master-dial" style="--needle-angle:${needleAngle(pct)}deg;--dial-fill:${pct * 2.4}deg" aria-hidden="true"><span></span></div>
     </section>

@@ -1,26 +1,8 @@
-/* Workbench Meter visual system shared by the extension and mirrored by the Omarchy companion. */
+/* Workbench Meter visual system shared by the extension and Omarchy companion. */
+@import './workbenchPalette.css';
+
 :root {
   color-scheme: dark;
-
-  --bg: #11120f;
-  --bg-deep: #0c0d0b;
-  --surface: #1a1b17;
-  --surface-2: #20211c;
-  --surface-3: #272820;
-  --enamel: #e8dfca;
-  --enamel-2: #d7cdb7;
-  --enamel-ink: #1d1c17;
-  --border: #4a493f;
-  --border-soft: #37372f;
-  --text: #eee8da;
-  --muted: #aaa293;
-  --faint: #7f7a6f;
-  --track: #10110f;
-
-  --ok: #7fad87;
-  --warn: #e49350;
-  --crit: #d9614d;
-  --accent: #e49350;
 
   --sans: "Aptos", "Segoe UI Variable", "Noto Sans", ui-sans-serif, system-ui, sans-serif;
   --mono: "Berkeley Mono", "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace;

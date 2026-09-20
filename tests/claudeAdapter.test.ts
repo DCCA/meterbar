@@ -17,8 +17,8 @@ describe('parseClaudeUsageResponse', () => {
     }, NOW);
 
     expect(snapshots).toMatchObject([
-      { provider: 'claude', window: 'five_hour', usedPercent: 15, usedRatio: 0.15, confidence: 'exact', stale: false },
-      { provider: 'claude', window: 'seven_day', usedPercent: 8, usedRatio: 0.08, confidence: 'exact', stale: false }
+      { provider: 'claude', window: 'five_hour', usedPercent: 15, usedRatio: 0.15, confidence: 'inferred', stale: false },
+      { provider: 'claude', window: 'seven_day', usedPercent: 8, usedRatio: 0.08, confidence: 'inferred', stale: false }
     ]);
   });
 
@@ -38,9 +38,9 @@ describe('parseClaudeUsageResponse', () => {
     expect(first.resetsAt).toBeUndefined();
   });
 
-  // Validation evidence for confidence: 'exact' - a real, sanitized response captured from
-  // a logged-in claude.ai session on 2026-06-20. The parser must surface the two windows we
-  // support and ignore the surrounding billing/limits/spend fields without error.
+  // Validation evidence for the parser - a real, sanitized response captured from a
+  // logged-in claude.ai session on 2026-06-20. The source remains undocumented, so the
+  // snapshots stay `inferred`; the parser still ignores unrelated billing/limits fields.
   it('parses the captured live response, ignoring non-window fields', () => {
     const captured = {
       five_hour: { utilization: 15, resets_at: '2026-06-20T22:29:59.870472+00:00', limit_dollars: null, used_dollars: null },
@@ -54,8 +54,8 @@ describe('parseClaudeUsageResponse', () => {
     };
     const snapshots = parseClaudeUsageResponse(captured, NOW);
     expect(snapshots.map((s) => [s.window, s.usedPercent, s.confidence])).toEqual([
-      ['five_hour', 15, 'exact'],
-      ['seven_day', 8, 'exact']
+      ['five_hour', 15, 'inferred'],
+      ['seven_day', 8, 'inferred']
     ]);
   });
 });

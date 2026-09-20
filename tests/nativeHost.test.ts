@@ -1,10 +1,11 @@
-import { mkdtempSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import extensionManifest from '../manifest.json';
+import { toCompanionSnapshot } from '../src/background/nativeBridge';
 
 function frame(value: unknown): Buffer {
   const body = Buffer.from(JSON.stringify(value));
@@ -16,6 +17,34 @@ function frame(value: unknown): Buffer {
 function unframe(buffer: Buffer): unknown {
   const length = buffer.readUInt32LE(0);
   return JSON.parse(buffer.subarray(4, 4 + length).toString('utf8'));
+}
+
+function requestWhileInputStaysOpen(value: unknown, statePath: string): Promise<{ status: number | null; stdout: Buffer }> {
+  const child = spawn(process.execPath, ['companion/native-host.mjs'], {
+    cwd: process.cwd(),
+    env: { ...process.env, METERBAR_STATE_PATH: statePath },
+    stdio: ['pipe', 'pipe', 'pipe']
+  });
+  const stdout: Buffer[] = [];
+  const stderr: Buffer[] = [];
+  child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk));
+  child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk));
+  child.stdin.write(frame(value));
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(new Error(`native host did not respond before EOF: ${Buffer.concat(stderr).toString('utf8')}`));
+    }, 1_000);
+    child.on('error', (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.on('close', (status) => {
+      clearTimeout(timer);
+      resolve({ status, stdout: Buffer.concat(stdout) });
+    });
+  });
 }
 
 describe('native messaging host', () => {
@@ -30,6 +59,20 @@ describe('native messaging host', () => {
     expect(extensionId).toBe('gfihfehckcbnmklfojnhnindphonbhhp');
     expect(hostManifest).toContain(`chrome-extension://${extensionId}/`);
     expect(hostManifest).not.toContain('chrome-extension://*/');
+  });
+
+  it('responds to one complete frame without waiting for stdin EOF', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'meterbar-host-'));
+    const statePath = join(dir, 'state.json');
+    const result = await requestWhileInputStaysOpen({
+      type: 'meterbar:snapshot',
+      schemaVersion: 1,
+      generatedAt: '2026-09-19T18:00:00.000Z',
+      cards: []
+    }, statePath);
+
+    expect(result.status).toBe(0);
+    expect(unframe(result.stdout)).toEqual({ ok: true });
   });
 
   it('atomically writes a private, validated companion snapshot', () => {
@@ -88,6 +131,45 @@ describe('native messaging host', () => {
     });
     expect(written).not.toContain('secret');
     expect(written).not.toContain('token');
+  });
+
+  it('accepts fixed-slot placeholders from a partial extension snapshot', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'meterbar-host-'));
+    const statePath = join(dir, 'state.json');
+    const payload = toCompanionSnapshot([{
+      provider: 'claude',
+      label: 'Claude',
+      status: 'connected',
+      snapshots: []
+    }], '2026-09-19T18:00:00.000Z');
+
+    const result = spawnSync(process.execPath, ['companion/native-host.mjs'], {
+      cwd: process.cwd(),
+      env: { ...process.env, METERBAR_STATE_PATH: statePath },
+      input: frame(payload)
+    });
+
+    expect(result.status).toBe(0);
+    expect(unframe(result.stdout)).toEqual({ ok: true });
+    const written = JSON.parse(readFileSync(statePath, 'utf8')) as { cards: Array<{ provider: string; status?: string }> };
+    expect(written.cards.map((card) => card.provider)).toEqual(['claude', 'chatgpt', 'codex', 'gemini']);
+    expect(written.cards[1].status).toBeUndefined();
+  });
+
+  it('removes the companion snapshot when the extension clears local data', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'meterbar-host-'));
+    const statePath = join(dir, 'state.json');
+    writeFileSync(statePath, '{}');
+
+    const result = spawnSync(process.execPath, ['companion/native-host.mjs'], {
+      cwd: process.cwd(),
+      env: { ...process.env, METERBAR_STATE_PATH: statePath },
+      input: frame({ type: 'meterbar:clear', schemaVersion: 1 })
+    });
+
+    expect(result.status).toBe(0);
+    expect(unframe(result.stdout)).toEqual({ ok: true });
+    expect(existsSync(statePath)).toBe(false);
   });
 
   it('rejects invalid messages without writing state', () => {

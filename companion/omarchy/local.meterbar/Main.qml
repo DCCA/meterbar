@@ -20,13 +20,26 @@ Item {
   readonly property var cards: {
     var changed = revision
     var rows = snapshot && Array.isArray(snapshot.cards) ? snapshot.cards.slice() : []
-    var order = { claude: 0, chatgpt: 1, codex: 2, gemini: 3 }
-    rows.sort(function(a, b) {
-      var left = order[String(a.provider)]
-      var right = order[String(b.provider)]
-      return Number(left === undefined ? 99 : left) - Number(right === undefined ? 99 : right)
-    })
-    return rows
+    var slots = [
+      { provider: "claude", label: "Claude" },
+      { provider: "chatgpt", label: "ChatGPT" },
+      { provider: "codex", label: "Codex" },
+      { provider: "gemini", label: "Gemini" }
+    ]
+    var result = []
+    for (var i = 0; i < slots.length; i++) {
+      var match = null
+      for (var j = 0; j < rows.length; j++) {
+        if (String(rows[j].provider) === slots[i].provider) { match = rows[j]; break }
+      }
+      result.push(match || {
+        provider: slots[i].provider,
+        label: slots[i].label,
+        snapshots: [],
+        message: "No usage reported"
+      })
+    }
+    return result
   }
 
   readonly property string generatedAt: snapshot && snapshot.generatedAt ? String(snapshot.generatedAt) : ""

@@ -24,9 +24,9 @@ describe('parseChatgptUsage', () => {
   it('maps the main rate_limit to five_hour + seven_day ChatGPT windows', () => {
     const snaps = parseChatgptUsage(CAPTURED, NOW);
     expect(snaps).toMatchObject([
-      { provider: 'chatgpt', window: 'five_hour', usedPercent: 27, usedRatio: 0.27, confidence: 'exact', stale: false },
-      { provider: 'chatgpt', window: 'seven_day', usedPercent: 39, confidence: 'exact' },
-      { provider: 'chatgpt', window: 'custom', workspaceLabel: 'Codex', usedPercent: 11 }
+      { provider: 'chatgpt', window: 'five_hour', usedPercent: 27, usedRatio: 0.27, confidence: 'inferred', stale: false },
+      { provider: 'chatgpt', window: 'seven_day', usedPercent: 39, confidence: 'inferred' },
+      { provider: 'codex', window: 'custom', usedPercent: 11 }
     ]);
   });
 
@@ -36,14 +36,14 @@ describe('parseChatgptUsage', () => {
   });
 
   it('emits one Codex bar = the riskiest additional window across entries', () => {
-    const codex = parseChatgptUsage(CAPTURED, NOW).find((s) => s.workspaceLabel === 'Codex');
+    const codex = parseChatgptUsage(CAPTURED, NOW).find((s) => s.provider === 'codex');
     expect(codex).toMatchObject({ window: 'custom', usedPercent: 11 });
     expect(codex?.resetsAt).toBe(new Date(1782588049 * 1000).toISOString());
   });
 
   it('omits the Codex bar when there are no additional rate limits', () => {
     const snaps = parseChatgptUsage({ rate_limit: CAPTURED.rate_limit, additional_rate_limits: [] }, NOW);
-    expect(snaps.some((s) => s.workspaceLabel === 'Codex')).toBe(false);
+    expect(snaps.some((s) => s.provider === 'codex')).toBe(false);
     expect(snaps).toHaveLength(2);
   });
 

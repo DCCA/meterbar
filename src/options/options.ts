@@ -117,10 +117,22 @@ async function wire(): Promise<void> {
   });
 
   document.querySelector<HTMLButtonElement>('#clear')?.addEventListener('click', async () => {
-    if (!confirm('Clear all locally stored MeterBar data (usage history and settings)? This cannot be undone.')) return;
-    await chrome.storage.local.clear();
-    setStatus('Local MeterBar data cleared.');
-    await render();
+    if (!confirm('Clear all locally stored MeterBar data, including the optional companion snapshot? This cannot be undone.')) return;
+    try {
+      const result = await chrome.runtime.sendMessage({ type: 'data:clear' } as ExtensionMessage) as
+        | { ok?: boolean; companionCleared?: boolean }
+        | undefined;
+      if (!result?.ok) {
+        setStatus('MeterBar data could not be cleared. Try again.');
+      } else {
+        setStatus(result.companionCleared
+          ? 'Local MeterBar data cleared.'
+          : 'Browser data cleared. The optional companion snapshot may remain.');
+      }
+      await render();
+    } catch {
+      setStatus('MeterBar data could not be cleared. Try again.');
+    }
   });
 }
 

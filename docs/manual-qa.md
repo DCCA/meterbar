@@ -105,7 +105,8 @@ These guard the PRD's non-negotiables - verify on every release.
       usage endpoints. **No** request to any MeterBar/third-party backend and authenticated
       requests use `cache: no-store`.
 - [ ] `chrome://extensions` lists host access only for `claude.ai`, `chatgpt.com`, and
-      `gemini.google.com`; there is no broad or unused `chat.openai.com` access.
+      `gemini.google.com`; there is no broad or unused `chat.openai.com` access. The
+      `nativeMessaging` permission is used only for the optional local companion bridge.
 - [ ] `chrome://extensions` → MeterBar → **Inspect service worker** → Application →
       Storage: stored keys are `latest:*`, `history:*`, `alertState`, and settings -
       containing only metrics/timestamps. No tokens, cookies, account ids, or chat content.
@@ -116,11 +117,13 @@ These guard the PRD's non-negotiables - verify on every release.
 
 Run `./scripts/install-omarchy-companion.sh`, reload the unpacked extension, and refresh usage once.
 
-- [ ] The three-channel MeterBar indicator appears in the right side of the Omarchy bar.
+- [ ] The four-channel MeterBar indicator appears in the right side of the Omarchy bar.
 - [ ] Left-click opens the Workbench panel and right-click opens the extension in Chromium.
 - [ ] The panel shows the same fixed provider order, percentages, reset timing, and connected-only Gemini state as the extension.
+- [ ] Claude and ChatGPT/Codex readings are labeled **Unofficial source** in the extension and companion because their usage endpoints are undocumented.
 - [ ] Stop refreshing for longer than 10 minutes: last-known readings remain visible but are labeled stale and stop contributing to the master reading.
 - [ ] `~/.local/state/meterbar/state.json` has mode `0600` and contains only provider/status/window/percentage/timestamp/confidence/stale fields. Confirm there are no cookies, tokens, account hashes, endpoint details, prompts, responses, or chat content.
+- [ ] **Settings → Clear local MeterBar data** removes both browser storage and `~/.local/state/meterbar/state.json` when the companion host is installed.
 - [ ] Removing the native host or state file leaves the extension functional and gives the panel a truthful waiting state.
 
 ## 10. Regression gate

@@ -13,17 +13,19 @@ Panel {
   ipcTarget: "local.meterbar"
   manageIpc: false
 
+  WorkbenchPalette { id: palette }
+
   readonly property color foreground: bar ? bar.foreground : Color.foreground
-  readonly property color casing: "#1a1b17"
-  readonly property color casingRaised: "#22231e"
-  readonly property color casingBorder: "#4a493f"
-  readonly property color enamel: "#e8dfca"
-  readonly property color enamelInk: "#1d1c17"
-  readonly property color muted: "#aaa293"
-  readonly property color track: "#403f37"
-  readonly property color ok: "#7fad87"
-  readonly property color warn: "#e49350"
-  readonly property color crit: "#d9614d"
+  readonly property color casing: palette.surface
+  readonly property color casingRaised: palette.surface2
+  readonly property color casingBorder: palette.border
+  readonly property color enamel: palette.enamel
+  readonly property color enamelInk: palette.enamelInk
+  readonly property color muted: palette.muted
+  readonly property color track: palette.track
+  readonly property color ok: palette.ok
+  readonly property color warn: palette.warn
+  readonly property color crit: palette.crit
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
   readonly property string monoFamily: "JetBrains Mono"
 
@@ -122,6 +124,27 @@ Panel {
     return isFinite(reset) ? "Resets in " + formatDuration(reset - nowMs) : "Reset unknown"
   }
 
+  function confidenceText(row) {
+    if (row && row.confidence === "estimated") return "Estimated"
+    if (row && row.confidence === "inferred") return "Unofficial source"
+    return ""
+  }
+
+  function rowMeta(row, fresh) {
+    if (!fresh) return "Stale reading"
+    var notes = []
+    var confidence = confidenceText(row)
+    if (confidence !== "") notes.push(confidence)
+    notes.push(resetText(row))
+    return notes.join(" · ")
+  }
+
+  function peakTooltip() {
+    if (peak < 0) return "MeterBar · waiting for usage"
+    var confidence = confidenceText(peakRow())
+    return "MeterBar · " + Math.round(peak) + "% used" + (confidence !== "" ? " · " + confidence : "")
+  }
+
   function updatedText() {
     if (!usage.generatedAt) return "Waiting for browser bridge"
     var generated = new Date(usage.generatedAt).getTime()
@@ -171,7 +194,7 @@ Panel {
     anchors.fill: parent
     bar: root.bar
     active: root.alarming
-    tooltipText: root.peak >= 0 ? "MeterBar · " + Math.round(root.peak) + "% used" : "MeterBar · waiting for usage"
+    tooltipText: root.peakTooltip()
     iconComponent: Component {
       Item {
         Row {
@@ -179,7 +202,7 @@ Panel {
           spacing: 2
 
           Repeater {
-            model: root.cards.length > 0 ? root.cards : [{ provider: "claude" }, { provider: "chatgpt" }, { provider: "gemini" }]
+            model: root.cards.length > 0 ? root.cards : [{ provider: "claude" }, { provider: "chatgpt" }, { provider: "codex" }, { provider: "gemini" }]
 
             Rectangle {
               required property var modelData
@@ -305,7 +328,7 @@ Panel {
               anchors.verticalCenter: parent.verticalCenter
               spacing: Style.space(6)
 
-              Text { text: "MOST CONSTRAINED WINDOW"; color: "#675f50"; font.family: root.monoFamily; font.pixelSize: Style.font.caption; font.bold: true; font.letterSpacing: 1 }
+              Text { text: "MOST CONSTRAINED WINDOW"; color: palette.instrumentLabel; font.family: root.monoFamily; font.pixelSize: Style.font.caption; font.bold: true; font.letterSpacing: 1 }
               Row {
                 spacing: Style.space(4)
                 Text { text: root.peak >= 0 ? Math.round(root.peak) : "--"; color: root.enamelInk; font.family: root.monoFamily; font.pixelSize: Style.font.display; font.bold: true }
@@ -317,9 +340,11 @@ Panel {
                   var card = root.peakCard()
                   var row = root.peakRow()
                   if (!card || !row) return "Waiting for a fresh provider reading."
+                  var confidence = root.confidenceText(row)
                   return String(card.label || card.provider) + " · " + root.windowLabel(row)
+                    + (confidence !== "" ? " · " + confidence : "")
                 }
-                color: "#625b4f"
+                color: palette.enamelCopy
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
                 elide: Text.ElideRight
@@ -498,7 +523,7 @@ Panel {
       var sweep = Math.PI * 1.34
       ctx.lineWidth = Math.max(5, width * .12)
       ctx.lineCap = "butt"
-      ctx.strokeStyle = "#a49a86"
+      ctx.strokeStyle = palette.dialTrack
       ctx.beginPath()
       ctx.arc(center, center, radius, start, start + sweep)
       ctx.stroke()
@@ -539,7 +564,7 @@ Panel {
       width: Style.space(105)
       spacing: Style.space(3)
       Text { width: parent.width; text: root.windowLabel(meterRow.row); color: root.enamel; font.family: root.fontFamily; font.pixelSize: Style.font.caption; elide: Text.ElideRight }
-      Text { width: parent.width; text: meterRow.fresh ? root.resetText(meterRow.row) : "Stale reading"; color: root.muted; font.family: root.monoFamily; font.pixelSize: Style.font.caption; elide: Text.ElideRight }
+      Text { width: parent.width; text: root.rowMeta(meterRow.row, meterRow.fresh); color: root.muted; font.family: root.monoFamily; font.pixelSize: Style.font.caption; elide: Text.ElideRight }
     }
 
     Rectangle {

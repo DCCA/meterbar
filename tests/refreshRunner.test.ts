@@ -28,6 +28,20 @@ describe('createCoalescedRefresh', () => {
     expect(maxActive).toBe(1);
   });
 
+  it('exposes an idle barrier without starting another refresh', async () => {
+    let release: (() => void) | undefined;
+    const work = vi.fn(() => new Promise<void>((resolve) => { release = resolve; }));
+    const refresh = createCoalescedRefresh(work);
+
+    const active = refresh();
+    const idle = refresh.whenIdle();
+    expect(work).toHaveBeenCalledTimes(1);
+
+    release?.();
+    await Promise.all([active, idle]);
+    expect(work).toHaveBeenCalledTimes(1);
+  });
+
   it('starts a new run normally after the prior run settles', async () => {
     const work = vi.fn(async () => undefined);
     const refresh = createCoalescedRefresh(work);

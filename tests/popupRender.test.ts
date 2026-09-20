@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   cardAllStale,
   confidenceNote,
+  constraintMeta,
   escapeHtml,
   humanWindowLabel,
   isCompactRow,
@@ -87,6 +88,16 @@ describe('riskiestPercent', () => {
   it('returns the highest snapshot percent, or -1 with no snapshots', () => {
     expect(riskiestPercent(card({ snapshots: [snap({ usedPercent: 30 }), snap({ usedPercent: 80 })] }))).toBe(80);
     expect(riskiestPercent(card({ snapshots: [] }))).toBe(-1);
+  });
+});
+
+describe('constraintMeta', () => {
+  it('includes truthful uncertainty in the aggregate readout copy', () => {
+    const now = new Date('2026-06-20T12:00:00Z');
+    expect(constraintMeta('Claude', snap({
+      confidence: 'inferred',
+      resetsAt: '2026-06-20T14:00:00Z'
+    }), now)).toBe('Claude · 5-hour limit · Resets in 2h 0m · unofficial source');
   });
 });
 
@@ -208,6 +219,6 @@ describe('confidenceNote', () => {
     expect(confidenceNote(snap({}))).toBeUndefined();
     expect(confidenceNote(snap({ confidence: 'unavailable' }))).toBeUndefined();
     expect(confidenceNote(snap({ confidence: 'estimated' }))).toBe('estimated');
-    expect(confidenceNote(snap({ confidence: 'inferred' }))).toBe('approximate');
+    expect(confidenceNote(snap({ confidence: 'inferred' }))).toBe('unofficial source');
   });
 });

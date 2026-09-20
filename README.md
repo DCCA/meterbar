@@ -1,6 +1,6 @@
 # MeterBar
 
-A privacy-first Chrome extension and optional Omarchy companion that show AI subscription usage limits in one real-time instrument.
+A privacy-first Chrome extension for AI subscription usage limits, plus an optional post-MVP Omarchy display companion.
 
 ## Product thesis
 
@@ -8,7 +8,9 @@ AI power users increasingly juggle Claude, ChatGPT/Codex, Gemini, and other AI s
 
 ## Status
 
-MVP + Phase 2 implemented. The Workbench interface spans the toolbar, popup, side panel, and settings. The toolbar icon shows a risk-colored bar per connected provider plus a badge number you can pin to a provider (Auto, Claude, or OpenAI). Claude and ChatGPT/Codex read live usage via background fetches of your logged-in sessions; Gemini reports connected-status via a content script. The optional Omarchy plugin adds the same three-channel indicator and a click-open desktop panel using a sanitized local snapshot. The exact provider endpoints/DOM hooks are validated by live inspection - until validated, a provider reports "not connected" rather than showing unverified numbers.
+The Chrome MVP and Phase 2 browser tracking are implemented. The Workbench interface spans the toolbar, popup, side panel, and settings. The toolbar icon shows a risk-colored bar per connected provider plus a badge number you can pin to a provider (Auto, Claude, or OpenAI). Claude and ChatGPT/Codex read live usage via background fetches of your logged-in sessions; Gemini reports connected-status via a content script. The exact provider endpoints/DOM hooks are validated by live inspection - until validated, a provider reports "not connected" rather than showing unverified numbers.
+
+An optional post-MVP Omarchy plugin adds the same four-channel indicator and a click-open desktop panel using a sanitized local snapshot. It is a display-only subset of the PRD's future local companion phase: the Chrome extension remains the only collector, and no CLI tracking, local proxy, routing, or failover is included.
 
 ### Viewing your usage without clicking
 
@@ -41,7 +43,9 @@ npm test -- tests/badge.test.ts
 4. Click **Load unpacked** and select the `dist/` folder.
 5. Pin MeterBar to the toolbar.
 
-### Add the Omarchy companion
+### Add the optional post-MVP Omarchy companion
+
+This display-only companion is not part of the Chrome MVP and does not change its browser-only collection model.
 
 ```bash
 ./scripts/install-omarchy-companion.sh
@@ -64,7 +68,7 @@ MeterBar is local-first: there is no backend, no cloud sync, and no analytics. I
 | `host_permissions: https://chatgpt.com/*` | Read ChatGPT/Codex usage surfaced to the page. |
 | `host_permissions: https://gemini.google.com/*` | Read Gemini usage surfaced to the page. |
 
-Use **Settings → Clear local MeterBar data** to erase everything at any time.
+Use **Settings → Clear local MeterBar data** to erase browser storage and ask the installed companion host to remove its snapshot. If the host is unavailable, use the companion removal steps to delete its local state file.
 
 ## Disclaimer
 

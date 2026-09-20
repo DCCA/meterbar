@@ -82,6 +82,16 @@ export interface ConstraintSummary {
   snapshot: UsageSnapshot;
 }
 
+/** Human metadata for the master readout, including any uncertainty qualifier. */
+export function constraintMeta(providerLabel: string, snapshot: UsageSnapshot, now: Date = new Date()): string {
+  return [
+    providerLabel,
+    snapshot.workspaceLabel ?? humanWindowLabel(snapshot.window),
+    resetLabel(snapshot.resetsAt, now),
+    confidenceNote(snapshot)
+  ].filter(Boolean).join(' · ');
+}
+
 /** Highest fresh reading across providers for the Workbench master readout. */
 export function mostConstrainedWindow(cards: ProviderCardState[]): ConstraintSummary | undefined {
   let result: ConstraintSummary | undefined;
@@ -152,6 +162,6 @@ export function emptyHint(card: ProviderCardState | undefined): string {
 // 'unavailable' snapshots never reach the numeric render (renderableSnapshots drops them).
 export function confidenceNote(snapshot: UsageSnapshot): string | undefined {
   if (snapshot.confidence === 'estimated') return 'estimated';
-  if (snapshot.confidence === 'inferred') return 'approximate';
+  if (snapshot.confidence === 'inferred') return 'unofficial source';
   return undefined;
 }

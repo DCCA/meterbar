@@ -1,17 +1,30 @@
 // Generates the static Workbench Meter icon at 16/48/128 px into public/assets/.
 // Vite copies these files into dist/assets/. Run with: node scripts/generate-icons.mjs
 import { deflateSync } from 'node:zlib';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const OUT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../public/assets');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const OUT_DIR = resolve(ROOT, 'public/assets');
+const CHECK = process.argv.includes('--check');
+const palette = JSON.parse(readFileSync(resolve(ROOT, 'src/ui/workbenchPalette.json'), 'utf8'));
 
 const TRANSPARENT = [0, 0, 0, 0];
-const CASING = [26, 27, 23, 255];       // #1a1b17
-const BORDER = [106, 102, 89, 255];     // #6a6659
-const TRACK = [64, 63, 55, 255];        // #403f37
-const ACCENT = [228, 147, 80, 255];     // #e49350
+const CASING = rgba(palette.icon.casing);
+const BORDER = rgba(palette.icon.border);
+const TRACK = rgba(palette.icon.track);
+const ACCENT = rgba(palette.icon.accent);
+
+function rgba(hex) {
+  if (!/^#[0-9a-f]{6}$/.test(hex)) throw new Error(`Invalid icon color: ${String(hex)}`);
+  return [
+    Number.parseInt(hex.slice(1, 3), 16),
+    Number.parseInt(hex.slice(3, 5), 16),
+    Number.parseInt(hex.slice(5, 7), 16),
+    255
+  ];
+}
 
 function crc32(buf) {
   let c = ~0;
@@ -49,12 +62,12 @@ function pngForSize(size) {
   const innerRadius = Math.max(1, radius - borderWidth);
 
   const barPad = Math.max(3, Math.round(size * 0.2));
-  const gap = Math.max(1, Math.round(size * 0.07));
-  const barWidth = Math.max(1, Math.floor((size - barPad * 2 - gap * 2) / 3));
+  const gap = Math.max(1, Math.round(size * 0.05));
+  const fills = [0.46, 0.78, 0.56, 0.28];
+  const barWidth = Math.max(1, Math.floor((size - barPad * 2 - gap * (fills.length - 1)) / fills.length));
   const barTop = barPad;
   const barBottom = size - barPad;
   const barHeight = barBottom - barTop;
-  const fills = [0.46, 0.78, 0.28];
 
   const raw = Buffer.alloc((size * 4 + 1) * size);
   let o = 0;
@@ -67,7 +80,7 @@ function pngForSize(size) {
         const inInner = inRoundedRect(x, y, innerInset, innerInset, size - innerInset, size - innerInset, innerRadius);
         px = inInner ? CASING : BORDER;
 
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < fills.length; i++) {
           const left = barPad + i * (barWidth + gap);
           const right = left + barWidth;
           if (x >= left && x < right && y >= barTop && y < barBottom) {
@@ -101,7 +114,32 @@ function pngForSize(size) {
 }
 
 mkdirSync(OUT_DIR, { recursive: true });
+const stale = [];
 for (const size of [16, 48, 128]) {
-  writeFileSync(resolve(OUT_DIR, `icon${size}.png`), pngForSize(size));
-  console.log(`wrote public/assets/icon${size}.png`);
+  const path = resolve(OUT_DIR, `icon${size}.png`);
+  const png = pngForSize(size);
+  if (CHECK) {
+    if (!existingFileEquals(path, png)) stale.push(`public/assets/icon${size}.png`);
+  } else {
+    writeFileSync(path, png);
+    console.log(`wrote public/assets/icon${size}.png`);
+  }
+}
+
+if (CHECK) {
+  if (stale.length > 0) {
+    console.error(`Generated Workbench icons are stale: ${stale.join(', ')}`);
+    process.exitCode = 1;
+  } else {
+    console.log('Workbench icons are up to date');
+  }
+}
+
+function existingFileEquals(path, expected) {
+  try {
+    return readFileSync(path).equals(expected);
+  } catch (error) {
+    if (error && error.code === 'ENOENT') return false;
+    throw error;
+  }
 }

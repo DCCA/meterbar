@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdir, open, rename } from 'node:fs/promises';
+import { mkdir, open, rename, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -55,13 +55,15 @@ function validateRow(value, provider) {
 
 function validateCard(value) {
   if (!value || typeof value !== 'object' || !PROVIDERS.has(value.provider)) throw new Error('invalid provider');
-  if (!STATUSES.has(value.status) || !Array.isArray(value.snapshots) || value.snapshots.length > 32) throw new Error('invalid card');
+  if (!Array.isArray(value.snapshots) || value.snapshots.length > 32) throw new Error('invalid card');
+  const status = STATUSES.has(value.status) ? value.status : undefined;
+  if (status === undefined && (value.status !== undefined || value.snapshots.length > 0)) throw new Error('invalid card');
   const lastUpdatedAt = optionalIso(value.lastUpdatedAt);
   const message = optionalText(value.message, 240);
   return {
     provider: value.provider,
     label: text(value.label, 80),
-    status: value.status,
+    ...(status !== undefined ? { status } : {}),
     ...(lastUpdatedAt !== undefined ? { lastUpdatedAt } : {}),
     ...(message !== undefined ? { message } : {}),
     snapshots: value.snapshots.map((row) => validateRow(row, value.provider))
@@ -81,13 +83,48 @@ function validateMessage(value) {
 }
 
 async function readMessage() {
-  const chunks = [];
-  for await (const chunk of process.stdin) chunks.push(chunk);
-  const framed = Buffer.concat(chunks);
-  if (framed.length < 4) throw new Error('missing frame');
-  const length = framed.readUInt32LE(0);
-  if (length < 2 || length > MAX_MESSAGE_BYTES || framed.length !== length + 4) throw new Error('invalid frame');
-  return JSON.parse(framed.subarray(4).toString('utf8'));
+  return new Promise((resolve, reject) => {
+    let framed = Buffer.alloc(0);
+    let length;
+
+    const cleanup = () => {
+      process.stdin.off('data', onData);
+      process.stdin.off('end', onEnd);
+      process.stdin.off('error', onError);
+    };
+    const fail = (error) => {
+      cleanup();
+      reject(error);
+    };
+    const onData = (chunk) => {
+      framed = Buffer.concat([framed, chunk]);
+      if (length === undefined && framed.length >= 4) {
+        length = framed.readUInt32LE(0);
+        if (length < 2 || length > MAX_MESSAGE_BYTES) {
+          fail(new Error('invalid frame'));
+          return;
+        }
+      }
+      if (length !== undefined && framed.length >= length + 4) {
+        cleanup();
+        try {
+          resolve(JSON.parse(framed.subarray(4, length + 4).toString('utf8')));
+        } catch (error) {
+          reject(error);
+        }
+      }
+    };
+    const onEnd = () => fail(new Error(framed.length < 4 ? 'missing frame' : 'incomplete frame'));
+    const onError = (error) => fail(error);
+
+    process.stdin.on('data', onData);
+    process.stdin.once('end', onEnd);
+    process.stdin.once('error', onError);
+  });
+}
+
+function isClearMessage(value) {
+  return Boolean(value && typeof value === 'object' && value.type === 'meterbar:clear' && value.schemaVersion === 1);
 }
 
 async function writeSnapshot(snapshot) {
@@ -113,8 +150,12 @@ function respond(value, exitCode) {
 }
 
 try {
-  const snapshot = validateMessage(await readMessage());
-  await writeSnapshot(snapshot);
+  const message = await readMessage();
+  if (isClearMessage(message)) {
+    await rm(statePath(), { force: true });
+  } else {
+    await writeSnapshot(validateMessage(message));
+  }
   respond({ ok: true }, 0);
 } catch {
   respond({ ok: false, error: 'Invalid MeterBar snapshot.' }, 1);

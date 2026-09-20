@@ -1,4 +1,4 @@
-import type { ProviderCardState, UsageWindow } from './types';
+import type { Confidence, ProviderCardState, UsageWindow } from './types';
 import { formatCountdown } from './time';
 
 const SHORT: Partial<Record<UsageWindow, string>> = {
@@ -33,18 +33,26 @@ export interface AlertCopyInput {
   window: UsageWindow;
   usedPercent: number;
   resetsAt?: string;
+  confidence?: Confidence;
 }
 
 /** Human notification copy: provider label + plain window name, never raw enums. */
 export function alertCopy(alert: AlertCopyInput, now: Date = new Date()): { title: string; message: string } {
   const window = windowLongLabel(alert.window);
+  const confidence = confidenceSuffix(alert.confidence ?? 'exact');
   if (alert.kind === 'reset') {
-    return { title: `${alert.label}: ${window} reset`, message: `Fresh window — back to ${alert.usedPercent}% used.` };
+    return { title: `${alert.label}: ${window} reset${confidence}`, message: `Fresh window - back to ${alert.usedPercent}% used.` };
   }
   return {
-    title: `${alert.label}: ${window} at ${alert.usedPercent}% used`,
+    title: `${alert.label}: ${window} at ${alert.usedPercent}% used${confidence}`,
     message: alert.resetsAt ? `Resets in ${formatCountdown(alert.resetsAt, now)}.` : 'Reset time unknown.'
   };
+}
+
+function confidenceSuffix(confidence: Confidence): string {
+  if (confidence === 'estimated') return ' (estimated)';
+  if (confidence === 'inferred') return ' (unofficial source)';
+  return '';
 }
 
 /** Build a multi-line hover tooltip for the toolbar icon from fresh card data. */
@@ -53,7 +61,9 @@ export function buildTooltip(cards: ProviderCardState[]): string {
   for (const card of cards) {
     const fresh = card.snapshots.filter((s) => !s.stale && s.confidence !== 'unavailable');
     if (fresh.length === 0) continue;
-    lines.push(`${card.label}: ${fresh.map((s) => `${windowShortLabel(s.window)} ${s.usedPercent}%`).join(' · ')}`);
+    lines.push(`${card.label}: ${fresh.map((s) =>
+      `${windowShortLabel(s.window)} ${s.usedPercent}%${confidenceSuffix(s.confidence)}`
+    ).join(' · ')}`);
   }
   return lines.length ? `MeterBar · % of limit used\n${lines.join('\n')}` : 'MeterBar · no usage data yet';
 }

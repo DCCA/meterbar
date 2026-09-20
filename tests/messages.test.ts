@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isDataClear,
   isStateGet,
   isStatusReport,
   isTrustedContentReportSender,
@@ -43,6 +44,8 @@ describe('messages', () => {
     expect(isUsageRefresh({ type: 'usage:refresh', extra: true })).toBe(false);
     expect(isStateGet({ type: 'state:get' })).toBe(true);
     expect(isStateGet(null)).toBe(false);
+    expect(isDataClear({ type: 'data:clear' })).toBe(true);
+    expect(isDataClear({ type: 'data:clear', extra: true })).toBe(false);
   });
 });
 

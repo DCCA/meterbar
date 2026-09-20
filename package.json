@@ -6,6 +6,9 @@
   "description": "Privacy-first Chrome extension that shows AI subscription usage limits in one real-time bar.",
   "license": "Apache-2.0",
   "scripts": {
+    "assets:generate": "node scripts/generate-workbench-palette.mjs && node scripts/generate-icons.mjs",
+    "assets:check": "node scripts/generate-workbench-palette.mjs --check && node scripts/generate-icons.mjs --check",
+    "prebuild": "npm run assets:check",
     "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest",

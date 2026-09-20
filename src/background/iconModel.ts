@@ -23,8 +23,8 @@ function freshSnapshots(card: ProviderCardState): UsageSnapshot[] {
 
 /**
  * Pure: bars in fixed provider order — position identifies the provider, so once ANY
- * provider has fresh data, every card-holding provider keeps its slot (an empty track
- * when it has nothing fresh) instead of letting later bars shift left. Each filled bar
+ * provider has fresh data, all four known providers keep their slot (an empty track
+ * when they have nothing fresh) instead of letting later bars shift left. Each filled bar
  * uses that provider's riskiest window. With no fresh data anywhere, no bars: the
  * static logo shows instead. No DOM / canvas / chrome.*.
  */
@@ -34,8 +34,7 @@ export function iconBars(cards: ProviderCardState[]): IconBar[] {
   const bars: IconBar[] = [];
   for (const provider of ORDER) {
     const card = byProvider.get(provider);
-    if (!card) continue;
-    const fresh = freshSnapshots(card);
+    const fresh = card ? freshSnapshots(card) : [];
     const peak = fresh.reduce((max, s) => Math.max(max, s.usedPercent), 0);
     bars.push({ provider, level: levelFor(peak), fillRatio: Math.max(0, Math.min(1, peak / 100)) });
   }

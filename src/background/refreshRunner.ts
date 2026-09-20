@@ -1,14 +1,19 @@
+export interface CoalescedRefresh {
+  (): Promise<void>;
+  whenIdle(): Promise<void>;
+}
+
 /**
  * Serialize refresh work and collapse any number of requests received while one is
  * active into one follow-up run. This prevents an older provider response from
  * overwriting a newer manual refresh while still honoring a request that arrived
  * during the active run.
  */
-export function createCoalescedRefresh(work: () => Promise<void>): () => Promise<void> {
+export function createCoalescedRefresh(work: () => Promise<void>): CoalescedRefresh {
   let active: Promise<void> | null = null;
   let followUpRequested = false;
 
-  return function refresh(): Promise<void> {
+  const refresh = function refresh(): Promise<void> {
     if (active) {
       followUpRequested = true;
       return active;
@@ -24,5 +29,8 @@ export function createCoalescedRefresh(work: () => Promise<void>): () => Promise
     });
 
     return active;
-  };
+  } as CoalescedRefresh;
+
+  refresh.whenIdle = () => active ?? Promise.resolve();
+  return refresh;
 }

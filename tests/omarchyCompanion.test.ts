@@ -20,6 +20,21 @@ describe('Omarchy companion plugin', () => {
     expect(existsSync(`${pluginDir}/Panel.qml`)).toBe(true);
   });
 
+  it('normalizes partial or legacy snapshots to four fixed provider slots', () => {
+    const main = readFileSync(`${pluginDir}/Main.qml`, 'utf8');
+    expect(main).toContain('var slots = [');
+    expect(main).toContain('{ provider: "codex", label: "Codex" }');
+    expect(main).toContain('message: "No usage reported"');
+  });
+
+  it('surfaces truthful uncertainty for inferred provider readings', () => {
+    const panel = readFileSync(`${pluginDir}/Panel.qml`, 'utf8');
+    expect(panel).toContain('Unofficial source');
+    expect(panel).toContain('function confidenceText');
+    expect(panel).toContain('function peakTooltip');
+    expect(panel).toContain('tooltipText: root.peakTooltip()');
+  });
+
   it('reads only the sanitized local state file and contains no network collector', () => {
     const main = readFileSync(`${pluginDir}/Main.qml`, 'utf8');
     expect(main).toContain('/meterbar/state.json');

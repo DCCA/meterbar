@@ -2,7 +2,14 @@ import type { Confidence, ProviderCardState, ProviderId, ProviderStatus, UsageWi
 
 export const COMPANION_HOST = 'com.meterbar.bridge';
 
-const COMPANION_PROVIDERS = new Set<ProviderId>(['claude', 'chatgpt', 'codex', 'gemini']);
+const COMPANION_ORDER: ProviderId[] = ['claude', 'chatgpt', 'codex', 'gemini'];
+const COMPANION_PROVIDERS = new Set(COMPANION_ORDER);
+const COMPANION_LABELS: Partial<Record<ProviderId, string>> = {
+  claude: 'Claude',
+  chatgpt: 'ChatGPT',
+  codex: 'Codex',
+  gemini: 'Gemini'
+};
 
 export interface CompanionSnapshotRow {
   provider: ProviderId;
@@ -18,7 +25,7 @@ export interface CompanionSnapshotRow {
 export interface CompanionCard {
   provider: ProviderId;
   label: string;
-  status: ProviderStatus;
+  status?: ProviderStatus;
   lastUpdatedAt?: string;
   message?: string;
   snapshots: CompanionSnapshotRow[];
@@ -41,13 +48,23 @@ function safeText(value: string, maxLength = 240): string {
  * cross the native-messaging boundary.
  */
 export function toCompanionSnapshot(cards: ProviderCardState[], generatedAt = new Date().toISOString()): CompanionSnapshot {
+  const byProvider = new Map(cards
+    .filter((card) => COMPANION_PROVIDERS.has(card.provider))
+    .map((card) => [card.provider, card]));
+
   return {
     type: 'meterbar:snapshot',
     schemaVersion: 1,
     generatedAt,
-    cards: cards
-      .filter((card) => COMPANION_PROVIDERS.has(card.provider))
-      .map((card) => ({
+    cards: COMPANION_ORDER.map((provider) => {
+      const card = byProvider.get(provider);
+      if (!card) return {
+        provider,
+        label: COMPANION_LABELS[provider] ?? provider,
+        snapshots: [],
+        message: 'No usage reported'
+      };
+      return {
         provider: card.provider,
         label: safeText(card.label, 80),
         status: card.status,
@@ -66,8 +83,22 @@ export function toCompanionSnapshot(cards: ProviderCardState[], generatedAt = ne
             stale: snapshot.stale
           }];
         })
-      }))
+      };
+    })
   };
+}
+
+/** Ask the optional host to delete its local snapshot. */
+export async function clearCompanion(): Promise<boolean> {
+  try {
+    const response = await chrome.runtime.sendNativeMessage(COMPANION_HOST, {
+      type: 'meterbar:clear',
+      schemaVersion: 1
+    }) as { ok?: boolean } | undefined;
+    return response?.ok === true;
+  } catch {
+    return false;
+  }
 }
 
 /** Best-effort local sync. MeterBar remains fully functional when the host is absent. */

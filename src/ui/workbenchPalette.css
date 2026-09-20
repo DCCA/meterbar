@@ -1,0 +1,37 @@
+/* Generated from workbenchPalette.json by scripts/generate-workbench-palette.mjs. */
+:root {
+  --bg: #11120f;
+  --bg-deep: #0c0d0b;
+  --surface: #1a1b17;
+  --surface-2: #20211c;
+  --surface-3: #272820;
+  --enamel: #e8dfca;
+  --enamel-2: #d7cdb7;
+  --enamel-ink: #1d1c17;
+  --border: #4a493f;
+  --border-soft: #37372f;
+  --text: #eee8da;
+  --muted: #aaa293;
+  --faint: #7f7a6f;
+  --track: #10110f;
+  --ok: #7fad87;
+  --warn: #e49350;
+  --crit: #d9614d;
+  --accent: #e49350;
+  --instrument-label: #675f50;
+  --section-label: #6d6557;
+  --enamel-copy: #625b4f;
+  --dial-track: #a49a86;
+  --meter-border: #4d4c43;
+  --empty-border: #756e60;
+  --empty-bar-border: #716a5d;
+  --empty-bar: #b9af9b;
+  --control-border: #5c5a4e;
+  --icon-shell-border: #5a584e;
+  --legend-border: #59574c;
+  --danger: #ed9585;
+  --icon-casing: #1a1b17;
+  --icon-border: #6a6659;
+  --icon-track: #403f37;
+  --icon-accent: #e49350;
+}
