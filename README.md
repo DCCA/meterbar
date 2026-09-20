@@ -17,7 +17,7 @@ An optional experimental Omarchy preview adds the same four-channel indicator an
 - **Badge** - the pinned toolbar icon always shows your single riskiest percentage, color-coded.
 - **Hover tooltip** - hover the icon for a full per-provider, per-window summary with confidence qualifiers, no click needed.
 - **Side panel** - open it once (the **Side panel** button in the popup, or Chrome's side-panel toolbar button) and it stays docked and glanceable while you browse, refreshing itself as new usage arrives.
-- **Omarchy bar preview** - install the optional [experimental display preview](companion/README.md) for an always-visible shell indicator and click-open Workbench panel with its own 24-hour trend chart.
+- **Omarchy bar preview** - install the optional [experimental display preview](companion/README.md) for an always-visible shell indicator and click-open glass panel with its own 24-hour trend chart.
 
 ## Local development
 
