@@ -8,16 +8,16 @@ AI power users increasingly juggle Claude, ChatGPT/Codex, Gemini, and other AI s
 
 ## Status
 
-The Chrome MVP and Phase 2 browser tracking are implemented. The Workbench interface spans the toolbar, popup, side panel, and settings. The toolbar icon shows a risk-colored bar per connected provider plus a badge number you can pin to a provider (Auto, Claude, or OpenAI). Claude and ChatGPT/Codex read live usage via background fetches of your logged-in sessions; Gemini reports connected-status via a content script. The exact provider endpoints/DOM hooks are validated by live inspection - until validated, a provider reports "not connected" rather than showing unverified numbers.
+The Chrome MVP and Phase 2 browser tracking are implemented. The glass dashboard spans the toolbar, popup, side panel, and settings. The popup shows a hero readout of the tightest limit, a multi-provider 24-hour trend chart, and per-provider detail cards with two switchable views (home and limits). The toolbar icon draws a risk-colored bar per provider in a fixed four-slot casing (Claude, ChatGPT, Codex, Gemini) plus a badge number you can pin to a group (Auto, Claude, or OpenAI). ChatGPT and Codex are separate cards reading from the same endpoint. Claude, ChatGPT, and Codex read live usage via background fetches of your logged-in sessions; Gemini reports connected-status via a content script. All numeric readings are labeled "inferred" - the endpoints are undocumented, so MeterBar never presents them as exact.
 
 An optional experimental Omarchy preview adds the same four-channel indicator and a click-open desktop panel using a sanitized local snapshot. It is display-only and not a stable product surface: the Chrome extension remains the only collector, and no CLI tracking, local proxy, routing, or failover is included.
 
 ### Viewing your usage without clicking
 
 - **Badge** - the pinned toolbar icon always shows your single riskiest percentage, color-coded.
-- **Hover tooltip** - hover the icon for a full per-provider, per-window summary, no click needed.
+- **Hover tooltip** - hover the icon for a full per-provider, per-window summary with confidence qualifiers, no click needed.
 - **Side panel** - open it once (the **Side panel** button in the popup, or Chrome's side-panel toolbar button) and it stays docked and glanceable while you browse, refreshing itself as new usage arrives.
-- **Omarchy bar preview** - install the optional [experimental display preview](companion/README.md) for an always-visible shell indicator and click-open Workbench panel.
+- **Omarchy bar preview** - install the optional [experimental display preview](companion/README.md) for an always-visible shell indicator and click-open glass panel with its own 24-hour trend chart.
 
 ## Local development
 
@@ -27,6 +27,7 @@ npm test            # vitest run (all suites)
 npm run typecheck   # tsc --noEmit
 npm run check       # typecheck + test
 npm run build       # vite build → dist/ (the unpacked extension)
+npm run assets:generate  # regenerate palette CSS/QML and icon PNGs
 ```
 
 Run a single test file:
@@ -65,7 +66,7 @@ MeterBar is local-first: there is no backend, no cloud sync, and no analytics. I
 | `sidePanel` | Keep the usage instrument docked while you browse. |
 | `nativeMessaging` | Send a sanitized usage snapshot to the optional experimental Omarchy preview. No credential or chat data is included. |
 | `host_permissions: https://claude.ai/*` | Read your Claude usage from your logged-in session. |
-| `host_permissions: https://chatgpt.com/*` | Read ChatGPT/Codex usage surfaced to the page. |
+| `host_permissions: https://chatgpt.com/*` | Read ChatGPT and Codex usage surfaced to the page. |
 | `host_permissions: https://gemini.google.com/*` | Read Gemini usage surfaced to the page. |
 
 Use **Settings → Clear local MeterBar data** to erase browser storage and ask the installed companion host to remove its snapshot. If the host is unavailable, use the companion removal steps to delete its local state file.
