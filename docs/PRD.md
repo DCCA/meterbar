@@ -5,7 +5,7 @@
 **Visibility:** Private  
 **Date:** 2026-06-20  
 **Owner:** DCCA  
-**Status:** MVP + Phase 2 implemented; Workbench and optional display companion implemented
+**Status:** MVP + Phase 2 implemented; Workbench implemented; optional Omarchy display preview experimental
 
 ---
 
@@ -40,14 +40,13 @@ The pain is especially acute for builders using AI tools as part of a daily work
 - Cares about privacy and does not want prompt/chat contents collected.
 - Is willing to install a Chrome extension if the value is immediate and visible.
 
-### Secondary persona: small AI-heavy team lead
+### Product scope: personal only
 
-- Wants lightweight visibility across teammates' AI usage.
-- Does not necessarily want to move everyone to enterprise/team plans.
-- Needs breach signals, weekly reports, and plan-fit insights.
+MeterBar is deliberately a single-user product. Team dashboards, cross-member visibility, shared reporting, and organization administration are not planned product directions.
 
-### Not the initial persona
+### Not the target persona
 
+- Team leads seeking visibility into other people's usage.
 - Large enterprises needing official billing integrations, SSO, procurement, audit workflows, or admin consoles.
 - API-only teams who need metering from provider billing APIs rather than browser subscriptions.
 
@@ -61,7 +60,7 @@ The pain is especially acute for builders using AI tools as part of a daily work
 
 ### Longer positioning
 
-> MeterBar shows your AI subscription limits before they stop your work — starting with Claude, ChatGPT/Codex, and Gemini in Chrome.
+> MeterBar shows your AI subscription limits before they stop your work - starting with Claude, ChatGPT/Codex, and Gemini in Chrome.
 
 ### Differentiation
 
@@ -72,7 +71,7 @@ MeterBar should sit between simple single-provider extensions and heavier local 
 | Single-provider browser tracker | Claude Usage Tracker | Deep per-provider UX | Not unified across providers |
 | Multi-provider extension/dashboard | Claude Tuner | Strong analytics/team features | Trust/privacy concerns if server-first |
 | Local proxy/menu bar | Quotio | CLI control, routing, failover | Heavier setup, macOS/coding-agent focused |
-| MeterBar | This product | Lightweight unified visibility | Starts as visibility, may later add local companion |
+| MeterBar | This product | Lightweight unified visibility | Browser-first collection with an experimental local display preview |
 
 ---
 
@@ -81,8 +80,8 @@ MeterBar should sit between simple single-provider extensions and heavier local 
 1. **Privacy-first by default**  
    No prompt, message, file, attachment, or chat content collection.
 
-2. **Local-first MVP**  
-   Usage snapshots and history stay in browser storage unless the user explicitly enables sync/team features later.
+2. **Local-first and personal-only**
+   Usage snapshots and history stay on the user's device. MeterBar has no cloud sync, account system, or team mode.
 
 3. **Glanceable before detailed**  
    The product should be useful from the Chrome toolbar badge and compact popup before any advanced dashboard exists.
@@ -93,8 +92,8 @@ MeterBar should sit between simple single-provider extensions and heavier local 
 5. **Truthful uncertainty**  
    If a value is estimated, inferred, stale, or based on undocumented endpoints, the UI must say so.
 
-6. **No routing/failover in the Chrome-only MVP**  
-   Routing belongs to a later companion app or local proxy, not the first browser extension.
+6. **No routing/failover in MeterBar**
+   Any future personal companion capability requires a separate product decision; routing and proxy behavior are not current product commitments.
 
 ---
 
@@ -226,28 +225,15 @@ Minimum settings:
 - Usage pacing: are you burning quota faster than the reset window?
 - Configurable thresholds.
 
-### Phase 4: Optional sync/team mode
+### Personal-only boundary
 
-Only after explicit consent:
+Cloud sync, accounts, team dashboards, member usage, shared reports, and organization administration are not planned product directions.
 
-- Account-based sync.
-- Team dashboard.
-- Member usage snapshots.
-- Weekly reports.
-- Admin privacy controls.
+### Future local companion exploration
 
-### Phase 5: Local companion app
+A future personal companion may explore native tray or menu-bar visibility, local CLI status, or other on-device workflows. Any such work requires a separate product decision and must preserve the privacy boundary.
 
-Approach parity with products like Quotio by adding:
-
-- native tray/menu bar
-- Native Messaging Host
-- local proxy
-- Claude Code / Codex CLI / Gemini CLI visibility
-- local-only CLI status API
-- optional routing/failover experiments
-
-**Implemented post-MVP subset:** MeterBar includes an optional Omarchy display companion and a Native Messaging host that receives sanitized usage snapshots from the Chrome extension. The extension remains the only provider collector. This subset does not add CLI tracking, a local proxy, routing, failover, or shell/CLI configuration changes, and it does not alter the browser-only MVP scope or the non-goals in section 7.
+**Implemented experimental preview:** MeterBar includes an optional Omarchy display preview and a Native Messaging host that receives sanitized usage snapshots from the Chrome extension. It is not a stable product surface. The extension remains the only provider collector. The preview does not add CLI tracking, a local proxy, routing, failover, or shell/CLI configuration changes, and it does not alter the browser-only MVP scope or the non-goals in section 7.
 
 ---
 
@@ -435,7 +421,8 @@ Resolved decisions:
 
 - Provider position is fixed everywhere: Claude, ChatGPT, Codex, Gemini.
 - ChatGPT and Codex have separate cards/history but share the OpenAI setting and badge target.
-- Chrome remains the sole provider collector; the optional Omarchy companion is display-only.
+- MeterBar is a personal-only product; team visibility, accounts, and cloud sync are not planned directions.
+- Chrome remains the sole provider collector; the optional Omarchy companion is an experimental display-only preview.
 - Structured readings from undocumented Claude/OpenAI endpoints are labeled `inferred` / "unofficial source."
 
 Open questions:
@@ -443,6 +430,7 @@ Open questions:
 1. Should the repo include a public landing page now that provider adapters are working?
 2. How aggressively should MeterBar attempt to discover undocumented provider endpoints versus only observing requests already made by the official UI?
 3. What is the minimum privacy posture required before making the repo public?
+4. What evidence and support bar would the experimental Omarchy preview need before it could be considered stable?
 
 ---
 
@@ -455,7 +443,7 @@ Reasoning:
 - It validates the core user value quickly.
 - It avoids overbuilding a Quotio-like local proxy too early.
 - It creates a narrow trust promise: “usage limits, not chat content.”
-- It gives us a natural path to multi-provider and companion app later.
+- It permits optional on-device display experiments without widening the browser's collector role.
 
 ---
 

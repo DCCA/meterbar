@@ -1,6 +1,6 @@
 # MeterBar for Omarchy
 
-This optional post-MVP companion adds a four-channel usage indicator to the Omarchy shell bar and a click-open Workbench panel. It is a display-only subset of the PRD's future local companion phase, not part of the Chrome MVP. The Chrome extension remains the only collector. The desktop plugin reads one sanitized local JSON snapshot and makes no network requests.
+This optional experimental preview adds a four-channel usage indicator to the Omarchy shell bar and a click-open Workbench panel. It is display-only, is not a stable product surface, and is not part of the Chrome MVP. The Chrome extension remains the only collector. The desktop plugin reads one sanitized local JSON snapshot and makes no network requests.
 
 It does not add CLI quota tracking, a local proxy, provider routing, failover, or shell/CLI configuration changes.
 
