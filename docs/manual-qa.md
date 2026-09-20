@@ -122,7 +122,7 @@ Run `./scripts/install-omarchy-companion.sh`, reload the unpacked extension, and
 - [ ] The four-channel MeterBar indicator appears in the right side of the Omarchy bar.
 - [ ] Left-click opens the glass panel (hero, trend, compact limits) and right-click opens the extension in Chromium; the bar widget shows four mini meters and the tightest percent.
 - [ ] The panel shows the same fixed provider order, percentages, reset timing, and connected-only Gemini state as the extension.
-- [ ] Claude and ChatGPT/Codex readings are labeled **Unofficial source** in the extension and companion because their usage endpoints are undocumented.
+- [ ] Claude and OpenAI readings are labeled **inferred** in the extension and companion (full phrase in tooltips) because their usage endpoints are undocumented; OpenAI is one card for ChatGPT and Codex.
 - [ ] Stop refreshing for longer than 10 minutes: last-known readings remain visible but are labeled stale and stop contributing to the master reading.
 - [ ] `~/.local/state/meterbar/state.json` has mode `0600` and contains only provider/status/window/percentage/timestamp/confidence/stale fields. Confirm there are no cookies, tokens, account hashes, endpoint details, prompts, responses, or chat content.
 - [ ] **Settings → Clear local MeterBar data** removes both browser storage and `~/.local/state/meterbar/state.json` when the companion host is installed.

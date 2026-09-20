@@ -21,13 +21,14 @@ const CAPTURED = {
 };
 
 describe('parseChatgptUsage', () => {
-  it('maps the main rate_limit to five_hour + seven_day ChatGPT windows', () => {
+  it('maps the whole response onto one OpenAI card: pool windows plus a named model cap', () => {
     const snaps = parseChatgptUsage(CAPTURED, NOW);
     expect(snaps).toMatchObject([
       { provider: 'chatgpt', window: 'five_hour', usedPercent: 27, usedRatio: 0.27, confidence: 'inferred', stale: false },
       { provider: 'chatgpt', window: 'seven_day', usedPercent: 39, confidence: 'inferred' },
-      { provider: 'codex', window: 'custom', usedPercent: 11 }
+      { provider: 'chatgpt', window: 'custom', workspaceLabel: 'GPT-5.3-Codex-Spark', usedPercent: 11 }
     ]);
+    expect(snaps.every((s) => s.provider === 'chatgpt')).toBe(true);
   });
 
   it('converts reset_at epoch seconds to an ISO timestamp', () => {
@@ -35,15 +36,15 @@ describe('parseChatgptUsage', () => {
     expect(primary.resetsAt).toBe(new Date(1781989386 * 1000).toISOString());
   });
 
-  it('emits one Codex bar = the riskiest additional window across entries', () => {
-    const codex = parseChatgptUsage(CAPTURED, NOW).find((s) => s.provider === 'codex');
-    expect(codex).toMatchObject({ window: 'custom', usedPercent: 11 });
-    expect(codex?.resetsAt).toBe(new Date(1782588049 * 1000).toISOString());
+  it('emits one model-cap window = the riskiest additional window across entries', () => {
+    const cap = parseChatgptUsage(CAPTURED, NOW).find((s) => s.window === 'custom');
+    expect(cap).toMatchObject({ provider: 'chatgpt', workspaceLabel: 'GPT-5.3-Codex-Spark', usedPercent: 11 });
+    expect(cap?.resetsAt).toBe(new Date(1782588049 * 1000).toISOString());
   });
 
-  it('omits the Codex bar when there are no additional rate limits', () => {
+  it('omits the model-cap window when there are no additional rate limits', () => {
     const snaps = parseChatgptUsage({ rate_limit: CAPTURED.rate_limit, additional_rate_limits: [] }, NOW);
-    expect(snaps.some((s) => s.provider === 'codex')).toBe(false);
+    expect(snaps.some((s) => s.window === 'custom')).toBe(false);
     expect(snaps).toHaveLength(2);
   });
 

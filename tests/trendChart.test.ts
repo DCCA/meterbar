@@ -6,8 +6,8 @@ const now = Date.parse('2026-09-20T12:00:00.000Z');
 const from = now - 24 * HOUR;
 const series: TrendSeries[] = [
   { provider: 'claude', label: 'Claude', points: [[from + HOUR, 40], [from + 12 * HOUR, 60], [now, 72]] },
-  { provider: 'chatgpt', label: 'ChatGPT', points: [[from - HOUR, 10], [now, 91]] },
-  { provider: 'codex', label: 'Codex', points: [[now, 44]] }
+  { provider: 'chatgpt', label: 'OpenAI', points: [[from - HOUR, 10], [now, 91]] },
+  { provider: 'gemini', label: 'Gemini', points: [[now, 44]] }
 ];
 
 describe('trendChartSvg', () => {
@@ -16,7 +16,7 @@ describe('trendChartSvg', () => {
     expect(svg).toContain('data-provider="claude"');
     expect(svg).toContain('style="stroke:var(--series-claude)"');
     expect(svg).not.toContain('data-provider="chatgpt"'); // only one point inside the domain
-    expect(svg).not.toContain('data-provider="codex"');
+    expect(svg).not.toContain('data-provider="gemini"');
     expect(svg).toContain('<text class="trend-label"');
     expect(svg).toContain('>72</text>');
     expect(svg).toContain('trend-guide-70');

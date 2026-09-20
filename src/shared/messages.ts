@@ -14,7 +14,7 @@ interface SenderLike {
   tab?: { url?: string };
 }
 
-const REPORT_PROVIDERS = new Set<ProviderId>(['claude', 'chatgpt', 'codex', 'gemini']);
+const REPORT_PROVIDERS = new Set<ProviderId>(['claude', 'chatgpt', 'gemini']);
 const PROVIDER_STATUSES = new Set<ProviderCardState['status']>([
   'connected', 'not_connected', 'stale', 'unsupported'
 ]);

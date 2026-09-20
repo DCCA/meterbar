@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 
 const MAX_MESSAGE_BYTES = 1024 * 1024;
-const PROVIDERS = new Set(['claude', 'chatgpt', 'codex', 'gemini']);
+const PROVIDERS = new Set(['claude', 'chatgpt', 'gemini']);
 const STATUSES = new Set(['connected', 'not_connected', 'stale', 'unsupported']);
 const WINDOWS = new Set(['five_hour', 'seven_day', 'daily', 'monthly', 'api_billing', 'custom']);
 const CONFIDENCE = new Set(['exact', 'estimated', 'inferred', 'unavailable']);

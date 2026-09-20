@@ -5,7 +5,7 @@ describe('BADGE_TARGETS', () => {
   it('offers Auto first, then one entry per provider with a number', () => {
     expect(BADGE_TARGETS.map((t) => t.id)).toEqual(['riskiest', 'claude', 'chatgpt']);
     expect(BADGE_TARGETS[0].providers).toBeUndefined();
-    expect(BADGE_TARGETS[2]).toMatchObject({ label: 'OpenAI', providers: ['chatgpt', 'codex'] });
+    expect(BADGE_TARGETS[2]).toMatchObject({ label: 'OpenAI', providers: ['chatgpt'] });
   });
 
   it('does not offer Gemini (status-only, no number)', () => {

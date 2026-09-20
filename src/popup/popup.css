@@ -129,7 +129,6 @@ body {
 .trend-tip i { display: inline-block; width: 8px; height: 2px; margin-right: 5px; vertical-align: middle; }
 .trend-tip i[data-provider="claude"] { background: var(--series-claude); }
 .trend-tip i[data-provider="chatgpt"] { background: var(--series-openai); }
-.trend-tip i[data-provider="codex"] { background: var(--series-codex); }
 
 /* Compact limits (Home) */
 .lim { display: grid; gap: 7px; }
@@ -137,8 +136,8 @@ body {
 .lim-name { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text); }
 .lim-name svg, .prov-name svg { width: 12px; height: 12px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .lim-wins { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 3px 12px; }
-.lim-win { display: flex; justify-content: space-between; gap: 8px; min-width: 0; color: var(--muted); font-size: 10px; }
-.lim-win span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lim-win { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; min-width: 0; color: var(--muted); font-size: 10px; }
+.lim-win span { min-width: 0; overflow-wrap: anywhere; }
 .lim-win b { font-weight: 500; color: var(--text); white-space: nowrap; }
 .lim-win b.warn { color: var(--warn); }
 .lim-win b.crit { color: var(--crit); }
@@ -162,8 +161,8 @@ body {
 .wins { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
 .wins.one { grid-template-columns: 1fr; }
 .win { display: grid; gap: 5px; min-width: 0; }
-.win-t { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 10px; }
-.win-t span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.win-t { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; color: var(--muted); font-size: 10px; }
+.win-t span { min-width: 0; overflow-wrap: anywhere; }
 .win-t b { font-weight: 500; color: var(--text); white-space: nowrap; }
 .win.warn .win-t b { color: var(--warn); }
 .win.crit .win-t b { color: var(--crit); }

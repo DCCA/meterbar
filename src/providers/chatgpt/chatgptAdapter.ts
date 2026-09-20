@@ -23,10 +23,11 @@ function windowOf(w: ChatgptWindow, fallback: UsageWindow): UsageWindow {
   return WINDOW_BY_SECONDS[secs] ?? 'custom';
 }
 
-function snapshot(provider: UsageSnapshot['provider'], window: UsageWindow, w: ChatgptWindow, capturedAt: string): UsageSnapshot | null {
+function snapshot(window: UsageWindow, w: ChatgptWindow, capturedAt: string, workspaceLabel?: string): UsageSnapshot | null {
   if (typeof w.used_percent !== 'number') return null;
   return {
-    provider,
+    provider: 'chatgpt',
+    ...(workspaceLabel ? { workspaceLabel } : {}),
     window,
     usedRatio: w.used_percent / 100,
     usedPercent: Math.round(w.used_percent),
@@ -42,36 +43,42 @@ function snapshot(provider: UsageSnapshot['provider'], window: UsageWindow, w: C
  * Pure parser (no I/O). `used_percent` is already a 0-100 percent in the structured
  * response, but the endpoint is undocumented, so confidence remains `inferred`.
  * A sanitized live response captured on 2026-06-20 is checked in as parser evidence.
+ *
+ * ChatGPT and Codex are one subscription and one endpoint: `rate_limit` is the
+ * account-wide pool (Codex / Work / agents) and `additional_rate_limits` holds
+ * per-model caps that only exist while OpenAI publishes them. Everything lands on
+ * the single OpenAI card; a cap becomes an extra window named after its limit.
  */
 export function parseChatgptUsage(payload: ChatgptUsageResponse, now: Date = new Date()): UsageSnapshot[] {
   const capturedAt = now.toISOString();
   const out: UsageSnapshot[] = [];
 
-  // Account-wide usage pool (Codex / Work / agents; chat conversations excluded).
+  // Account-wide usage pool.
   const main = payload.rate_limit ?? {};
   const primary = main.primary_window
-    ? snapshot('chatgpt', windowOf(main.primary_window, 'five_hour'), main.primary_window, capturedAt)
+    ? snapshot(windowOf(main.primary_window, 'five_hour'), main.primary_window, capturedAt)
     : null;
   const secondary = main.secondary_window
-    ? snapshot('chatgpt', windowOf(main.secondary_window, 'seven_day'), main.secondary_window, capturedAt)
+    ? snapshot(windowOf(main.secondary_window, 'seven_day'), main.secondary_window, capturedAt)
     : null;
   if (primary) out.push(primary);
   if (secondary) out.push(secondary);
 
-  // One Codex bar under a distinct 'custom' window so it doesn't collide with the
-  // chat windows in the history store (keyed by provider:window) or the popup.
+  // The riskiest per-model cap becomes one extra window under 'custom' so it never
+  // collides with the pool's windows in the history store (keyed by provider:window).
   let riskiest: ChatgptWindow | null = null;
+  let riskiestName = '';
   let riskiestPct = -1;
   for (const entry of payload.additional_rate_limits ?? []) {
     const rl = entry.rate_limit ?? {};
     for (const w of [rl.primary_window, rl.secondary_window]) {
       if (!w || typeof w.used_percent !== 'number') continue;
-      if (w.used_percent > riskiestPct) { riskiestPct = w.used_percent; riskiest = w; }
+      if (w.used_percent > riskiestPct) { riskiestPct = w.used_percent; riskiest = w; riskiestName = entry.limit_name ?? ''; }
     }
   }
   if (riskiest) {
-    const codex = snapshot('codex', 'custom', riskiest, capturedAt);
-    if (codex) out.push(codex);
+    const cap = snapshot('custom', riskiest, capturedAt, (riskiestName || 'Model cap').slice(0, 40));
+    if (cap) out.push(cap);
   }
 
   return out;
@@ -104,7 +111,7 @@ export function pickChatgptAccountId(body: unknown): string | null {
 
 export const chatgptAdapter: ProviderAdapter = {
   provider: 'chatgpt',
-  label: 'ChatGPT',
+  label: 'OpenAI',
   // `fetch` strategy via the background worker (Bearer token minted from the session
   // cookie); nothing is stored. `endpoint` documents the usage call.
   collection: { strategy: 'fetch', endpoint: chatgptUsageUrl(), init: { headers: { accept: 'application/json' } } },

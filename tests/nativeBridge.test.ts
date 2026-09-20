@@ -56,8 +56,7 @@ describe('native companion bridge', () => {
       ]
     });
     expect(snapshot.cards.slice(1)).toEqual([
-      { provider: 'chatgpt', label: 'ChatGPT', snapshots: [], message: 'No usage reported' },
-      { provider: 'codex', label: 'Codex', snapshots: [], message: 'No usage reported' },
+      { provider: 'chatgpt', label: 'OpenAI', snapshots: [], message: 'No usage reported' },
       { provider: 'gemini', label: 'Gemini', snapshots: [], message: 'No usage reported' }
     ]);
 
@@ -89,7 +88,7 @@ describe('native companion bridge', () => {
   });
 
   it('publishes companion cards in the fixed provider order', () => {
-    const providers: ProviderCardState['provider'][] = ['gemini', 'codex', 'chatgpt', 'claude'];
+    const providers: ProviderCardState['provider'][] = ['gemini', 'chatgpt', 'claude'];
     const shuffled = providers.map((provider) => ({
       provider,
       label: provider,
@@ -98,7 +97,7 @@ describe('native companion bridge', () => {
     }));
 
     expect(toCompanionSnapshot(shuffled, capturedAt).cards.map((card) => card.provider))
-      .toEqual(['claude', 'chatgpt', 'codex', 'gemini']);
+      .toEqual(['claude', 'chatgpt', 'gemini']);
   });
 
   it('drops unknown providers and clamps malformed percentages', () => {
@@ -107,12 +106,12 @@ describe('native companion bridge', () => {
       {
         ...cards[0],
         provider: 'chatgpt',
-        label: 'ChatGPT / Codex',
+        label: 'OpenAI',
         snapshots: [{ ...cards[0].snapshots[0], provider: 'chatgpt', usedPercent: 140 }]
       }
     ], capturedAt);
 
-    expect(result.cards).toHaveLength(4);
+    expect(result.cards).toHaveLength(3);
     const chatgpt = result.cards.find((card) => card.provider === 'chatgpt');
     expect(chatgpt?.snapshots[0].usedPercent).toBe(100);
     expect(result.cards.some((card) => card.provider === 'unknown')).toBe(false);

@@ -31,8 +31,8 @@ An optional Omarchy companion is an experimental display preview, not a stable p
 - Never collect chat content. Store only usage metrics, reset timestamps, provider names, local history, and settings. Raw cookies, tokens, API keys, prompts, completions, files, screenshots, and browsing history are prohibited. (PRD §11, non-negotiable.)
 - Local-first and personal-only: no MeterBar backend, cloud sync, remote analytics, account system, or team dashboard.
 - Truthful uncertainty: inferred, estimated, stale, unavailable, and undocumented readings must be labeled rather than presented as exact.
-- Fixed provider order everywhere: Claude, ChatGPT, Codex, Gemini. Position identifies the provider; color, pulse, and the badge number express risk. (Confirmed 2026-07-25.)
-- ChatGPT and Codex have separate cards and history while sharing one OpenAI enablement setting and badge target.
+- Fixed provider order everywhere: Claude, OpenAI, Gemini. Position identifies the provider; color, pulse, and the badge number express risk. (Confirmed 2026-07-25; three slots since 2026-09-20.)
+- ChatGPT and Codex are one subscription read from one endpoint, so they are one OpenAI card, history, setting, and badge target. A per-model cap shows as an extra named window on that card. (Confirmed 2026-09-20.)
 - The 24-hour trend is the only history chart: one line per provider (its tightest window) over one labeled 24-hour span, in fixed provider hues, with direct labels and a legend. No daily consumption bars, token counts, or cost. (Confirmed 2026-09-20; replaces the 2026-07-25 sparkline rule.)
 - No routing, failover, local proxy, CLI collection, or shell configuration editing in the Chrome product.
 - Clearing MeterBar data removes browser-local state and requests deletion of the experimental companion snapshot when the host is installed.

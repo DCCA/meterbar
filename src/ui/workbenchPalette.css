@@ -17,7 +17,6 @@
   --crit: #f47788;
   --series-claude: #d9702f;
   --series-openai: #35a577;
-  --series-codex: #4189cf;
   --shadow: #000000;
   --icon-casing: #303438;
   --icon-border: #5a6068;
@@ -42,7 +41,6 @@
   --crit: #b5283f;
   --series-claude: #8e3417;
   --series-openai: #127a5a;
-  --series-codex: #1f64a3;
   --shadow: #000000;
 }
 @media (prefers-color-scheme: light) {
@@ -64,7 +62,6 @@
     --crit: #b5283f;
     --series-claude: #8e3417;
     --series-openai: #127a5a;
-    --series-codex: #1f64a3;
     --shadow: #000000;
   }
 }

@@ -101,14 +101,14 @@ MeterBar should sit between simple single-provider extensions and heavier local 
 
 ### Product goal
 
-Give one user a reliable, private, real-time-ish view of Claude, ChatGPT, Codex, and Gemini status or usage in Chrome while keeping all collection local to the extension.
+Give one user a reliable, private, real-time-ish view of Claude, OpenAI (ChatGPT and Codex), and Gemini status or usage in Chrome while keeping all collection local to the extension.
 
 ### Implemented features
 
 #### 6.1 Chrome toolbar instrument and badge
 
-- Shows four fixed provider slots in this order: Claude, ChatGPT, Codex, Gemini.
-- Shows the highest-risk fresh usage as a percentage by default; the user can pin the badge to Claude or OpenAI (the riskiest ChatGPT/Codex reading).
+- Shows three fixed provider slots in this order: Claude, OpenAI, Gemini. ChatGPT and Codex are one subscription read from one endpoint, so they are one OpenAI slot (decided 2026-09-20; a per-model cap such as a Codex model limit appears as an extra named window on that card).
+- Shows the highest-risk fresh usage as a percentage by default; the user can pin the badge to Claude or OpenAI (the riskiest OpenAI window).
 - Badge color states:
   - Green: below 70%
   - Yellow/orange: 70–89%
@@ -121,7 +121,6 @@ The extension popup and side panel show fixed provider cards in this order:
 
 - Claude
 - ChatGPT
-- Codex
 - Gemini
 
 Each card includes:
@@ -148,7 +147,7 @@ Implementation may rely on claude.ai requests/endpoints visible to the logged-in
 
 #### 6.4 OpenAI adapter
 
-ChatGPT and Codex usage is fetched from the logged-in chatgpt.com browser session. The shared response is partitioned into separate ChatGPT and Codex cards/history while both remain controlled by one OpenAI setting and badge target. Because the provider endpoint is undocumented, displayed readings are labeled `inferred` / "unofficial source" rather than exact.
+OpenAI usage (ChatGPT and Codex share one subscription and one `wham/usage` response) is fetched from the logged-in chatgpt.com browser session. The account-wide pool windows and the riskiest per-model cap (named after its `limit_name`) all land on one OpenAI card and history, controlled by one OpenAI setting and badge target. Because the provider endpoint is undocumented, displayed readings are labeled `inferred` / "unofficial source" rather than exact.
 
 #### 6.5 Gemini adapter
 
@@ -211,7 +210,7 @@ Minimum settings:
 
 ### Phase 2: Multi-provider browser tracking (implemented)
 
-- Separate ChatGPT and Codex cards populated from the shared OpenAI browser-session response.
+- One OpenAI card populated from the shared ChatGPT/Codex browser-session response, including any named per-model cap as an extra window.
 - Gemini connected-status adapter.
 - Provider-specific reset semantics.
 - Local history and trend charts.
@@ -306,7 +305,6 @@ Provider enum:
 
 - `claude`
 - `chatgpt`
-- `codex`
 - `gemini`
 - `unknown`
 
@@ -386,7 +384,6 @@ last updated 2m ago · exact
 ChatGPT
 Not connected yet
 
-Codex
 Not connected yet
 
 Gemini
@@ -419,8 +416,8 @@ Not connected yet
 
 Resolved decisions:
 
-- Provider position is fixed everywhere: Claude, ChatGPT, Codex, Gemini.
-- ChatGPT and Codex have separate cards/history but share the OpenAI setting and badge target.
+- Provider position is fixed everywhere: Claude, OpenAI, Gemini.
+- ChatGPT and Codex are one OpenAI card, history, setting, and badge target (one subscription, one endpoint).
 - MeterBar is a personal-only product; team visibility, accounts, and cloud sync are not planned directions.
 - Chrome remains the sole provider collector; the optional Omarchy companion is an experimental display-only preview.
 - Structured readings from undocumented Claude/OpenAI endpoints are labeled `inferred` / "unofficial source."

@@ -26,23 +26,22 @@ describe('iconBars', () => {
     expect(iconBars([card('claude', []), card('gemini', [], { status: 'not_connected' })])).toEqual([]);
   });
 
-  it('holds all four fixed slots when only one provider has data', () => {
+  it('holds all three fixed slots when only one provider has data', () => {
     const bars = iconBars([card('claude', [snap({ usedPercent: 40 })])]);
     expect(bars).toEqual([
       { provider: 'claude', level: 'ok', fillRatio: 0.4 },
       { provider: 'chatgpt', level: 'ok', fillRatio: 0 },
-      { provider: 'codex', level: 'ok', fillRatio: 0 },
       { provider: 'gemini', level: 'ok', fillRatio: 0 }
     ]);
   });
 
   it('emits every fixed slot in provider order', () => {
-    // Pass live cards out of order; the four output slots remain stable.
+    // Pass live cards out of order; the three output slots remain stable.
     const bars = iconBars([
       card('chatgpt', [snap({ provider: 'chatgpt', usedPercent: 88 })]),
       card('claude', [snap({ usedPercent: 30 })])
     ]);
-    expect(bars.map((b) => b.provider)).toEqual(['claude', 'chatgpt', 'codex', 'gemini']);
+    expect(bars.map((b) => b.provider)).toEqual(['claude', 'chatgpt', 'gemini']);
   });
 
   it("uses a provider's riskiest window for its bar", () => {
@@ -76,7 +75,6 @@ describe('iconBars', () => {
     expect(bars).toEqual([
       { provider: 'claude', level: 'ok', fillRatio: 0.4 },
       { provider: 'chatgpt', level: 'ok', fillRatio: 0 },
-      { provider: 'codex', level: 'ok', fillRatio: 0 },
       { provider: 'gemini', level: 'ok', fillRatio: 0 }
     ]);
   });

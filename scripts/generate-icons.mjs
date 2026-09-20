@@ -63,7 +63,7 @@ function pngForSize(size) {
 
   const barPad = Math.max(3, Math.round(size * 0.2));
   const gap = Math.max(1, Math.round(size * 0.05));
-  const fills = [0.46, 0.78, 0.56, 0.28];
+  const fills = [0.46, 0.78, 0.28];
   const barWidth = Math.max(1, Math.floor((size - barPad * 2 - gap * (fills.length - 1)) / fills.length));
   const barTop = barPad;
   const barBottom = size - barPad;

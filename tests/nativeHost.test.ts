@@ -154,7 +154,7 @@ describe('native messaging host', () => {
     expect(result.status).toBe(0);
     expect(unframe(result.stdout)).toEqual({ ok: true });
     const written = JSON.parse(readFileSync(statePath, 'utf8')) as { cards: Array<{ provider: string; status?: string }> };
-    expect(written.cards.map((card) => card.provider)).toEqual(['claude', 'chatgpt', 'codex', 'gemini']);
+    expect(written.cards.map((card) => card.provider)).toEqual(['claude', 'chatgpt', 'gemini']);
     expect(written.cards[1].status).toBeUndefined();
   });
 

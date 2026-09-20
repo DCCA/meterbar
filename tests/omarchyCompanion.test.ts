@@ -20,10 +20,11 @@ describe('Omarchy companion plugin', () => {
     expect(existsSync(`${pluginDir}/Panel.qml`)).toBe(true);
   });
 
-  it('normalizes partial or legacy snapshots to four fixed provider slots', () => {
+  it('normalizes partial or legacy snapshots to three fixed provider slots', () => {
     const main = readFileSync(`${pluginDir}/Main.qml`, 'utf8');
     expect(main).toContain('var slots = [');
-    expect(main).toContain('{ provider: "codex", label: "Codex" }');
+    expect(main).toContain('{ provider: "chatgpt", label: "OpenAI" }');
+    expect(main).not.toContain('codex');
     expect(main).toContain('message: "No usage reported"');
   });
 

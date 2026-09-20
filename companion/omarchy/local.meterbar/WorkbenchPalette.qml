@@ -20,7 +20,6 @@ QtObject {
     crit: "#f47788",
     seriesClaude: "#d9702f",
     seriesOpenai: "#35a577",
-    seriesCodex: "#4189cf",
     shadow: "#000000"
   })
   readonly property var light: ({
@@ -41,7 +40,6 @@ QtObject {
     crit: "#b5283f",
     seriesClaude: "#8e3417",
     seriesOpenai: "#127a5a",
-    seriesCodex: "#1f64a3",
     shadow: "#000000"
   })
 }
