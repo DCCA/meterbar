@@ -1,7 +1,7 @@
 // Runs before the product bundle in the demo copies of popup.html and sidepanel.html.
 // Freezes the clock and answers the chrome.* calls those pages make at load, from the
 // demo fixture. Query params: state (glance|alert), view (home|limits), theme (dark|light).
-import { demoCards, demoHistory, NOW, type DemoState } from './fixture';
+import { demoCards, demoHistory, demoNow, type DemoState } from './fixture';
 import { DEFAULT_SETTINGS } from '../src/storage/usageStore';
 
 const params = new URLSearchParams(location.search);
@@ -10,6 +10,7 @@ const view = params.get('view') === 'limits' ? 'limits' : 'home';
 const theme = params.get('theme') === 'light' ? 'light' : 'dark';
 
 // Frozen clock: countdowns, "Updated 1m ago" and the chart range are identical every frame.
+const NOW = demoNow(state);
 const RealDate = Date;
 class FrozenDate extends RealDate {
   constructor(...args: unknown[]) {

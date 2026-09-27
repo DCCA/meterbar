@@ -3,11 +3,19 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=2400, height=1500" />
+<!-- Declared inline so HyperFrames sees the family is provided and never fetches it. -->
+<style>
+  @font-face { font-family: "JetBrains Mono"; font-weight: 400; src: url(".build/fonts/JetBrainsMono-Regular.woff2") format("woff2"); }
+  @font-face { font-family: "JetBrains Mono"; font-weight: 500; src: url(".build/fonts/JetBrainsMono-Medium.woff2") format("woff2"); }
+  @font-face { font-family: "JetBrains Mono"; font-weight: 600; src: url(".build/fonts/JetBrainsMono-SemiBold.woff2") format("woff2"); }
+  @font-face { font-family: "JetBrains Mono"; font-weight: 700; src: url(".build/fonts/JetBrainsMono-Bold.woff2") format("woff2"); }
+  @font-face { font-family: "JetBrains Mono"; font-weight: 800; src: url(".build/fonts/JetBrainsMono-ExtraBold.woff2") format("woff2"); }
+</style>
 <link rel="stylesheet" href="stage.css" />
 <script src=".build/vendor/gsap.min.js"></script>
 </head>
 <body>
-<div id="root" data-composition-id="root" data-start="0" data-duration="18" data-width="2400" data-height="1500">
+<div id="root" data-composition-id="root" data-start="0" data-duration="21.6" data-width="2400" data-height="1500">
   <div class="stage">
     <div class="layer toolbar" id="toolbar">
       <div class="omni"></div>
@@ -24,23 +32,22 @@
 
     <div class="layer caption" id="cap1">
       <div class="kicker">01 &middot; Toolbar</div>
-      <p class="cap">Every AI limit,<br>in your toolbar.</p>
+      <p class="cap">Claude + OpenAI limits,<br>in your toolbar.</p>
       <p class="sub">Hover for every window, no click needed.</p>
     </div>
     <div class="layer caption" id="cap2a">
       <div class="kicker">02 &middot; At a glance</div>
-      <p class="cap">Claude + Claude Code.<br>ChatGPT + Codex.<br>Gemini status.</p>
-      <p class="sub">The tightest limit first, with its reset countdown.</p>
+      <p class="cap">Claude + Claude Code.<br>ChatGPT + Codex.<br>Gemini: status only.</p>
     </div>
     <div class="layer caption" id="cap2b">
       <div class="kicker">02 &middot; Limits</div>
       <p class="cap">Which limit bites<br>first, and when.</p>
-      <p class="sub">The tick marks even pacing to the reset.</p>
+      <p class="sub">Past the tick: ahead of even pace.</p>
     </div>
     <div class="layer caption" id="cap3">
       <div class="kicker">03 &middot; Side panel</div>
       <p class="cap">Stays docked.<br>Alerts at 70%<br>and 90% used.</p>
-      <p class="sub">Every reading is labelled inferred: the endpoints are undocumented.</p>
+      <p class="sub">The endpoints are undocumented, so rows say "inferred" and alerts say "unofficial source".</p>
     </div>
 
     <div class="layer frame popup" id="popup">
@@ -48,29 +55,30 @@
       <iframe id="popup-limits" data-page="popup" data-state="glance" data-view="limits" title="MeterBar popup, limits view"></iframe>
     </div>
     <div class="layer frame panel" id="panel">
+      <div class="panel-head"><img src=".build/ext/assets/icon48.png" alt="" />MeterBar<span class="panel-x" aria-hidden="true"></span></div>
       <iframe id="panel-glance" data-page="sidepanel" data-state="glance" data-view="home" title="MeterBar side panel"></iframe>
       <iframe id="panel-alert" data-page="sidepanel" data-state="alert" data-view="home" title="MeterBar side panel after the alert"></iframe>
     </div>
 
     <div class="layer notice" id="notice">
-      <div class="app"><img src=".build/ext/assets/icon48.png" alt="" />MeterBar &middot; now</div>
+      <div class="app"><img src=".build/ext/assets/icon48.png" alt="" />Chrome &middot; MeterBar &middot; now</div>
       <p class="title" id="notice-title"></p>
       <p class="msg" id="notice-msg"></p>
     </div>
 
     <section class="layer privacy" id="privacy">
-      <header><span class="mark">MeterBar</span><span class="local">Local only</span></header>
-      <h2>Privacy</h2>
+      <header><h2>Privacy</h2><span class="aside">What MeterBar touches</span></header>
       <ul>
-        <li>Reads usage only, from your logged-in session.</li>
-        <li>Tokens are never stored.</li>
-        <li>Talks only to claude.ai, chatgpt.com, gemini.google.com.</li>
+        <li>Reads only account and usage endpoints, with your own session.</li>
+        <li>Access tokens and account ids stay in memory, never stored.</li>
+        <li>Network: claude.ai and chatgpt.com. Gemini: a sign-in check in the page.</li>
         <li>No backend. No analytics. No chat content.</li>
       </ul>
-      <p class="fine">Not affiliated with Anthropic, OpenAI, or Google.</p>
+      <p class="fine">An optional local companion gets a sanitized snapshot. Not affiliated with Anthropic, OpenAI, or Google.</p>
     </section>
 
-    <span class="layer tag">Demo data &middot; sped up</span>
+    <span class="layer tag" id="tag">Demo data &middot; sped up</span>
+    <span class="layer tag" id="tag-later">Demo data &middot; 10 min later</span>
     <img class="layer cursor" id="cursor" src="cursor.svg" alt="" />
   </div>
 </div>

@@ -1,9 +1,12 @@
 /* The video stage, in the product's design language (DESIGN.md). Colors are token
-   references only; the light render swaps them via [data-theme="light"]. */
+   references only; the light render swaps them via [data-theme="light"].
+   Type uses the bundled JetBrains Mono (declared inline in index.html) through --stage-font,
+   not the product's --mono stack: HyperFrames tries to download every family a composition
+   names that has no @font-face in its HTML, and --mono names five system fonts. */
 @import './.build/ui/tokens.css';
-@import './.build/fonts/fonts.css';
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --stage-font: "JetBrains Mono", monospace; }
 html, body { width: 2400px; height: 1500px; overflow: hidden; background: var(--bg-deep); }
 
 /* Designed at 1200x750 CSS px, rendered at 2x for a crisp README downscale. */
@@ -11,7 +14,7 @@ html, body { width: 2400px; height: 1500px; overflow: hidden; background: var(--
 .stage {
   position: absolute; left: 0; top: 0; width: 1200px; height: 750px;
   transform: scale(2); transform-origin: 0 0; overflow: hidden;
-  font-family: var(--mono); color: var(--text);
+  font-family: var(--stage-font); color: var(--text);
   font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
   background:
     radial-gradient(1100px 820px at 6% -8%, var(--ambient-a) 0%, transparent 64%),
@@ -34,15 +37,14 @@ html, body { width: 2400px; height: 1500px; overflow: hidden; background: var(--
 .action { position: relative; width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; background: var(--control-active); }
 .action canvas { position: absolute; left: 6px; top: 6px; width: 24px; height: 24px; }
 .badge {
-  position: absolute; right: -9px; bottom: -6px; min-width: 22px; padding: 1px 4px; border-radius: 5px;
-  font: 700 11px/1.25 var(--mono); text-align: center;
-  color: var(--icon-track); /* Chrome draws the badge outside any theme, like the product's icon */
+  position: absolute; right: 1px; bottom: 2px; min-width: 22px; padding: 1px 4px; border-radius: 5px;
+  font: 700 11px/1.25 var(--stage-font); text-align: center; /* colors: the product's BadgeState */
 }
 
 /* Native-style hover tooltip: the only opaque material allowed over the pane. */
 .tooltip {
   right: 16px; top: 64px; z-index: 6; padding: 8px 10px; border-radius: 7px; white-space: pre;
-  font: 400 12px/1.5 var(--mono); color: var(--text);
+  font: 400 12px/1.5 var(--stage-font); color: var(--text);
   background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
   box-shadow: inset 0 0 0 1px var(--hairline), var(--shell-shadow);
 }
@@ -50,16 +52,26 @@ html, body { width: 2400px; height: 1500px; overflow: hidden; background: var(--
 /* Product pages, embedded live from the built extension. */
 .frame { overflow: hidden; border-radius: var(--radius); box-shadow: var(--shell-shadow), 0 0 0 1px var(--hairline); transform-origin: 0 0; }
 .frame iframe { position: absolute; left: 0; top: 0; border: 0; background: transparent; }
-.popup { left: 640px; top: 60px; width: 376px; height: 494px; } /* x1.4 = to the stage's bottom edge */
+.popup { left: 640px; top: 60px; width: 376px; } /* height and scale: stage.ts */
 .popup iframe { width: 376px; height: 600px; }
-.panel { left: 720px; top: 56px; width: 400px; height: 579px; border-radius: 0; box-shadow: -1px 0 0 var(--hairline); }
-.panel iframe { width: 400px; height: 579px; }
+.panel { left: 720px; top: 56px; width: 400px; height: 579px; border-radius: 0; box-shadow: -1px 0 0 var(--hairline); background: var(--bg-deep); } /* docked: flush, no lift */
+.panel iframe { top: 30px; width: 400px; height: 549px; }
+/* Chrome's own side-panel header: extension icon and name, close control. */
+.panel-head {
+  position: absolute; left: 0; top: 0; width: 400px; height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 12px;
+  font-size: 12px; font-weight: 600; color: var(--text);
+  background: color-mix(in srgb, var(--surface-strong) 70%, transparent); border-bottom: 1px solid var(--hairline);
+}
+.panel-head img { width: 14px; height: 14px; border-radius: 3px; }
+.panel-x { margin-left: auto; width: 10px; height: 10px; background:
+  linear-gradient(45deg, transparent 45%, var(--muted) 45% 55%, transparent 55%),
+  linear-gradient(-45deg, transparent 45%, var(--muted) 45% 55%, transparent 55%); }
 
 /* Captions sit on the field as text: no boxes (the No-Card Rule). */
 .caption { left: 64px; top: 236px; width: 560px; }
-.kicker { font-size: 14px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.kicker { font-size: 16px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .cap { margin-top: 14px; font-size: 40px; font-weight: 800; line-height: 1.08; letter-spacing: -0.02em; color: var(--text); }
-.sub { margin-top: 16px; font-size: 17px; line-height: 1.45; color: var(--muted); }
+.sub { margin-top: 16px; font-size: 20px; line-height: 1.45; color: var(--muted); }
 .tag {
   left: 64px; bottom: 36px; z-index: 7; padding: 5px 9px; border-radius: 6px;
   font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
@@ -68,7 +80,8 @@ html, body { width: 2400px; height: 1500px; overflow: hidden; background: var(--
 
 /* OS-style notification: drawn as the system's, carrying the product's alert copy. */
 .notice {
-  right: 24px; bottom: 24px; width: 392px; z-index: 6; padding: 12px 14px; border-radius: 12px;
+  /* Left of the docked panel, so it never covers the panel's controls. */
+  right: 500px; bottom: 24px; width: 392px; z-index: 6; padding: 12px 14px; border-radius: 12px;
   background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
   box-shadow: inset 0 0 0 1px var(--hairline), var(--shell-shadow);
 }
@@ -83,12 +96,11 @@ html, body { width: 2400px; height: 1500px; overflow: hidden; background: var(--
   border-radius: var(--radius); background: var(--glass); backdrop-filter: var(--glass-filter);
   box-shadow: var(--shell-shadow), inset 0 0 0 1px var(--hairline), inset 0 1px 0 var(--control-active);
 }
-.privacy header { display: flex; align-items: baseline; justify-content: space-between; }
-.privacy .mark { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
-.privacy .local { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.privacy h2 { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--hairline-soft); font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.privacy header { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 12px; }
+.privacy h2 { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.privacy .aside { font-size: 14px; color: var(--muted); }
 .privacy li { list-style: none; padding: 13px 0; border-top: 1px solid var(--hairline-soft); font-size: 18px; line-height: 1.4; }
-.privacy li:first-child { border-top: 0; }
-.privacy .fine { margin-top: 12px; font-size: 12px; color: var(--muted); }
+.privacy li:first-child { border-top: 1px solid var(--hairline-soft); }
+.privacy .fine { margin-top: 12px; font-size: 13px; line-height: 1.45; color: var(--muted); }
 
 .cursor { left: 0; top: 0; width: 22px; height: 30px; z-index: 9; transform-origin: 3px 2px; }

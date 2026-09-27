@@ -21,7 +21,7 @@ A short, silent, looping demo at the top of `README.md` that tells a first-time 
 - **PRD truthfulness rules apply to marketing.** Gemini is status-only, readings are `inferred`, alerts are OS notifications, the popup does not live-update, the hero number and trend chart are static.
 - **PRD privacy rules.** No real account data. The demo dataset contains no realistic emails, org names, or ids.
 - **DESIGN.md is the visual contract.** Colors come from the generated palette (`src/ui/workbenchPalette.css` via `src/ui/tokens.css`), never copied hex. Monospace only. The Risk-Only Color Rule, the One Number Rule, the Percent Phrase Rule ("72% used"), and the No-Card Rule hold for everything the video adds.
-- **No change to extension runtime code.** `dist/` is consumed, never modified. HyperFrames stays out of the root `package.json`.
+- **No change to extension runtime code.** `dist/` is consumed, never modified. HyperFrames stays out of the root `package.json`. *(Amended: the review found product bugs, which were fixed; see the amendments below.)*
 
 ## Tooling
 
@@ -40,7 +40,7 @@ Stage: 1200x750 CSS px design space. A persistent `Demo data · sped up` tag sit
 | 2a | 3.5-6.5 | Click (120 ms press to 0.9). Popup drops from the icon (opacity + 12 px y, 300 ms, product ease) into the **Mix 1 layout**: popup at 1.4x anchored under the icon on the right, running off the bottom edge; caption block on the left. Home view. | `02 · At a glance` / "Claude + Claude Code. ChatGPT + Codex. Gemini status." (three lines, 40 px), sub: "The tightest limit first, with its reset countdown." |
 | 2b | 6.5-9.0 | Cursor clicks the view toggle; crossfade (200 ms) to the Limits view. Meters fill 0 to value (600 ms, product ease, 60 ms stagger); pace ticks visible. | `02 · Limits` / "Which limit bites first, and when." sub: "The tick marks even pacing to the reset." |
 | 3 | 9.0-14.0 | Popup gone. Side panel docked at the right below the toolbar strip (squared top corners), a quiet empty page to its left. At 10.8 s the panel crossfades from the 72% state to the 91% state; the Claude 5-hour meter grows 72 to 91 and turns rose; the toolbar badge changes `72` amber to `91` rose. At 11.4 s an OS-style notification slides in top-right with the real `alertCopy` title and body. | `03 · Side panel` / "Stays docked. Alerts at 70% and 90% used." |
-| 4 | 14.0-18.0 | Everything else fades; a single glass pane in the product's own format: uppercase `PRIVACY` section title, hairline-separated rows. At 17.4 s crossfade to the exact frame-0 state for a seamless loop. | Rows: "Reads usage only, from your logged-in session." / "Tokens are never stored." / "Talks only to claude.ai, chatgpt.com, gemini.google.com." / "No backend. No analytics. No chat content." Micro line: "Not affiliated with Anthropic, OpenAI, or Google." |
+| 4 | 14.0-18.0 | Everything else fades; a single glass pane in the product's own format: uppercase `PRIVACY` section title, hairline-separated rows. At 17.4 s crossfade to the exact frame-0 state for a seamless loop. | Rows as shipped (the first draft overclaimed network use): "Reads only account and usage endpoints, with your own session." / "Access tokens and account ids stay in memory, never stored." / "Network: claude.ai and chatgpt.com. Gemini: a sign-in check in the page." / "No backend. No analytics. No chat content." Micro line: "Not affiliated with Anthropic, OpenAI, or Google." |
 
 Every caption is on screen for at least 2.5 s. One thing moves at a time: no simultaneous zoom, pan, and slide.
 
@@ -116,8 +116,8 @@ Settings: `DEFAULT_SETTINGS` (badge target `riskiest`, notifications on).
 
 `render.sh` runs: root `npm run build`, then `demo` prepare, then `hyperframes render` at 24 fps, quality high, once per theme (`HYPERFRAMES_NO_TELEMETRY=1`), then FFmpeg:
 
-- `docs/media/meterbar-demo-dark.webp` and `-light.webp`: animated, lossy q 78, looping, scaled to 1600x1000, under 5 MB each.
-- `docs/media/meterbar-demo-poster-dark.png` and `-light.png`: the frame at 6.0 s (beat 2a), 1600x1000.
+- `docs/media/meterbar-demo-dark.webp` and `-light.webp`: animated, lossy, looping, under 5 MB each (final settings in the amendments below).
+- `docs/media/meterbar-demo-poster-dark.png` and `-light.png`: a beat 2a frame, 1600x1000.
 - `docs/media/meterbar-demo.mp4`: dark, H.264, 1920x1200, `yuv420p`, `+faststart`.
 
 README hero, directly under the title:
@@ -167,3 +167,40 @@ Followed by one line: demo data, sped up; a link to the MP4; and a link to the "
 - **The popup frame resizes from 494 to 479 px** when it switches to Limits, as Chrome resizes a popup window to its content (Home is 497.5 px tall, Limits 478.5 px).
 - **The toolbar badge text uses `--icon-track`.** Chrome draws the badge outside any theme, like the product's icon.
 - **HyperFrames' checker loads the stage bundle before `<body>` exists**, so `stage.ts` initializes on `DOMContentLoaded` in that case. That is still before `load`, and the timeline registers before any seek.
+
+### After the adversarial review of the first render
+
+- **The loop is 21.6 s** after the second review round, so every caption holds for at least 2.5 s and the tooltip for 2.3 s. The cursor now opens the side panel from the popup's own side-panel button, which is the product's path, and beat 3 starts from that click.
+- **The alert state is the next 10-minute refresh.** Every reset time is the same absolute instant and Claude weekly moves 41 to 44. The product would fire exactly one alert between the states, and a test runs the real `evaluateAlerts` to prove it.
+- **The 5-hour trend is a sawtooth** that drops to 0 at each reset.
+- **The per-model cap is `GPT-5.3-Codex-Spark`**, the limit name the adapter tests use.
+- **Product fixes exposed by the video:**
+  - The tooltip and alerts now name a per-model cap by its limit name (they said "usage").
+  - The badge text color is set explicitly (Chrome otherwise picks it).
+  - `historyKey` is exported so the fixture writes the product's own keys.
+  - A test proves tokens, account ids and org ids never reach storage.
+- **Privacy copy matches the code:** account and usage endpoints only; tokens in memory only; network to claude.ai and chatgpt.com, with Gemini a sign-in check in the page; the optional local companion is named.
+- **Stage fixes:**
+  - The notification is labeled as Chrome's and sits clear of the panel.
+  - The side panel has Chrome's header.
+  - The tooltip is scaled 1.4x for README legibility.
+  - The popup is scaled 1.37x so it fits.
+  - The poster moves to 5.5 s.
+- **The timeline is built synchronously** (a HyperFrames rule), not after the pages report ready. Motion inside a page goes through setter proxies that re-apply on each page's `demo:ready`.
+- **WebP is encoded with `img2webp` at q85, 1440 px, 20 fps, with a keyframe every 10 to 20 frames.** FFmpeg and libvips expose no keyframe control, and without keyframes libwebp smears slow fades into blocky ghosts.
+- **HyperFrames' update, skills and auto-install checks are off**, as well as telemetry.
+- **The bundled font is declared inline**, so HyperFrames fetches no fonts.
+
+### After the second adversarial review
+
+- **The glance state is 84%** (the refresh adds 7 points, not 19). Readings are captured at the refresh itself, so the panel says "Updated just now" beside the notification's "now". A "Demo data · 10 min later" tag marks the refresh.
+- **Captions:**
+  - The popup-beat subline is dropped (it claimed one limit per card beside cards showing two).
+  - The pace caption says "Past the tick: ahead of even pace", which is what the product's tick means, not a prediction.
+- **Choreography:**
+  - The cursor hovers the icon button's top-right, so the arrow covers neither icon nor badge.
+  - It parks clear of the popup.
+  - The meters fill after the view crossfade lands.
+  - The popup scale is 1.3 for a visible bottom margin.
+- **The notification copy is `alertCopy` applied to the alert the product's own `evaluateAlerts` fires** between the two states. It is no longer a hand-built input.
+- **The WebP frames around the beat-4 fades and the loop's return are encoded at q92** (`HQ_WINDOWS_MS` in render.sh). The rest stay at q85.

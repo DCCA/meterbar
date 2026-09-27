@@ -1,25 +1,47 @@
 // Demo dataset for the README video. Every reading is 'inferred' (as live Claude and
 // OpenAI readings are), Gemini is status-only, and nothing resembles a real account.
-// tests/demoFixture.test.ts pins these truthfulness rules.
+// The 'alert' state is the very next 10-minute refresh after 'glance': every reset time is
+// the same absolute instant, so the product would fire exactly one alert (Claude 5-hour
+// at 90%) between them. tests/demoFixture.test.ts pins these rules.
 import type { ProviderCardState, UsageSnapshot, UsageWindow } from '../src/shared/types';
+import { historyKey, type Point } from '../src/storage/historyStore';
 
 export type DemoState = 'glance' | 'alert';
-export type HistoryPoint = [t: number, p: number];
 
 const M = 60_000;
 const H = 60 * M;
 const D = 24 * H;
+const REFRESH = 10 * M;
+const FIVE_HOURS = 5 * H;
 
-/** Frozen "now" for every surface. Local time on purpose: all on-screen times are relative. */
+/** "Now" for the glance state. Local time on purpose: every on-screen time is relative. */
 export const NOW = new Date(2026, 8, 24, 14, 30).getTime();
 
-const iso = (offsetMs: number) => new Date(NOW + offsetMs).toISOString();
+/** Each state is one refresh apart, the product's alarm cadence. */
+export function demoNow(state: DemoState): number {
+  return state === 'glance' ? NOW : NOW + REFRESH;
+}
+
+// Absolute reset instants, shared by both states.
+const RESETS = {
+  claude5h: NOW + 2 * H + 14 * M,
+  claude7d: NOW + 3 * D + 6 * H,
+  openai7d: NOW + 4 * D + 2 * H,
+  openaiCap: NOW + 3 * D
+};
+
+// 84 -> 91 in one refresh: a heavy Claude Code burst, not an impossible jump.
+const USED: Record<DemoState, { claude5h: number; claude7d: number }> = {
+  glance: { claude5h: 84, claude7d: 43 },
+  alert: { claude5h: 91, claude7d: 44 }
+};
 
 function snap(
+  state: DemoState,
   provider: UsageSnapshot['provider'],
   window: UsageWindow,
   usedPercent: number,
-  resetsInMs: number,
+  resetsAt: number,
   extra: Partial<UsageSnapshot> = {}
 ): UsageSnapshot {
   return {
@@ -27,8 +49,8 @@ function snap(
     window,
     usedRatio: usedPercent / 100,
     usedPercent,
-    resetsAt: iso(resetsInMs),
-    capturedAt: iso(-1 * M),
+    resetsAt: new Date(resetsAt).toISOString(),
+    capturedAt: new Date(demoNow(state)).toISOString(), // read at the refresh itself
     source: 'demo',
     confidence: 'inferred',
     stale: false,
@@ -36,46 +58,53 @@ function snap(
   };
 }
 
-/** The Claude 5-hour reading is the only thing that changes between beats. */
-const CLAUDE_5H: Record<DemoState, { pct: number; resetsIn: number }> = {
-  glance: { pct: 72, resetsIn: 2 * H + 14 * M },
-  alert: { pct: 91, resetsIn: 46 * M }
-};
-
 export function demoCards(state: DemoState): ProviderCardState[] {
-  const c = CLAUDE_5H[state];
-  const updated = iso(-1 * M);
+  const used = USED[state];
+  const updated = new Date(demoNow(state)).toISOString();
   return [
     {
       provider: 'claude', label: 'Claude', status: 'connected', lastUpdatedAt: updated,
-      snapshots: [snap('claude', 'five_hour', c.pct, c.resetsIn), snap('claude', 'seven_day', 41, 3 * D + 6 * H)]
+      snapshots: [
+        snap(state, 'claude', 'five_hour', used.claude5h, RESETS.claude5h),
+        snap(state, 'claude', 'seven_day', used.claude7d, RESETS.claude7d)
+      ]
     },
     {
       provider: 'chatgpt', label: 'OpenAI', status: 'connected', lastUpdatedAt: updated,
       snapshots: [
-        snap('chatgpt', 'seven_day', 38, 4 * D + 2 * H),
-        snap('chatgpt', 'custom', 22, 3 * D, { workspaceLabel: 'Codex' })
+        snap(state, 'chatgpt', 'seven_day', 38, RESETS.openai7d),
+        // Per-model cap name as the wham/usage parser receives it (tests/chatgptAdapter.test.ts).
+        snap(state, 'chatgpt', 'custom', 22, RESETS.openaiCap, { workspaceLabel: 'GPT-5.3-Codex-Spark' })
       ]
     },
     { provider: 'gemini', label: 'Gemini', status: 'connected', lastUpdatedAt: updated, snapshots: [] }
   ];
 }
 
-/** 24 h of 10-minute points (the refresh cadence), ending exactly at NOW on `end`. */
-function series(end: number, shape: (f: number) => number): HistoryPoint[] {
-  const steps = 144;
-  return Array.from({ length: steps + 1 }, (_, i) => {
-    const f = i / steps;
-    return [NOW - (steps - i) * 10 * M, i === steps ? end : Math.round(end * shape(f))];
-  });
+/** Peak of each earlier 5-hour window, oldest first: a night, a morning, a heavy afternoon. */
+const EARLIER_PEAKS = [30, 18, 64, 8, 55];
+
+/** Claude 5-hour usage at time t: a sawtooth that drops to 0 at every reset. */
+function claude5hAt(t: number, state: DemoState): number {
+  const now = demoNow(state);
+  if (t === now) return USED[state].claude5h;
+  const windowsBack = Math.ceil((RESETS.claude5h - FIVE_HOURS - t) / FIVE_HOURS);
+  const windowStart = RESETS.claude5h - FIVE_HOURS * (windowsBack + 1);
+  const progress = (t - windowStart) / FIVE_HOURS;
+  if (windowsBack <= 0) {
+    // Current window: from 0 at its start to the glance reading at NOW.
+    return Math.round(USED.glance.claude5h * Math.min(1, (t - windowStart) / (NOW - windowStart)) ** 1.15);
+  }
+  const peak = EARLIER_PEAKS[EARLIER_PEAKS.length - windowsBack] ?? 0;
+  return Math.round(peak * progress ** 0.9);
 }
 
-/** A working day: a morning bump that resets, then a steady afternoon climb. */
-const workday = (f: number) => (f < 0.45 ? 0.35 * Math.sin(f * 7) ** 2 : Math.min(1, ((f - 0.45) / 0.55) * 1.05));
-
-export function demoHistory(state: DemoState): Record<string, HistoryPoint[]> {
+/** 24 h of 10-minute points (the refresh cadence), ending at the state's now. */
+export function demoHistory(state: DemoState): Record<string, Point[]> {
+  const now = demoNow(state);
+  const times = Array.from({ length: 145 }, (_, i) => now - (144 - i) * REFRESH);
   return {
-    'history:claude:five_hour': series(CLAUDE_5H[state].pct, workday),
-    'history:chatgpt:seven_day': series(38, (f) => 0.62 + 0.38 * f)
+    [historyKey('claude', 'five_hour')]: times.map((t) => [t, claude5hAt(t, state)]),
+    [historyKey('chatgpt', 'seven_day')]: times.map((t, i) => [t, i === 144 ? 38 : Math.round(30 + (8 * i) / 144)])
   };
 }
