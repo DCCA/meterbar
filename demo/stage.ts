@@ -142,6 +142,7 @@ function init(): void {
 
   // Beat 2b (7.7-10.8): the Limits view; once it has landed, meters fill as the product fills them.
   show('#popup-limits', 7.8, 0.2);
+  tl.set('#popup-home', { opacity: 0 }, 8.0); // fully covered by now; the window is Limits-sized
   tl.fromTo('#popup', { height: POPUP.homeHeight }, { height: POPUP.limitsHeight, duration: 0.2, ease: EASE, immediateRender: false }, 7.8);
   show('#cap2b', 7.85, 0.35, { y: 8 });
   fill.forEach((_, i) => tl.fromTo(meters, { [`m${i}`]: 0 }, { [`m${i}`]: 1, duration: 0.6, ease: EASE, immediateRender: false }, 8.35 + i * 0.06));
@@ -167,9 +168,9 @@ function init(): void {
   hide('#cap3', 15.6, 0.2);
 
   // Beat 4 (15.8-21.6): the privacy summary (stage HTML in the product's pane style), then
-  // back to frame 0 for a seamless loop. Fades here are short, and render.sh encodes
-  // 15.7-16.9 s and 20.4 s to the end at higher quality (HQ_WINDOWS_MS): low-contrast fades
-  // over the glass are what the WebP encoder otherwise smears into ghosts.
+  // back to frame 0 for a seamless loop. render.sh forces a WebP keyframe at 16.0 s and
+  // 20.85 s (KEYFRAMES_AT_MS), right after the two fades below, so no ghost of a faded
+  // layer survives in the README image. Keep those in step when moving these fades.
   hide('#panel', 15.8, 0.15);
   hide('#toolbar', 15.8, 0.15);
   hide('#tag-later', 15.8, 0.15);

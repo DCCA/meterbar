@@ -16,21 +16,19 @@ export HYPERFRAMES_NO_TELEMETRY=1 HYPERFRAMES_NO_UPDATE_CHECK=1 HYPERFRAMES_SKIP
 export HYPERFRAMES_NO_AUTO_INSTALL=1 DO_NOT_TRACK=1
 
 FPS=24
-# README WebP: 1440 px (1.8x the 800 px README column) at 20 fps, lossy, with a keyframe at
-# least every second. libwebp's animation encoder otherwise skips "similar" regions and lets
-# slow fades smear into blocky ghosts. q85 is the lowest quality without visible ghosting;
-# the width and frame rate are what fit it under the budget.
+# README WebP: 1440 px (1.8x the 800 px README column) at 20 fps, lossy q85, a keyframe at
+# least every second, plus a forced keyframe right after each big fade (KEYFRAMES_AT_MS, in
+# step with stage.ts): libwebp's lossy animation encoder otherwise keeps a faint ghost of a
+# faded layer until its next keyframe. img2webp cannot place keyframes, so the frames are
+# encoded in parts split there (each part starts with a full frame) and joined.
 WEBP_WIDTH=1440
 WEBP_FPS=20
 WEBP_QUALITY=85
 KMIN=10
 KMAX=20
+KEYFRAMES_AT_MS=(16000 20850) # after the panel/toolbar fade and after the privacy exit
 MAX_WEBP_BYTES=5000000
 POSTER_WIDTH=1600
-# Frames around the beat-4 fades (stage.ts) encoded at HQ_QUALITY: without it the encoder
-# leaves a faint structured ghost of the faded layers for up to a keyframe interval.
-HQ_QUALITY=92
-HQ_WINDOWS_MS=("15700 16900" "20400 21600")
 POSTER_AT=6.0 # Home view, caption up, cursor parked off the controls
 
 IMG2WEBP="$(command -v "${IMG2WEBP:-img2webp}" || true)"
@@ -54,22 +52,24 @@ for theme in dark light; do
   frames="$out/frames-$theme"
   rm -rf "$frames" && mkdir -p "$frames"
   ffmpeg -v error -i "$out/$theme.mp4" -vf "fps=$WEBP_FPS,scale=$WEBP_WIDTH:-1:flags=lanczos" "$frames/f%04d.png"
-  # Per-frame options: whole-millisecond durations that add up to exactly WEBP_FPS frames per
-  # second, and the quality, emitted only when it changes (img2webp applies an option to every
-  # following frame).
-  args=() i=0 current_q=""
-  for f in "$frames"/f*.png; do
-    at_ms=$(( i * 1000 / WEBP_FPS )) q=$WEBP_QUALITY
-    for window in "${HQ_WINDOWS_MS[@]}"; do
-      read -r from to <<<"$window"
-      (( at_ms >= from && at_ms < to )) && q=$HQ_QUALITY
+  # Split points as frame indices, then encode each part (in parallel) and join them.
+  files=("$frames"/f*.png)
+  bounds=(0)
+  for ms in "${KEYFRAMES_AT_MS[@]}"; do bounds+=($(( ms * WEBP_FPS / 1000 ))); done
+  bounds+=(${#files[@]})
+  parts=() pids=()
+  for ((p = 0; p < ${#bounds[@]} - 1; p++)); do
+    args=()
+    for ((i = bounds[p]; i < bounds[p + 1]; i++)); do
+      # Whole-millisecond durations that add up to exactly WEBP_FPS frames per second.
+      args+=(-d $(( ((i + 1) * 1000 + WEBP_FPS / 2) / WEBP_FPS - (i * 1000 + WEBP_FPS / 2) / WEBP_FPS )) "${files[$i]}")
     done
-    [[ "$q" == "$current_q" ]] || { args+=(-q "$q"); current_q=$q; }
-    args+=(-d $(( ((i + 1) * 1000 + WEBP_FPS / 2) / WEBP_FPS - (i * 1000 + WEBP_FPS / 2) / WEBP_FPS )) "$f")
-    i=$((i + 1))
+    parts+=("$frames/part$p.webp")
+    "$IMG2WEBP" -loop 0 -lossy -q "$WEBP_QUALITY" -m 6 -kmin "$KMIN" -kmax "$KMAX" "${args[@]}" -o "${parts[$p]}" >/dev/null &
+    pids+=($!)
   done
-  "$IMG2WEBP" -loop 0 -lossy -m 6 -kmin "$KMIN" -kmax "$KMAX" "${args[@]}" \
-    -o "$media/meterbar-demo-$theme.webp"
+  for pid in "${pids[@]}"; do wait "$pid"; done
+  node "$here/concat-webp.mjs" "$media/meterbar-demo-$theme.webp" "${parts[@]}"
   rm -rf "$frames"
 
   ffmpeg -v error -y -ss "$POSTER_AT" -i "$out/$theme.mp4" -frames:v 1 -vf "scale=$POSTER_WIDTH:-1:flags=lanczos" \

@@ -203,4 +203,4 @@ Followed by one line: demo data, sped up; a link to the MP4; and a link to the "
   - The meters fill after the view crossfade lands.
   - The popup scale is 1.3 for a visible bottom margin.
 - **The notification copy is `alertCopy` applied to the alert the product's own `evaluateAlerts` fires** between the two states. It is no longer a hand-built input.
-- **The WebP frames around the beat-4 fades and the loop's return are encoded at q92** (`HQ_WINDOWS_MS` in render.sh). The rest stay at q85.
+- **The WebP is encoded in parts split right after the two big fades (16.0 s, 20.85 s) and joined** (`demo/concat-webp.mjs`). libwebp's lossy animation encoder keeps a faint ghost of a faded layer until its next keyframe, even at q100 and with `-exact`, and `img2webp` cannot place keyframes. Each part starts with a full frame. The joiner checks its own output.

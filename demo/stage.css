@@ -53,7 +53,10 @@ html, body { width: 2400px; height: 1500px; overflow: hidden; background: var(--
 .frame { overflow: hidden; border-radius: var(--radius); box-shadow: var(--shell-shadow), 0 0 0 1px var(--hairline); transform-origin: 0 0; }
 .frame iframe { position: absolute; left: 0; top: 0; border: 0; background: transparent; }
 .popup { left: 640px; top: 60px; width: 376px; } /* height and scale: stage.ts */
-.popup iframe { width: 376px; height: 600px; }
+.popup iframe { width: 376px; }
+/* Each view's measured content height (497.5 / 478.5 px), as Chrome sizes the popup window. */
+#popup-home { height: 498px; }
+#popup-limits { height: 479px; }
 .panel { left: 720px; top: 56px; width: 400px; height: 579px; border-radius: 0; box-shadow: -1px 0 0 var(--hairline); background: var(--bg-deep); } /* docked: flush, no lift */
 .panel iframe { top: 30px; width: 400px; height: 549px; }
 /* Chrome's own side-panel header: extension icon and name, close control. */
