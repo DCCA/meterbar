@@ -1,0 +1,16 @@
+{
+  "name": "meterbar-demo",
+  "private": true,
+  "type": "module",
+  "description": "Renders the README demo video from the built extension. See README.md.",
+  "scripts": {
+    "prepare-pages": "node prepare.mjs",
+    "preview": "node prepare.mjs && HYPERFRAMES_NO_TELEMETRY=1 hyperframes preview",
+    "render": "bash render.sh"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "gsap": "3.15.0",
+    "hyperframes": "0.8.80"
+  }
+}

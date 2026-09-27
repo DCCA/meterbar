@@ -1,0 +1,5 @@
+/* Injected into the demo copies of the product pages. The composition's GSAP timeline owns
+   all motion, so the product's own CSS animations are held at their end state (the same
+   rule the product applies under prefers-reduced-motion). */
+@import './fonts/fonts.css';
+*, *::before, *::after { animation: none !important; transition: none !important; }
