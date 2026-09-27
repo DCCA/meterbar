@@ -36,6 +36,18 @@ describe('Omarchy companion plugin', () => {
     expect(panel).toContain('tooltipText: root.peakTooltip()');
   });
 
+  it('colors the bar widget for the backdrop it sits on, solid or transparent', () => {
+    const panel = readFileSync(`${pluginDir}/Panel.qml`, 'utf8');
+    // Transparent bars sit on the wallpaper: only barForeground tracks that, and the
+    // popup-derived tone (track, riskColor) must not leak into the bar widget.
+    const widget = panel.slice(panel.indexOf('BarIconButton {'), panel.indexOf('KeyboardPanel {'));
+    expect(widget).not.toContain('bar.foreground');
+    expect(widget).not.toContain('root.track');
+    expect(widget).not.toContain('root.riskColor(');
+    expect(widget).toContain('root.barForeground');
+    expect(panel).toMatch(/readonly property var barTone: .*barForeground/);
+  });
+
   it('reads only the sanitized local state file and contains no network collector', () => {
     const main = readFileSync(`${pluginDir}/Main.qml`, 'utf8');
     expect(main).toContain('/meterbar/state.json');

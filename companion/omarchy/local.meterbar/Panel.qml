@@ -28,8 +28,19 @@ Panel {
   readonly property color crit: tone.crit
   readonly property color hairline: alpha(tone.line, 0.14)
   readonly property color hairlineSoft: alpha(tone.line, 0.10)
-  readonly property color track: alpha(tone.sunken, 0.44)
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
+
+  // The bar widget sits on the bar, or on the wallpaper when the bar is transparent. The shell's
+  // barForeground already contrasts with whichever it is, so dark text means a light backdrop.
+  readonly property var barTone: (barForeground.r * 0.299 + barForeground.g * 0.587 + barForeground.b * 0.114) < 0.5 ? palette.light : palette.dark
+  readonly property color barTrack: alpha(barForeground, 0.25)
+
+  function barRiskColor(percent) {
+    if (percent < 0) return barTrack
+    if (percent >= 90) return barTone.crit
+    if (percent >= 70) return barTone.warn
+    return barTone.ok
+  }
 
   property double nowMs: Date.now()
   readonly property real staleAfterMs: Math.max(1, Number(setting("staleAfterMinutes", 10))) * 60000
@@ -236,7 +247,7 @@ Panel {
                 width: 12
                 height: 4
                 radius: 2
-                color: root.track
+                color: root.barTrack
 
                 Rectangle {
                   anchors.left: parent.left
@@ -244,7 +255,7 @@ Panel {
                   anchors.bottom: parent.bottom
                   width: parent.width * root.clamp(parent.percent / 100, 0, 1)
                   radius: 2
-                  color: root.riskColor(parent.percent, parent.percent >= 0)
+                  color: root.barRiskColor(parent.percent)
                 }
               }
             }
@@ -253,8 +264,8 @@ Panel {
           Text {
             anchors.verticalCenter: parent.verticalCenter
             text: root.peak >= 0 ? Math.round(root.peak) + "%" : "--"
-            // Risk lives in the pills; the number keeps the bar's own foreground so it stays legible on any theme.
-            color: root.bar ? root.bar.foreground : root.text
+            // Risk lives in the pills; the number uses the bar's transparency-aware foreground like built-in widgets.
+            color: root.barForeground
             font.family: root.fontFamily
             font.pixelSize: Style.font.bodySmall
             font.bold: true
