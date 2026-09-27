@@ -14,7 +14,7 @@ An optional experimental Omarchy preview adds the same three-channel indicator a
 
 ### Viewing your usage without clicking
 
-- **Badge** - the pinned toolbar icon always shows your single riskiest percentage, color-coded.
+- **Badge** - the pinned toolbar icon shows your riskiest percentage by default (or the group you pin: Claude or OpenAI), color-coded.
 - **Hover tooltip** - hover the icon for a full per-provider, per-window summary with confidence qualifiers, no click needed.
 - **Side panel** - open it once (the **Side panel** button in the popup, or Chrome's side-panel toolbar button) and it stays docked and glanceable while you browse, refreshing itself as new usage arrives.
 - **Omarchy bar preview** - install the optional [experimental display preview](companion/README.md) for an always-visible shell indicator and click-open glass panel with its own 24-hour trend chart.
@@ -67,7 +67,7 @@ MeterBar is local-first: there is no backend, no cloud sync, and no analytics. I
 | `nativeMessaging` | Send a sanitized usage snapshot to the optional experimental Omarchy preview. No credential or chat data is included. |
 | `host_permissions: https://claude.ai/*` | Read your Claude usage from your logged-in session. |
 | `host_permissions: https://chatgpt.com/*` | Read OpenAI usage (ChatGPT and Codex share one subscription) surfaced to the page. |
-| `host_permissions: https://gemini.google.com/*` | Read Gemini usage surfaced to the page. |
+| `host_permissions: https://gemini.google.com/*` | Detect whether you are signed in to Gemini (connected status only; no usage numbers are read). |
 
 Use **Settings → Clear local MeterBar data** to erase browser storage and ask the installed companion host to remove its snapshot. If the host is unavailable, use the companion removal steps to delete its local state file.
 
@@ -85,6 +85,16 @@ You are responsible for your use of MeterBar with any third-party service.
 
 The software is provided **"AS IS", without warranty of any kind** (see [LICENSE](LICENSE)).
 Use it at your own risk.
+
+## Contributing
+
+Issues and pull requests are welcome. Before opening a PR:
+
+1. Read [docs/PRD.md](docs/PRD.md) - its privacy and security rules are non-negotiable (no chat content, no backend, least-privilege permissions, truthful confidence labels).
+2. Write the Vitest spec first, then the change.
+3. Run `npm run check && npm run build` - CI runs the same gate on every PR.
+
+Report security or privacy issues privately - see [SECURITY.md](SECURITY.md).
 
 ## License
 
