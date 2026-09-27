@@ -5,11 +5,14 @@ import palette from '../ui/workbenchPalette.json';
 export interface BadgeState {
   text: string;
   color: string;
+  /** Set explicitly so Chrome never picks a low-contrast default on amber. */
+  textColor: string;
   provider?: ProviderId;
   usedPercent?: number;
 }
 
-const UNKNOWN: BadgeState = { text: '?', color: palette.dark.muted };
+const TEXT_COLOR = palette.icon.track;
+const UNKNOWN: BadgeState = { text: '?', color: palette.dark.muted, textColor: TEXT_COLOR };
 
 export function calculateBadgeState(snapshots: UsageSnapshot[], targetId: BadgeTargetId = 'riskiest'): BadgeState {
   const fresh = snapshots.filter((snapshot) => !snapshot.stale && snapshot.confidence !== 'unavailable');
@@ -25,6 +28,7 @@ export function calculateBadgeState(snapshots: UsageSnapshot[], targetId: BadgeT
   return {
     text: String(Math.round(chosen.usedPercent)),
     color: colorForPercent(chosen.usedPercent),
+    textColor: TEXT_COLOR,
     provider: chosen.provider,
     usedPercent: chosen.usedPercent
   };
