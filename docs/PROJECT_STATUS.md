@@ -3,6 +3,35 @@
 Session logbook, newest first. Each entry: where the project was, what the session
 changed (with evidence), and what is still open.
 
+## 2026-09-26 - Omarchy bar widget legible on solid and transparent bars
+
+**Where we were:** main at a418a8e, no open PRs. The user reported the Omarchy bar widget
+broke in one of the bar's two modes (solid vs transparent over the wallpaper).
+
+**What we did:**
+- Root cause: the widget used `bar.foreground` (theme text) and a palette picked from the
+  popup background. The shell gives widgets `barForeground`, which follows the wallpaper when
+  the bar is transparent. Result: a pale number on the transparent bar, invisible tracks on
+  the solid bar.
+- Fix: the number and track use `barForeground`; the pill palette comes from its luminance
+  (`barTone`); shared `luma()`; `riskColor` takes a palette and unknown color (PR #41,
+  commits 828d5c0 + refactor).
+- Regression test fails on main and passes on the branch; `npm run check` 150/150; build green.
+  Live grim captures of both modes with a synthetic 95/75/40 snapshot, plus the dropdown
+  panel. Two-axis `/code-review` findings applied.
+
+**Decisions:** one luminance rule on `barForeground` covers both modes (solid mode's
+`barForeground` is the theme text), so no transparency branch. The dropdown panel keeps the
+popup-derived `tone`.
+
+**Pending / next:**
+- [ ] Review and merge PR #41 (open, not merged). The fixed `Panel.qml` is already installed
+      locally in `~/.config/omarchy/plugins/local.meterbar/`.
+- [ ] Existing gap: `active: root.alarming` has no visible effect (BarIconButton colors only
+      the hidden glyph), so >=90% shows no alarm on the bar.
+- [ ] Existing gap: the widget's horizontal row overflows on vertical bars.
+- [ ] Not verified: a light Omarchy theme with a solid bar (same code path as transparent).
+
 ## 2026-09-20 (later) - One OpenAI card for ChatGPT and Codex
 
 **Where we were:** the glass dashboard had shipped with four slots; the user noted ChatGPT and
