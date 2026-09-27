@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { demoCards, demoHistory, NOW, type DemoState } from '../demo/fixture';
 import { mostConstrainedWindow } from '../src/popup/render';
 
@@ -39,5 +39,49 @@ describe.each(STATES)('demo fixture (%s)', (state) => {
     const text = JSON.stringify(cards);
     expect(text).not.toMatch(EMAIL);
     expect(text).not.toMatch(UUID);
+  });
+});
+
+describe('derived product copy', () => {
+  it('uses the product alert wording with its uncertainty qualifier', async () => {
+    const { deriveDemo } = await import('../demo/derive');
+    const d = deriveDemo();
+    expect(d.alert.title).toBe('Claude: 5-hour limit at 91% used (unofficial source)');
+    expect(d.alert.message).toBe('Resets in 46m.');
+  });
+
+  it('builds the tooltip from fresh readings only, with no Gemini number', async () => {
+    const { deriveDemo } = await import('../demo/derive');
+    const lines = deriveDemo().tooltip.split('\n');
+    expect(lines[0]).toBe('MeterBar · % of limit used');
+    expect(lines[1]).toMatch(/^Claude: 5h 72% \(unofficial source\)/);
+    expect(lines[2]).toMatch(/^OpenAI: 7d 38%/);
+    expect(lines.some((l) => l.startsWith('Gemini'))).toBe(false);
+  });
+
+  it('matches the badge and icon the background worker would draw', async () => {
+    const { deriveDemo } = await import('../demo/derive');
+    const d = deriveDemo();
+    expect(d.badge.glance.text).toBe('72');
+    expect(d.badge.alert.text).toBe('91');
+    expect(d.icon.alert.map((b) => [b.provider, b.level])).toEqual([['claude', 'crit'], ['chatgpt', 'ok'], ['gemini', 'ok']]);
+    expect(d.icon.alert[2].fillRatio).toBe(0);
+  });
+
+  it('renders identical strings in any time zone', async () => {
+    const original = process.env.TZ;
+    const results: string[] = [];
+    try {
+      for (const tz of ['UTC', 'Pacific/Auckland', 'America/Los_Angeles']) {
+        process.env.TZ = tz;
+        vi.resetModules();
+        const { deriveDemo } = await import('../demo/derive');
+        results.push(JSON.stringify(deriveDemo()));
+      }
+    } finally {
+      if (original === undefined) delete process.env.TZ;
+      else process.env.TZ = original;
+    }
+    expect(new Set(results).size).toBe(1);
   });
 });
