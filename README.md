@@ -2,6 +2,15 @@
 
 A privacy-first Chrome extension for personal AI subscription usage limits, plus an optional experimental Omarchy display preview.
 
+<picture>
+  <source media="(prefers-reduced-motion: reduce) and (prefers-color-scheme: light)" srcset="docs/media/meterbar-demo-poster-light.png">
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/media/meterbar-demo-poster-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/media/meterbar-demo-light.webp">
+  <img src="docs/media/meterbar-demo-dark.webp" width="800" alt="MeterBar demo: the toolbar badge and hover summary, the popup with Claude and OpenAI limits and Gemini connection status, the docked side panel after a refresh crosses 90% used with its notification, and the privacy summary.">
+</picture>
+
+<sub>Demo data, sped up. The provider endpoints are undocumented, so every reading is marked "inferred" (or "unofficial source" in tooltips and alerts). [Watch the MP4](docs/media/meterbar-demo.mp4) · [Permissions and privacy](#permissions-and-privacy) · Not on the Chrome Web Store yet: [build from source](#local-development).</sub>
+
 ## Product thesis
 
 AI power users increasingly juggle Claude, ChatGPT/Codex, Gemini, and other AI subscriptions without a single place to see remaining limits. MeterBar is a personal Chrome extension that surfaces usage caps before they interrupt work. It has no account system, cloud sync, or team dashboard.
@@ -56,7 +65,7 @@ Reload the unpacked extension after installation, then open MeterBar once to pub
 
 ## Permissions and privacy
 
-MeterBar is local-first: there is no backend, no cloud sync, and no analytics. It stores **only** usage metrics (percentages, reset timestamps, provider names, and your settings) in `chrome.storage.local`. It never reads or stores prompts, responses, uploaded files, or chat content.
+MeterBar is local-first: there is no backend, no cloud sync, and no analytics. It stores **only** usage metrics (percentages, reset timestamps, provider names, provider limit names such as a model cap, connection status, alert history, and your settings) in `chrome.storage.local`. It never reads or stores prompts, responses, uploaded files, or chat content.
 
 | Permission | Why |
 |---|---|
@@ -65,9 +74,9 @@ MeterBar is local-first: there is no backend, no cloud sync, and no analytics. I
 | `notifications` | Warn at 70% / 90% and when a window resets. |
 | `sidePanel` | Keep the usage instrument docked while you browse. |
 | `nativeMessaging` | Send a sanitized usage snapshot to the optional experimental Omarchy preview. No credential or chat data is included. |
-| `host_permissions: https://claude.ai/*` | Read your Claude usage from your logged-in session. |
-| `host_permissions: https://chatgpt.com/*` | Read OpenAI usage (ChatGPT and Codex share one subscription) surfaced to the page. |
-| `host_permissions: https://gemini.google.com/*` | Read Gemini usage surfaced to the page. |
+| `host_permissions: https://claude.ai/*` | Read your Claude usage from your logged-in session. MeterBar first looks up your organization id, which is used in memory only for the usage request and never stored. |
+| `host_permissions: https://chatgpt.com/*` | Read OpenAI usage (ChatGPT and Codex share one subscription). Your chatgpt.com session mints an access token that is used, in memory only, for the account and `wham/usage` requests and never stored. |
+| `host_permissions: https://gemini.google.com/*` | Detect that you are signed in to Gemini by checking the page's scripts for a sign-in marker. Nothing from the page is copied, sent, or stored, and MeterBar makes no Gemini requests. Status only: no Gemini usage number. |
 
 Use **Settings → Clear local MeterBar data** to erase browser storage and ask the installed companion host to remove its snapshot. If the host is unavailable, use the companion removal steps to delete its local state file.
 

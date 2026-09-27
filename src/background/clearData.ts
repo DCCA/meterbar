@@ -15,6 +15,7 @@ export async function clearMeterbarData(): Promise<ClearDataResult> {
   await Promise.all([
     chrome.action.setBadgeText({ text: badge.text }),
     chrome.action.setBadgeBackgroundColor({ color: badge.color }),
+    chrome.action.setBadgeTextColor({ color: badge.textColor }),
     renderIcon([]),
     chrome.action.setTitle({ title: buildTooltip([]) })
   ]);

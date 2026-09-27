@@ -27,6 +27,7 @@ describe('calculateBadgeState', () => {
     expect(calculateBadgeState([snapshot('claude', 42), snapshot('gemini', 81)])).toEqual({
       text: '81',
       color: '#f1d973',
+      textColor: '#1b1f24',
       provider: 'gemini',
       usedPercent: 81
     });
@@ -35,7 +36,8 @@ describe('calculateBadgeState', () => {
   it('returns unknown when no fresh snapshots exist', () => {
     expect(calculateBadgeState([])).toEqual({
       text: '?',
-      color: '#a3adbb'
+      color: '#a3adbb',
+      textColor: '#1b1f24'
     });
   });
 
@@ -55,6 +57,7 @@ describe('calculateBadgeState', () => {
     expect(calculateBadgeState(snapshots, 'claude')).toEqual({
       text: '60',
       color: '#b7ead4',
+      textColor: '#1b1f24',
       provider: 'claude',
       usedPercent: 60
     });
@@ -69,7 +72,8 @@ describe('calculateBadgeState', () => {
     expect(calculateBadgeState(snapshots, 'chatgpt')).toMatchObject({
       text: '88',
       provider: 'chatgpt',
-      color: '#f1d973'
+      color: '#f1d973',
+      textColor: '#1b1f24'
     });
   });
 
@@ -81,12 +85,33 @@ describe('calculateBadgeState', () => {
   it('shows ? when the pinned provider has no snapshot', () => {
     expect(calculateBadgeState([snapshot('chatgpt', 95)], 'claude')).toEqual({
       text: '?',
-      color: '#a3adbb'
+      color: '#a3adbb',
+      textColor: '#1b1f24'
     });
   });
 
   it('shows ? when the pinned provider exists only as a stale snapshot', () => {
     const stale = snapshot('claude', 80, 'five_hour', { stale: true });
-    expect(calculateBadgeState([stale], 'claude')).toEqual({ text: '?', color: '#a3adbb' });
+    expect(calculateBadgeState([stale], 'claude')).toEqual({ text: '?', color: '#a3adbb', textColor: '#1b1f24' });
+  });
+});
+
+describe('badge text color', () => {
+  // WCAG relative luminance, so the claim in the name is checked, not assumed.
+  const luminance = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const contrast = (a: string, b: string) => {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+
+  it('reads at WCAG AA contrast on every badge background', () => {
+    for (const state of [calculateBadgeState([snapshot('claude', 20)]), calculateBadgeState([snapshot('claude', 75)]),
+      calculateBadgeState([snapshot('claude', 95)]), calculateBadgeState([])]) {
+      expect(contrast(state.textColor, state.color)).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });
