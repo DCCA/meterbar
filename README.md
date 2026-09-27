@@ -47,6 +47,8 @@ npm test -- tests/badge.test.ts
 
 ### Load in Chrome
 
+Requires Chrome 114 or later.
+
 1. `npm run build`
 2. Go to `chrome://extensions`.
 3. Enable **Developer mode**.
