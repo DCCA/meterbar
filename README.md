@@ -47,11 +47,21 @@ npm test -- tests/badge.test.ts
 
 ### Load in Chrome
 
+Requires Chrome 114 or later.
+
 1. `npm run build`
 2. Go to `chrome://extensions`.
 3. Enable **Developer mode**.
 4. Click **Load unpacked** and select the `dist/` folder.
 5. Pin MeterBar to the toolbar.
+
+### Re-render the README demo
+
+The demo at the top of this README is rendered from the built extension with demo data, not recorded by hand. See [demo/README.md](demo/README.md) for requirements and how it works.
+
+```bash
+cd demo && npm install && npm run render
+```
 
 ### Try the experimental Omarchy display preview
 
