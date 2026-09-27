@@ -158,3 +158,12 @@ Followed by one line: demo data, sped up; a link to the MP4; and a link to the "
 - The Omarchy companion.
 - CI rendering.
 - **Making `nativeMessaging` an optional permission.** Tracked as a separate issue, since it is a product change.
+
+## Amendments during implementation
+
+- **Beat 3 crossfades instead of growing a meter.** The side panel's Home view shows the hero number and the trend, not meters, and the product re-renders on a storage change rather than animating it. The video crossfades the panel from its 72% state to its 91% state, which is what a user sees.
+- **`drawBars` is exported from `src/background/icon.ts`.** This is a one-word change with no runtime effect, so the video paints the toolbar icon with the product's own drawing code.
+- **No `derived.json`.** `derive.ts` exports a pure `deriveDemo()`, which the composition bundle calls directly and the tests call in node.
+- **The popup frame resizes from 494 to 479 px** when it switches to Limits, as Chrome resizes a popup window to its content (Home is 497.5 px tall, Limits 478.5 px).
+- **The toolbar badge text uses `--icon-track`.** Chrome draws the badge outside any theme, like the product's icon.
+- **HyperFrames' checker loads the stage bundle before `<body>` exists**, so `stage.ts` initializes on `DOMContentLoaded` in that case. That is still before `load`, and the timeline registers before any seek.
