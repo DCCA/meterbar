@@ -3,6 +3,49 @@
 Session logbook, newest first. Each entry: where the project was, what the session
 changed (with evidence), and what is still open.
 
+## 2026-09-27 - Open-source readiness and provider terms-of-service risk
+
+**Where we were:** private repo; PRs #41 (Omarchy bar fix) and #42 (2026-09-26 recap) open.
+The user wanted the repo ready to make public, then asked whether our collection method is OK
+with the providers.
+
+**What we did:**
+- Readiness audit: full git history (all branches) grepped for keys, tokens, JWTs, private keys,
+  cookies: none. No captured account ids in fixtures/docs. `manifest.json` `key` is a public key.
+- PR #43: CI workflow (`npm ci`, check, build; read-only token, SHA-pinned, fork-safe),
+  `SECURITY.md`, README Contributing + corrected badge/Gemini wording, vitest bumped past
+  GHSA-82fw-gwwq-j7x9 (`npm audit` 0), local path removed from this file, CI covered by
+  `tests/workflowSecurity.test.ts` (mutation-checked). 151 tests; CI green on the PR.
+- Terms check: Anthropic Consumer Terms s.3 bans "automated or non-human means ... bot, script";
+  OpenAI bans "automatically or programmatically extract data"; Google only restricts
+  robots.txt-violating automation. MeterBar's 10-min background alarm is the exposed part.
+- PR #44: `docs/research/2026-09-27-usage-tracker-landscape.md` - survey of CodexBar, ccusage,
+  Token Monitor, Claude-Code-Usage-Monitor, two Web Store Claude extensions. No sanctioned
+  consumer-usage route exists; everyone uses undocumented endpoints plus disclaimers; no
+  provider action against a usage reader found; CLI OAuth is the riskiest path.
+- PR #45: spec `docs/superpowers/specs/2026-09-27-refresh-policy-and-provider-notice.md`,
+  split into issues #46-#51.
+
+**Decisions:** keep the browser-session collection method; change *when* it runs (on user
+presence, background polling opt-in). Never add CLI OAuth, header probes, DOM scraping, or
+chat-stream reading. Publish the repo now; Chrome Web Store is a separate decision (#51).
+
+**Pending / next:**
+- [ ] Merge #44, #45, #43 (the auto-mode guard blocked agent merges; user merges). This PR
+      stacks on #42 - merging it lands both entries.
+- [ ] Confirm the two spec calls on #45: existing installs migrate to background refresh
+      off, and must acknowledge each provider before new readings.
+- [ ] Make the repo public, then `gh api -X PUT repos/DCCA/meterbar/private-vulnerability-reporting`
+      (404s while private).
+- [ ] Delete `claude/great-albattani-82r7an` (merged; the guard blocked the agent). Decide on
+      closed-unmerged `docs/session-status-2026-08-23` and `fix/openai-dynamic-usage-windows`.
+- [ ] Build order: #47 (Retry-After backoff, no deps) -> #46 (render 2-3 UI options, user
+      picks) -> #48 (presence triggers, opt-in alarm) -> #49 (acknowledgement gate) -> #50
+      (PRD) -> #51 (Web Store call).
+- [ ] Also open from parallel README-demo work: #53 (make `nativeMessaging` optional).
+- [ ] Known: docs-update workflow fails for merged fork PRs (no secrets on fork events).
+- [ ] Your commit email becomes public with the repo; use the GitHub noreply address from now on.
+
 ## 2026-09-26 - Omarchy bar widget legible on solid and transparent bars
 
 **Where we were:** main at a418a8e, no open PRs. The user reported the Omarchy bar widget
