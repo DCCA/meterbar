@@ -55,6 +55,14 @@ Requires Chrome 114 or later.
 4. Click **Load unpacked** and select the `dist/` folder.
 5. Pin MeterBar to the toolbar.
 
+### Re-render the README demo
+
+The demo at the top of this README is rendered from the built extension with demo data, not recorded by hand. See [demo/README.md](demo/README.md) for requirements and how it works.
+
+```bash
+cd demo && npm install && npm run render
+```
+
 ### Try the experimental Omarchy display preview
 
 This optional display-only preview is not a stable product surface, is not part of the Chrome MVP, and does not change its browser-only collection model.
