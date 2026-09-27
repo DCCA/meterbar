@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en" data-composition-variables='[{"id":"theme","type":"string","label":"Theme (dark or light)","default":"dark"}]'>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=2400, height=1500" />
+<link rel="stylesheet" href="stage.css" />
+<script src=".build/vendor/gsap.min.js"></script>
+</head>
+<body>
+<div id="root" data-composition-id="root" data-start="0" data-duration="18" data-width="2400" data-height="1500">
+  <div class="stage">
+    <div class="layer toolbar" id="toolbar">
+      <div class="omni"></div>
+      <span class="ext"></span><span class="ext"></span>
+      <span class="action" id="action">
+        <canvas id="icon-glance" width="48" height="48"></canvas>
+        <canvas id="icon-alert" width="48" height="48"></canvas>
+        <b class="badge" id="badge-glance"></b>
+        <b class="badge" id="badge-alert" data-layout-allow-occlusion></b>
+      </span>
+      <span class="ext avatar"></span>
+    </div>
+    <div class="layer tooltip" id="tooltip"></div>
+
+    <div class="layer caption" id="cap1">
+      <div class="kicker">01 &middot; Toolbar</div>
+      <p class="cap">Every AI limit,<br>in your toolbar.</p>
+      <p class="sub">Hover for every window, no click needed.</p>
+    </div>
+    <div class="layer caption" id="cap2a">
+      <div class="kicker">02 &middot; At a glance</div>
+      <p class="cap">Claude + Claude Code.<br>ChatGPT + Codex.<br>Gemini status.</p>
+      <p class="sub">The tightest limit first, with its reset countdown.</p>
+    </div>
+    <div class="layer caption" id="cap2b">
+      <div class="kicker">02 &middot; Limits</div>
+      <p class="cap">Which limit bites<br>first, and when.</p>
+      <p class="sub">The tick marks even pacing to the reset.</p>
+    </div>
+    <div class="layer caption" id="cap3">
+      <div class="kicker">03 &middot; Side panel</div>
+      <p class="cap">Stays docked.<br>Alerts at 70%<br>and 90% used.</p>
+      <p class="sub">Every reading is labelled inferred: the endpoints are undocumented.</p>
+    </div>
+
+    <div class="layer frame popup" id="popup">
+      <iframe id="popup-home" data-page="popup" data-state="glance" data-view="home" title="MeterBar popup, home view"></iframe>
+      <iframe id="popup-limits" data-page="popup" data-state="glance" data-view="limits" title="MeterBar popup, limits view"></iframe>
+    </div>
+    <div class="layer frame panel" id="panel">
+      <iframe id="panel-glance" data-page="sidepanel" data-state="glance" data-view="home" title="MeterBar side panel"></iframe>
+      <iframe id="panel-alert" data-page="sidepanel" data-state="alert" data-view="home" title="MeterBar side panel after the alert"></iframe>
+    </div>
+
+    <div class="layer notice" id="notice">
+      <div class="app"><img src=".build/ext/assets/icon48.png" alt="" />MeterBar &middot; now</div>
+      <p class="title" id="notice-title"></p>
+      <p class="msg" id="notice-msg"></p>
+    </div>
+
+    <section class="layer privacy" id="privacy">
+      <header><span class="mark">MeterBar</span><span class="local">Local only</span></header>
+      <h2>Privacy</h2>
+      <ul>
+        <li>Reads usage only, from your logged-in session.</li>
+        <li>Tokens are never stored.</li>
+        <li>Talks only to claude.ai, chatgpt.com, gemini.google.com.</li>
+        <li>No backend. No analytics. No chat content.</li>
+      </ul>
+      <p class="fine">Not affiliated with Anthropic, OpenAI, or Google.</p>
+    </section>
+
+    <span class="layer tag">Demo data &middot; sped up</span>
+    <img class="layer cursor" id="cursor" src="cursor.svg" alt="" />
+  </div>
+</div>
+<script src=".build/stage.js"></script>
+<script>
+  // stage.js registers the timeline; restated here for HyperFrames' static lint.
+  if (window.__stageTimeline) { window.__timelines = window.__timelines || {}; window.__timelines["root"] = window.__stageTimeline; }
+</script>
+</body>
+</html>

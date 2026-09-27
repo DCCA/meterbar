@@ -3,7 +3,7 @@
 //                   that load the stub, the bundled font, and the motion-off rule
 //   ui/             the product's token CSS (the composition's only color source)
 //   vendor/         GSAP, served locally so a render never touches the network
-//   derived.json    tooltip, alert, icon and badge values from the real src/ functions
+//   stub.js, stage.js  esbuild bundles of stub.ts (product pages) and stage.ts (composition)
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -38,13 +38,9 @@ for (const page of ['popup', 'sidepanel']) {
   writeFileSync(join(out, 'ext', `${page}.html`), demo);
 }
 
-await build({
-  entryPoints: [join(here, 'stub.ts')],
-  outfile: join(out, 'ext', 'stub.js'),
-  bundle: true,
-  format: 'iife',
-  target: 'chrome120',
-  logLevel: 'warning'
-});
+const bundle = (entry, outfile) =>
+  build({ entryPoints: [join(here, entry)], outfile, bundle: true, format: 'iife', target: 'chrome120', logLevel: 'warning' });
+await bundle('stub.ts', join(out, 'ext', 'stub.js'));
+await bundle('stage.ts', join(out, 'stage.js'));
 
 console.log('demo/.build ready');

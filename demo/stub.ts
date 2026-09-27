@@ -57,9 +57,6 @@ function whenRendered(): void {
     requestAnimationFrame(whenRendered);
     return;
   }
-  void document.fonts.ready.then(() => {
-    const font = document.fonts.check('600 40px "JetBrains Mono"');
-    parent.postMessage({ type: 'demo:ready', src: location.pathname + location.search, font }, '*');
-  });
+  void document.fonts.ready.then(() => parent.postMessage({ type: 'demo:ready' }, '*'));
 }
 addEventListener('DOMContentLoaded', whenRendered);
