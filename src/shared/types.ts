@@ -1,4 +1,6 @@
 export type ProviderId = 'claude' | 'chatgpt' | 'gemini' | 'unknown';
+/** Providers the worker reads over the network (Gemini is status-only). */
+export type FetchProviderId = 'claude' | 'chatgpt';
 export type UsageWindow = 'five_hour' | 'seven_day' | 'daily' | 'monthly' | 'api_billing' | 'custom';
 export type Confidence = 'exact' | 'estimated' | 'inferred' | 'unavailable';
 export type ProviderStatus = 'connected' | 'not_connected' | 'stale' | 'unsupported';
@@ -24,4 +26,6 @@ export interface ProviderCardState {
   snapshots: UsageSnapshot[];
   lastUpdatedAt?: string;
   message?: string;
+  /** Derived at read time: the user has not yet given the provider notice an OK. */
+  needsAcknowledgement?: boolean;
 }

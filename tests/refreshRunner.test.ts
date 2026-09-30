@@ -51,4 +51,22 @@ describe('createCoalescedRefresh', () => {
 
     expect(work).toHaveBeenCalledTimes(2);
   });
+
+  it('merges requests received during a run into the single follow-up', async () => {
+    let release: (() => void) | undefined;
+    const seen: string[][] = [];
+    const work = vi.fn(async (request: string[]) => {
+      seen.push(request);
+      if (seen.length === 1) await new Promise<void>((resolve) => { release = resolve; });
+    });
+    const refresh = createCoalescedRefresh(work, (a: string[], b: string[]) => [...a, ...b]);
+
+    const first = refresh(['a']);
+    const second = refresh(['b']);
+    const third = refresh(['c']);
+    release?.();
+    await Promise.all([first, second, third]);
+
+    expect(seen).toEqual([['a'], ['b', 'c']]);
+  });
 });

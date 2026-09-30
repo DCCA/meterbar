@@ -24,6 +24,8 @@ import {
 } from '../popup/render';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+// Popup and side panel both live one directory below src/, next to options/.
+const CONSENT_LINK = '<a class="cta" href="../options/options.html#providers" target="_blank" rel="noopener">Review in Settings</a>';
 const VIEW_KEY = 'meterbar:view';
 
 export type DashboardView = 'home' | 'limits';
@@ -150,7 +152,7 @@ function trendHtml(series: TrendSeries[], now: Date, size: { width: number; heig
   const svg = trendChartSvg(series, { ...size, from, to });
   const body = svg
     ? `<div class="trend-plot">${svg}<div class="trend-tip" hidden></div></div>${trendLegendHtml(series, from, to)}`
-    : '<p class="sec-empty">The trend appears after a few readings - MeterBar records one every 10 minutes.</p>';
+    : '<p class="sec-empty">The trend appears after a few readings - MeterBar records one each time it reads usage.</p>';
   return `
     <section class="sec sec-trend">
       <div class="sec-head"><h2>Trend</h2><span>24 h · % of limit used</span></div>
@@ -166,7 +168,9 @@ function compactRowsHtml(cards: ProviderCardState[], now: Date): string {
     const name = `<span class="lim-name">${MARK[provider]}${escapeHtml(label)}</span>`;
     if (renderable.length === 0) {
       const status = safeProviderStatus(card?.status);
-      const text = provider === 'gemini' && status === 'connected' ? 'Signed in' : STATUS_TEXT[status];
+      const text = card?.needsAcknowledgement
+        ? 'Needs your OK'
+        : provider === 'gemini' && status === 'connected' ? 'Signed in' : STATUS_TEXT[status];
       const cls = status === 'connected' ? 'ok' : 'idle';
       return `<div class="lim-row lim-status">${name}<span class="lim-win"><span>${provider === 'gemini' ? 'Status only' : 'No usage'}</span><b class="${cls}">${escapeHtml(text)}</b></span></div>`;
     }
@@ -174,7 +178,8 @@ function compactRowsHtml(cards: ProviderCardState[], now: Date): string {
       const label = escapeHtml(s.workspaceLabel ?? shortWindowLabel(s.window));
       return `<span class="lim-win"><span>${label}</span><b class="${pctClass(s)}">${s.usedPercent}% used</b></span>`;
     }).join('');
-    return `<div class="lim-row">${name}<div class="lim-wins">${wins}</div><div class="lim-notes">${escapeHtml(compactNote(renderable, now))}</div></div>`;
+    const note = compactNote(renderable, now) + (card?.needsAcknowledgement ? ' · needs your OK' : '');
+    return `<div class="lim-row">${name}<div class="lim-wins">${wins}</div><div class="lim-notes">${escapeHtml(note)}</div></div>`;
   }).join('');
   return `<div class="lim">${rows}</div>`;
 }
@@ -235,6 +240,14 @@ function providerHtml(provider: ProviderId, label: string, card: ProviderCardSta
     </section>`;
     }
     const home = providerHome(provider);
+    if (card?.needsAcknowledgement) {
+      return `
+    <section class="prov prov-empty" data-provider="${provider}" data-status="needs-ok">
+      ${head('Needs your OK')}
+      <p class="prov-hint">MeterBar reads nothing from ${escapeHtml(home ? new URL(home).host : label)} until you allow it in Settings.</p>
+      ${CONSENT_LINK}
+    </section>`;
+    }
     const cta = home ? `<a class="cta" href="${home}" target="_blank" rel="noopener">Open ${escapeHtml(new URL(home).host)}</a>` : '';
     return `
     <section class="prov prov-empty" data-provider="${provider}" data-status="${escapeHtml(status)}">
@@ -245,9 +258,11 @@ function providerHtml(provider: ProviderId, label: string, card: ProviderCardSta
   }
 
   const allStale = cardAllStale({ ...card!, snapshots: renderable });
-  const notice = allStale
-    ? `<p class="prov-notice">${escapeHtml(card?.message ?? 'Last reading is out of date - MeterBar retries every 10 minutes.')}</p>`
-    : '';
+  const notice = card?.needsAcknowledgement
+    ? `<p class="prov-notice">${escapeHtml(card.message ?? '')} ${CONSENT_LINK}</p>`
+    : allStale
+      ? `<p class="prov-notice">${escapeHtml(card?.message ?? 'Last reading is out of date - reopen the provider or refresh.')}</p>`
+      : '';
   const right = allStale ? STATUS_TEXT.stale : `${renderable.length} ${renderable.length === 1 ? 'window' : 'windows'}`;
   return `
     <section class="prov${allStale ? ' prov-stale' : ''}" data-provider="${provider}">
@@ -334,6 +349,12 @@ export async function renderCardsInto(container: HTMLElement, view: DashboardVie
 /** Ask the worker to refresh fetch-strategy providers now. */
 export function requestRefresh(): Promise<unknown> {
   return chrome.runtime.sendMessage({ type: 'usage:refresh' } as ExtensionMessage);
+}
+
+/** Opening the popup or side panel counts as the user being present (throttled by the worker). */
+export function requestSurfaceRefresh(): Promise<unknown> {
+  return chrome.runtime.sendMessage({ type: 'usage:refresh', reason: 'surface-open' } as ExtensionMessage)
+    .catch(() => undefined);
 }
 
 /** Wire a Refresh button with busy feedback - shared so the side panel behaves like the popup. */

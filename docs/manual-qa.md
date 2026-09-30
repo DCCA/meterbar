@@ -30,13 +30,13 @@ Use a Chrome profile **not** signed into any provider (or clear data first - see
 
 - [ ] Popup shows the glass hero in its idle state (`--% used`, sign-in hint) and the header mark's dot is neutral.
 - [ ] Each provider renders an empty channel row with truthful status copy (e.g. "Not connected yet").
-- [ ] Each first-party card shows an **Open <provider> →** CTA.
+- [ ] Claude and OpenAI show **Needs your OK** with a **Review in Settings** link; Gemini shows an **Open <provider> →** CTA until signed in.
 - [ ] Clicking a CTA opens the provider site in a new tab (`claude.ai`, `chatgpt.com`, `gemini.google.com`).
 - [ ] Toolbar badge shows `?` in gray (no fresh data).
 
 ## 2. Live usage (the core path)
 
-Sign into `claude.ai` and/or `chatgpt.com` in the same profile, open the popup, click **Refresh**.
+Sign into `claude.ai` and/or `chatgpt.com` in the same profile. In Settings, click **Allow reading Claude usage** / **Allow reading OpenAI usage**, then open the popup.
 
 - [ ] Cards populate with real percentages and window labels ("5-hour limit", "7-day limit").
 - [ ] Providers stay in their fixed order so position identifies the provider; the hero names the tightest limit with its reset countdown and any uncertainty note.
@@ -76,6 +76,16 @@ Sign into `claude.ai` and/or `chatgpt.com` in the same profile, open the popup, 
       exactly one OS notification fires per threshold crossing (no duplicate spam on
       repeated refreshes).
 - [ ] Disabling notifications in Options suppresses them.
+
+## 5b. Refresh policy and provider notice
+
+- [ ] Fresh install (or right after this update): Claude and OpenAI cards say **Needs your OK** with **Review in Settings**; DevTools on the service worker shows **no** requests to `claude.ai` / `chatgpt.com`, even after clicking Refresh.
+- [ ] Settings shows each notice under its provider; **Allow** reads that provider immediately, then shows "Allowed <date> · Revoke". **Revoke** stops reads again.
+- [ ] With **Background refresh** off, leave Chrome idle for 30 min with no provider tab or MeterBar surface open: no requests to provider origins; the badge number clears after 10 min.
+- [ ] Switching to a `claude.ai` tab reads Claude only; switching back within 5 min does not read again.
+- [ ] Turning **Background refresh** on creates the `meterbar-refresh` alarm (`chrome.alarms.getAll()` in the worker console); turning it off removes it.
+- [ ] A 429 (simulate with DevTools request blocking returning 429, or wait for a real one) shows "<Provider> asked MeterBar to wait - next try at HH:MM" and Refresh makes no request for that provider until then.
+- [ ] **Clear local MeterBar data** also clears both acknowledgements.
 
 ## 6. Options page
 
@@ -117,7 +127,7 @@ These guard the PRD's non-negotiables - verify on every release.
 
 ## 9. Omarchy companion
 
-Run `./scripts/install-omarchy-companion.sh`, reload the unpacked extension, and refresh usage once.
+Run `./scripts/install-omarchy-companion.sh`, reload the unpacked extension, turn on **Settings → Companion**, and refresh usage once.
 
 - [ ] The four-channel MeterBar indicator appears in the right side of the Omarchy bar.
 - [ ] Left-click opens the glass panel (hero, trend, compact limits) and right-click opens the extension in Chromium; the bar widget shows four mini meters and the tightest percent.

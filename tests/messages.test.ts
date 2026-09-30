@@ -42,6 +42,11 @@ describe('messages', () => {
   it('recognizes only exact internal request messages', () => {
     expect(isUsageRefresh({ type: 'usage:refresh' })).toBe(true);
     expect(isUsageRefresh({ type: 'usage:refresh', extra: true })).toBe(false);
+    expect(isUsageRefresh({ type: 'usage:refresh', reason: 'manual' })).toBe(true);
+    expect(isUsageRefresh({ type: 'usage:refresh', reason: 'surface-open' })).toBe(true);
+    // Pages may not claim worker-only reasons that skip the per-provider gate.
+    expect(isUsageRefresh({ type: 'usage:refresh', reason: 'settings' })).toBe(false);
+    expect(isUsageRefresh({ type: 'usage:refresh', reason: 'surface-open', extra: 1 })).toBe(false);
     expect(isStateGet({ type: 'state:get' })).toBe(true);
     expect(isStateGet(null)).toBe(false);
     expect(isDataClear({ type: 'data:clear' })).toBe(true);

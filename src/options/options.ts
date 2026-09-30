@@ -3,6 +3,7 @@ import { readAllHistory } from '../storage/historyStore';
 import { historyToCsv, historyToJson } from '../shared/exporters';
 import { renderBadgeTargets, wireBadgeTargets } from '../ui/badgeTargetControl';
 import type { ExtensionMessage } from '../shared/messages';
+import type { FetchProviderId } from '../shared/types';
 import { clearCompanion, COMPANION_PERMISSION, hasCompanionPermission } from '../background/nativeBridge';
 
 // Only the boolean settings drive the toggle switches.
@@ -10,10 +11,55 @@ type BoolSettingKey = { [K in keyof Settings]: Settings[K] extends boolean ? K :
 
 const TOGGLES: Array<[id: string, key: BoolSettingKey]> = [
   ['notifications', 'notificationsEnabled'],
+  ['backgroundRefresh', 'backgroundRefresh'],
   ['claude', 'claudeEnabled'],
   ['chatgpt', 'chatgptEnabled'],
   ['gemini', 'geminiEnabled']
 ];
+
+const NOTICE: Record<FetchProviderId, { name: string; origin: string }> = {
+  claude: { name: 'Claude', origin: 'claude.ai' },
+  chatgpt: { name: 'OpenAI', origin: 'chatgpt.com' }
+};
+
+function noticeText({ name, origin }: { name: string; origin: string }): string {
+  return `MeterBar reads your ${name} usage from an undocumented endpoint on ${origin}, using your existing login. `
+    + 'It reads only percentages and reset times - never chats, cookies, or tokens. '
+    + `${name} has not approved this, and automated access may conflict with its terms. Any account risk is yours.`;
+}
+
+/** Notice + Allow while unacknowledged, "Allowed <date> · Revoke" after; nothing for a disabled provider. */
+function renderAcknowledgement(el: HTMLElement, provider: FetchProviderId, settings: Settings): void {
+  const enabled = provider === 'claude' ? settings.claudeEnabled : settings.chatgptEnabled;
+  const at = settings.acknowledged[provider];
+  el.replaceChildren();
+  if (!enabled) return;
+  if (at) {
+    const meta = document.createElement('p');
+    meta.className = 'ack-meta';
+    const when = new Date(at).toLocaleDateString([], { day: 'numeric', month: 'short' });
+    meta.innerHTML = `<b>Allowed</b> ${when} · `;
+    const revoke = document.createElement('button');
+    revoke.type = 'button';
+    revoke.className = 'linkish';
+    revoke.dataset.action = 'revoke';
+    revoke.textContent = 'Revoke';
+    meta.append(revoke);
+    el.append(meta);
+    return;
+  }
+  const box = document.createElement('div');
+  box.className = 'consent';
+  const text = document.createElement('p');
+  text.textContent = noticeText(NOTICE[provider]);
+  const allow = document.createElement('button');
+  allow.type = 'button';
+  allow.className = 'btn btn-primary';
+  allow.dataset.action = 'allow';
+  allow.textContent = `Allow reading ${NOTICE[provider].name} usage`;
+  box.append(text, allow);
+  el.append(box);
+}
 
 let statusTimer: ReturnType<typeof setTimeout> | undefined;
 function setStatus(message: string): void {
@@ -41,6 +87,9 @@ async function render(): Promise<void> {
     const el = document.querySelector<HTMLInputElement>(`#${id}`);
     if (el) el.checked = settings[key];
   }
+  for (const el of Array.from(document.querySelectorAll<HTMLElement>('.ack[data-provider]'))) {
+    renderAcknowledgement(el, el.dataset.provider as FetchProviderId, settings);
+  }
   if (badgeGroup) await renderBadgeTargets(badgeGroup, settings, { previews: true });
   const companion = document.querySelector<HTMLInputElement>('#companion');
   if (companion) companion.checked = await hasCompanionPermission();
@@ -50,8 +99,24 @@ async function wire(): Promise<void> {
   for (const [id, key] of TOGGLES) {
     document.querySelector<HTMLInputElement>(`#${id}`)?.addEventListener('change', async (event) => {
       const current = await loadSettings();
+      // The worker reacts to the storage write (refresh, alarm, repaint).
       await saveSettings({ ...current, [key]: (event.target as HTMLInputElement).checked });
-      void chrome.runtime.sendMessage({ type: 'usage:refresh' } as ExtensionMessage);
+      await render();
+    });
+  }
+
+  for (const el of Array.from(document.querySelectorAll<HTMLElement>('.ack[data-provider]'))) {
+    el.addEventListener('click', async (event) => {
+      const action = (event.target as HTMLElement).closest<HTMLElement>('[data-action]')?.dataset.action;
+      if (!action) return;
+      const provider = el.dataset.provider as FetchProviderId;
+      const current = await loadSettings();
+      const acknowledged = { ...current.acknowledged };
+      if (action === 'allow') acknowledged[provider] = new Date().toISOString();
+      else delete acknowledged[provider];
+      await saveSettings({ ...current, acknowledged });
+      await render();
+      if (action === 'revoke') setStatus(`${NOTICE[provider].name} paused - MeterBar reads nothing until you allow it again.`);
     });
   }
 
