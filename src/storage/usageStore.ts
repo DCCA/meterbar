@@ -34,6 +34,16 @@ export async function loadSettings(): Promise<Settings> {
 export async function saveSettings(s: Settings): Promise<void> {
   await chrome.storage.local.set(s);
 }
+/** Per-provider refresh bookkeeping; persisted because the service worker is ephemeral. */
+export interface RefreshState { backoffUntil?: string; }
+
+export async function loadRefreshState(provider: ProviderId): Promise<RefreshState> {
+  const k = `refreshState:${provider}`;
+  return ((await chrome.storage.local.get(k))[k] ?? {}) as RefreshState;
+}
+export async function updateRefreshState(provider: ProviderId, patch: RefreshState): Promise<void> {
+  await chrome.storage.local.set({ [`refreshState:${provider}`]: { ...(await loadRefreshState(provider)), ...patch } });
+}
 export async function loadAlertState(): Promise<AlertState> {
   return ((await chrome.storage.local.get({ alertState: { seen: [], lastReset: {} } })).alertState) as AlertState;
 }
