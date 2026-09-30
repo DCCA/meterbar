@@ -2,6 +2,16 @@ import type { Confidence, ProviderCardState, ProviderId, ProviderStatus, UsageWi
 import { readAllHistory, type Point } from '../storage/historyStore';
 
 export const COMPANION_HOST = 'com.meterbar.bridge';
+/** Optional: granted only when the user turns on the companion in Settings. */
+export const COMPANION_PERMISSION: chrome.permissions.Permissions = { permissions: ['nativeMessaging'] };
+
+export async function hasCompanionPermission(): Promise<boolean> {
+  try {
+    return await chrome.permissions.contains(COMPANION_PERMISSION);
+  } catch {
+    return false;
+  }
+}
 
 const COMPANION_ORDER: ProviderId[] = ['claude', 'chatgpt', 'gemini'];
 const COMPANION_PROVIDERS = new Set(COMPANION_ORDER);
@@ -129,6 +139,7 @@ export function toCompanionSnapshot(
 
 /** Ask the optional host to delete its local snapshot. */
 export async function clearCompanion(): Promise<boolean> {
+  if (!(await hasCompanionPermission())) return false;
   try {
     const response = await chrome.runtime.sendNativeMessage(COMPANION_HOST, {
       type: 'meterbar:clear',
@@ -142,6 +153,7 @@ export async function clearCompanion(): Promise<boolean> {
 
 /** Best-effort local sync. MeterBar remains fully functional when the host is absent. */
 export async function syncCompanion(cards: ProviderCardState[]): Promise<boolean> {
+  if (!(await hasCompanionPermission())) return false;
   // History is optional for the companion: a storage hiccup must not block the usage sync.
   const history = await readAllHistory().catch(() => ({}) as Record<string, Point[]>);
   try {

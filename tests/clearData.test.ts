@@ -7,6 +7,9 @@ const STATIC_ICON = {
   128: 'assets/icon128.png'
 };
 
+// The companion permission is optional; these tests run with it granted.
+const GRANTED = { contains: vi.fn(async () => true) };
+
 describe('clearMeterbarData', () => {
   afterEach(() => vi.unstubAllGlobals());
 
@@ -20,7 +23,7 @@ describe('clearMeterbarData', () => {
     const setTitle = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('chrome', {
       storage: { local: { clear } },
-      runtime: { sendNativeMessage },
+      runtime: { sendNativeMessage }, permissions: GRANTED,
       action: { setBadgeText, setBadgeBackgroundColor, setBadgeTextColor, setIcon, setTitle }
     });
 

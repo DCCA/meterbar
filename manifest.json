@@ -10,7 +10,8 @@
     "48": "assets/icon48.png",
     "128": "assets/icon128.png"
   },
-  "permissions": ["storage", "alarms", "notifications", "sidePanel", "nativeMessaging"],
+  "permissions": ["storage", "alarms", "notifications", "sidePanel"],
+  "optional_permissions": ["nativeMessaging"],
   "commands": {
     "_execute_action": {
       "suggested_key": { "default": "Alt+Shift+M" },
