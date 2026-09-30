@@ -22,6 +22,7 @@ import {
   isUsageReport
 } from '../shared/messages';
 import { buildTooltip } from '../shared/summary';
+import { nextStaleAt } from '../shared/time';
 import {
   mergeRefreshRequests,
   providerForUrl,
@@ -47,6 +48,10 @@ async function recompute(): Promise<void> {
   await chrome.action.setTitle({ title: buildTooltip(cards) });
   await syncCompanion(cards);
   if (settings.notificationsEnabled) await evaluateAndNotify(cards);
+  // Repaint (never fetch) when the next reading goes stale, so an idle badge clears on time.
+  const staleAt = nextStaleAt(flattenSnapshots(cards));
+  if (staleAt === undefined) await chrome.alarms.clear(STALE_ALARM);
+  else await chrome.alarms.create(STALE_ALARM, { when: staleAt + 1000 });
 }
 
 let clearInProgress = false;
@@ -63,6 +68,7 @@ const everyProvider = (reason: RefreshReason): RefreshRequest => ({ claude: reas
 
 // The periodic alarm exists only while the user has opted in to background refresh.
 const ALARM = 'meterbar-refresh';
+const STALE_ALARM = 'meterbar-stale';
 async function syncAlarm(on: boolean): Promise<void> {
   const existing = await chrome.alarms.get(ALARM);
   if (on && !existing) await chrome.alarms.create(ALARM, { periodInMinutes: 10 });
@@ -70,10 +76,12 @@ async function syncAlarm(on: boolean): Promise<void> {
 }
 
 // Browser start and install/update only; not every service-worker wake-up, which tab
-// events cause constantly and which would amount to unattended polling.
+// events cause constantly. Without background refresh, reads wait for the user.
 function onStart(): void {
-  void loadSettings().then((s) => syncAlarm(s.backgroundRefresh));
-  void refresh(everyProvider('startup'));
+  void loadSettings().then((s) => {
+    void syncAlarm(s.backgroundRefresh);
+    void (s.backgroundRefresh ? refresh(everyProvider('startup')) : recompute());
+  });
 }
 chrome.runtime.onInstalled.addListener(onStart);
 chrome.runtime.onStartup.addListener(onStart);
@@ -105,7 +113,12 @@ chrome.storage.onChanged.addListener((changes, area) => {
 chrome.permissions.onAdded.addListener((p) => {
   if (p.permissions?.some((name) => COMPANION_PERMISSION.permissions?.includes(name))) void recompute();
 });
-chrome.alarms.onAlarm.addListener((a) => { if (a.name === ALARM) void refresh(everyProvider('alarm')); });
+chrome.alarms.onAlarm.addListener((a) => {
+  if (a.name === STALE_ALARM) void recompute();
+  if (a.name !== ALARM) return;
+  // Re-check the setting: an alarm that outlived it (clear, fast toggle) must never poll.
+  void loadSettings().then((s) => (s.backgroundRefresh ? refresh(everyProvider('alarm')) : syncAlarm(false)));
+});
 
 chrome.runtime.onMessage.addListener((msg: unknown, sender, sendResponse) => {
   if (isUsageReport(msg)) {

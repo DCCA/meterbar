@@ -32,6 +32,8 @@ function noticeText({ name, origin }: { name: string; origin: string }): string 
 function renderAcknowledgement(el: HTMLElement, provider: FetchProviderId, settings: Settings): void {
   const enabled = provider === 'claude' ? settings.claudeEnabled : settings.chatgptEnabled;
   const at = settings.acknowledged[provider];
+  // Allow and Revoke replace each other; keep keyboard focus on whichever is shown next.
+  const hadFocus = el.contains(document.activeElement);
   el.replaceChildren();
   if (!enabled) return;
   if (at) {
@@ -46,6 +48,7 @@ function renderAcknowledgement(el: HTMLElement, provider: FetchProviderId, setti
     revoke.textContent = 'Revoke';
     meta.append(revoke);
     el.append(meta);
+    if (hadFocus) revoke.focus();
     return;
   }
   const box = document.createElement('div');
@@ -59,6 +62,7 @@ function renderAcknowledgement(el: HTMLElement, provider: FetchProviderId, setti
   allow.textContent = `Allow reading ${NOTICE[provider].name} usage`;
   box.append(text, allow);
   el.append(box);
+  if (hadFocus) allow.focus();
 }
 
 let statusTimer: ReturnType<typeof setTimeout> | undefined;

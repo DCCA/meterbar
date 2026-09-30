@@ -10,6 +10,14 @@ export function formatCountdown(resetsAtIso: string, now: Date = new Date()): st
   return `${hours}h ${minutes}m`;
 }
 
-export function isStale(capturedAtIso: string, now: Date = new Date(), maxAgeMs = 10 * 60 * 1000): boolean {
+export const STALE_AFTER_MS = 10 * 60 * 1000;
+
+export function isStale(capturedAtIso: string, now: Date = new Date(), maxAgeMs = STALE_AFTER_MS): boolean {
   return now.getTime() - new Date(capturedAtIso).getTime() > maxAgeMs;
+}
+
+/** When the freshest-to-expire reading turns stale, so surfaces can repaint then without a fetch. */
+export function nextStaleAt(snapshots: Array<{ capturedAt: string; stale: boolean }>): number | undefined {
+  const fresh = snapshots.filter((s) => !s.stale).map((s) => Date.parse(s.capturedAt));
+  return fresh.length > 0 ? Math.min(...fresh) + STALE_AFTER_MS : undefined;
 }

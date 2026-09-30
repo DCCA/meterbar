@@ -31,7 +31,7 @@ Use a Chrome profile **not** signed into any provider (or clear data first - see
 - [ ] Popup shows the glass hero in its idle state (`--% used`, sign-in hint) and the header mark's dot is neutral.
 - [ ] Each provider renders an empty channel row with truthful status copy (e.g. "Not connected yet").
 - [ ] Claude and OpenAI show **Needs your OK** with a **Review in Settings** link; Gemini shows an **Open <provider> →** CTA until signed in.
-- [ ] Clicking a CTA opens the provider site in a new tab (`claude.ai`, `chatgpt.com`, `gemini.google.com`).
+- [ ] Clicking **Review in Settings** opens Settings at Providers; Gemini's **Open gemini.google.com** CTA opens the site in a new tab.
 - [ ] Toolbar badge shows `?` in gray (no fresh data).
 
 ## 2. Live usage (the core path)
@@ -81,11 +81,11 @@ Sign into `claude.ai` and/or `chatgpt.com` in the same profile. In Settings, cli
 
 - [ ] Fresh install (or right after this update): Claude and OpenAI cards say **Needs your OK** with **Review in Settings**; DevTools on the service worker shows **no** requests to `claude.ai` / `chatgpt.com`, even after clicking Refresh.
 - [ ] Settings shows each notice under its provider; **Allow** reads that provider immediately, then shows "Allowed <date> · Revoke". **Revoke** stops reads again.
-- [ ] With **Background refresh** off, leave Chrome idle for 30 min with no provider tab or MeterBar surface open: no requests to provider origins; the badge number clears after 10 min.
+- [ ] With **Background refresh** off, leave Chrome idle for 30 min with no provider tab or MeterBar surface open: no requests to provider origins; the badge number clears after 10 min (a repaint-only `meterbar-stale` alarm, no fetch). Restarting the browser makes no provider request either.
 - [ ] Switching to a `claude.ai` tab reads Claude only; switching back within 5 min does not read again.
 - [ ] Turning **Background refresh** on creates the `meterbar-refresh` alarm (`chrome.alarms.getAll()` in the worker console); turning it off removes it.
 - [ ] A 429 (simulate with DevTools request blocking returning 429, or wait for a real one) shows "<Provider> asked MeterBar to wait - next try at HH:MM" and Refresh makes no request for that provider until then.
-- [ ] **Clear local MeterBar data** also clears both acknowledgements.
+- [ ] **Clear local MeterBar data** also clears both acknowledgements and every alarm; an unexpired rate-limit wait survives, so re-allowing that provider still waits.
 
 ## 6. Options page
 
@@ -118,9 +118,9 @@ These guard the PRD's non-negotiables - verify on every release.
       requests use `cache: no-store`.
 - [ ] `chrome://extensions` lists host access only for `claude.ai`, `chatgpt.com`, and
       `gemini.google.com`; there is no broad or unused `chat.openai.com` access. The
-      `nativeMessaging` permission is used only for the optional local companion bridge.
+      the optional `nativeMessaging` permission is granted only after turning on Settings → Companion.
 - [ ] `chrome://extensions` → MeterBar → **Inspect service worker** → Application →
-      Storage: stored keys are `latest:*`, `history:*`, `alertState`, and settings -
+      Storage: stored keys are `latest:*`, `history:*`, `alertState`, `refreshState:*` (last attempt and 429 wait times), and settings -
       containing only metrics/timestamps. No tokens, cookies, account ids, or chat content.
 - [ ] A provider-supplied string with HTML (e.g. a workspace label containing `<`) renders
       as text, not markup (escaping holds).
