@@ -186,6 +186,8 @@ Minimum settings:
 - enable/disable notifications
 - clear all browser-local data and the optional companion snapshot
 - privacy explanation
+- background refresh, **off by default**: without it, MeterBar reads usage only while a provider tab or a MeterBar surface is open
+- per-provider acknowledgement: before the first Claude or OpenAI read, the user sees what MeterBar reads, from where, and the terms risk, and gives an explicit OK; nothing is fetched for that provider until then
 
 ---
 
@@ -354,6 +356,8 @@ Confidence enum:
 - No remote analytics in MVP.
 - Use least-privilege host permissions.
 - Clearly declare permissions in README and Chrome extension copy.
+- Read usage only through the browser's own logged-in session to the provider's page origin. Never use CLI or desktop OAuth credentials, synthetic inference requests to read rate-limit headers, page/DOM scraping, or chat-stream interception.
+- Honor provider rate limits: after a `429`, make no request to that provider, manual refresh included, until its `Retry-After` time.
 
 ---
 
@@ -405,7 +409,7 @@ Not connected yet
 
 ### MVP quantitative success
 
-- Fresh usage displayed within 10 minutes of a relevant provider update.
+- Fresh usage displayed within 10 minutes of a relevant provider update while the user has a provider tab or a MeterBar surface open, or has turned on background refresh.
 - Popup loads under 300ms from local state.
 - Extension stores fewer than 100KB for basic local history after one day.
 - Notification de-duplication prevents repeated alerts more than once per threshold/window/reset cycle.
