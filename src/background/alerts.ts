@@ -3,8 +3,18 @@ import type { AlertState } from '../storage/usageStore';
 import { loadAlertState, saveAlertState } from '../storage/usageStore';
 import { alertCopy } from '../shared/summary';
 
-export function getAlertKey(provider: ProviderId, window: UsageWindow, threshold: number, resetsAt = 'unknown'): string {
-  return `${provider}:${window}:${threshold}:${resetsAt}`;
+/**
+ * A per-model cap (window 'custom') is a different series per limit name: the riskiest cap
+ * can switch models between refreshes. The name is appended only when present, so keys for
+ * ordinary windows (and alert state already stored) are unchanged.
+ */
+function seriesKey(provider: ProviderId, window: UsageWindow, workspaceLabel?: string): string {
+  return workspaceLabel ? `${provider}:${window}:${workspaceLabel}` : `${provider}:${window}`;
+}
+
+export function getAlertKey(provider: ProviderId, window: UsageWindow, threshold: number, resetsAt = 'unknown', workspaceLabel?: string): string {
+  const key = `${provider}:${window}:${threshold}:${resetsAt}`;
+  return workspaceLabel ? `${key}:${workspaceLabel}` : key;
 }
 
 export function shouldAlert(seen: Set<string>, key: string): boolean {
@@ -17,6 +27,7 @@ export interface FiredAlert {
   kind: 'threshold' | 'reset';
   provider: UsageSnapshot['provider'];
   window: UsageSnapshot['window'];
+  workspaceLabel?: string;
   threshold?: number;
   usedPercent: number;
   resetsAt?: string;
@@ -30,10 +41,10 @@ export function evaluateAlerts(snapshots: UsageSnapshot[], state: AlertState): {
   const fired: FiredAlert[] = [];
 
   for (const s of snapshots) {
-    const resetKey = `${s.provider}:${s.window}`;
+    const resetKey = seriesKey(s.provider, s.window, s.workspaceLabel);
     if (s.resetsAt && lastReset[resetKey] && lastReset[resetKey] !== s.resetsAt) {
       fired.push({
-        kind: 'reset', provider: s.provider, window: s.window, usedPercent: s.usedPercent,
+        kind: 'reset', provider: s.provider, window: s.window, workspaceLabel: s.workspaceLabel, usedPercent: s.usedPercent,
         resetsAt: s.resetsAt, confidence: s.confidence
       });
     }
@@ -41,10 +52,10 @@ export function evaluateAlerts(snapshots: UsageSnapshot[], state: AlertState): {
 
     for (const threshold of THRESHOLDS) {
       if (s.usedPercent >= threshold) {
-        const key = getAlertKey(s.provider, s.window, threshold, s.resetsAt ?? 'unknown');
+        const key = getAlertKey(s.provider, s.window, threshold, s.resetsAt ?? 'unknown', s.workspaceLabel);
         if (shouldAlert(seen, key)) {
           fired.push({
-            kind: 'threshold', provider: s.provider, window: s.window, threshold,
+            kind: 'threshold', provider: s.provider, window: s.window, workspaceLabel: s.workspaceLabel, threshold,
             usedPercent: s.usedPercent, resetsAt: s.resetsAt, confidence: s.confidence
           });
         }
@@ -64,6 +75,7 @@ export async function evaluateAndNotify(cards: ProviderCardState[]): Promise<voi
       kind: f.kind,
       label: labelByProvider.get(f.provider) ?? f.provider,
       window: f.window,
+      workspaceLabel: f.workspaceLabel,
       usedPercent: f.usedPercent,
       resetsAt: f.resetsAt,
       confidence: f.confidence

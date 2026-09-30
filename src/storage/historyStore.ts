@@ -25,18 +25,19 @@ export function pruneSeries(series: Point[], now: number, opts: PruneOptions = D
   return merged.length > opts.maxPoints ? merged.slice(merged.length - opts.maxPoints) : merged;
 }
 
-function key(provider: ProviderId, window: UsageWindow): string {
+/** Storage key for one provider window's series; the demo fixture writes the same keys. */
+export function historyKey(provider: ProviderId, window: UsageWindow): string {
   return `history:${provider}:${window}`;
 }
 
 export async function recordPoint(provider: ProviderId, window: UsageWindow, t: number, p: number): Promise<void> {
-  const k = key(provider, window);
+  const k = historyKey(provider, window);
   const stored = (await chrome.storage.local.get(k))[k] as Point[] | undefined;
   await chrome.storage.local.set({ [k]: pruneSeries(appendPoint(stored ?? [], t, p), Date.now()) });
 }
 
 export async function readSeries(provider: ProviderId, window: UsageWindow): Promise<Point[]> {
-  const k = key(provider, window);
+  const k = historyKey(provider, window);
   return ((await chrome.storage.local.get(k))[k] as Point[] | undefined) ?? [];
 }
 

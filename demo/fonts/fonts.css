@@ -1,0 +1,7 @@
+/* JetBrains Mono 2.304 (SIL OFL 1.1, see OFL.txt), bundled so renders never depend on host
+   fonts. Registered under the product's first font-stack name so --mono resolves to it. */
+@font-face { font-family: "JetBrains Mono"; font-weight: 400; src: url("./JetBrainsMono-Regular.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 500; src: url("./JetBrainsMono-Medium.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 600; src: url("./JetBrainsMono-SemiBold.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 700; src: url("./JetBrainsMono-Bold.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 800; src: url("./JetBrainsMono-ExtraBold.woff2") format("woff2"); }

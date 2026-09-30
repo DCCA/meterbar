@@ -13,7 +13,7 @@ const TRACK_COLOR = palette.icon.track;
 const STATIC_ICON = { 16: 'assets/icon16.png', 48: 'assets/icon48.png', 128: 'assets/icon128.png' };
 
 /** Draw the bars onto a square canvas of the given size and return its pixels. */
-function drawBars(bars: IconBar[], size: number): ImageData {
+export function drawBars(bars: IconBar[], size: number): ImageData {
   const canvas = new OffscreenCanvas(size, size);
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('2d context unavailable');

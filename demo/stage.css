@@ -1,0 +1,109 @@
+/* The video stage, in the product's design language (DESIGN.md). Colors are token
+   references only; the light render swaps them via [data-theme="light"].
+   Type uses the bundled JetBrains Mono (declared inline in index.html) through --stage-font,
+   not the product's --mono stack: HyperFrames tries to download every family a composition
+   names that has no @font-face in its HTML, and --mono names five system fonts. */
+@import './.build/ui/tokens.css';
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --stage-font: "JetBrains Mono", monospace; }
+html, body { width: 2400px; height: 1500px; overflow: hidden; background: var(--bg-deep); }
+
+/* Designed at 1200x750 CSS px, rendered at 2x for a crisp README downscale. */
+#root { position: relative; width: 2400px; height: 1500px; overflow: hidden; }
+.stage {
+  position: absolute; left: 0; top: 0; width: 1200px; height: 750px;
+  transform: scale(2); transform-origin: 0 0; overflow: hidden;
+  font-family: var(--stage-font); color: var(--text);
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(1100px 820px at 6% -8%, var(--ambient-a) 0%, transparent 64%),
+    radial-gradient(1150px 860px at 102% 108%, var(--ambient-b) 0%, transparent 64%),
+    radial-gradient(700px 520px at 58% 48%, color-mix(in srgb, var(--ambient-a) 45%, transparent) 0%, transparent 70%),
+    var(--bg-deep);
+}
+.layer { position: absolute; }
+
+/* Browser toolbar strip: a hairline edge, an empty omnibox, no URL, no window controls. */
+.toolbar {
+  left: 0; top: 0; width: 1200px; height: 56px; z-index: 5;
+  display: flex; align-items: center; gap: 14px; padding: 0 28px;
+  background: color-mix(in srgb, var(--surface-strong) 70%, transparent);
+  border-bottom: 1px solid var(--hairline);
+}
+.omni { flex: 1; height: 32px; border-radius: 16px; background: var(--control); box-shadow: inset 0 0 0 1px var(--hairline-soft); }
+.ext { width: 22px; height: 22px; border-radius: 50%; background: var(--control-active); }
+.ext.avatar { width: 28px; height: 28px; }
+.action { position: relative; width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; background: var(--control-active); }
+.action canvas { position: absolute; left: 6px; top: 6px; width: 24px; height: 24px; }
+.badge {
+  position: absolute; right: 1px; bottom: 2px; min-width: 22px; padding: 1px 4px; border-radius: 5px;
+  font: 700 11px/1.25 var(--stage-font); text-align: center; /* colors: the product's BadgeState */
+}
+
+/* Native-style hover tooltip: the only opaque material allowed over the pane. */
+.tooltip {
+  right: 16px; top: 64px; z-index: 6; padding: 8px 10px; border-radius: 7px; white-space: pre;
+  font: 400 12px/1.5 var(--stage-font); color: var(--text);
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  box-shadow: inset 0 0 0 1px var(--hairline), var(--shell-shadow);
+}
+
+/* Product pages, embedded live from the built extension. */
+.frame { overflow: hidden; border-radius: var(--radius); box-shadow: var(--shell-shadow), 0 0 0 1px var(--hairline); transform-origin: 0 0; }
+.frame iframe { position: absolute; left: 0; top: 0; border: 0; background: transparent; }
+.popup { left: 640px; top: 60px; width: 376px; } /* height and scale: stage.ts */
+.popup iframe { width: 376px; }
+/* Each view's measured content height (497.5 / 478.5 px), as Chrome sizes the popup window. */
+#popup-home { height: 498px; }
+#popup-limits { height: 479px; }
+.panel { left: 720px; top: 56px; width: 400px; height: 579px; border-radius: 0; box-shadow: -1px 0 0 var(--hairline); background: var(--bg-deep); } /* docked: flush, no lift */
+.panel iframe { top: 30px; width: 400px; height: 549px; }
+/* Chrome's own side-panel header: extension icon and name, close control. */
+.panel-head {
+  position: absolute; left: 0; top: 0; width: 400px; height: 30px; display: flex; align-items: center; gap: 8px; padding: 0 12px;
+  font-size: 12px; font-weight: 600; color: var(--text);
+  background: color-mix(in srgb, var(--surface-strong) 70%, transparent); border-bottom: 1px solid var(--hairline);
+}
+.panel-head img { width: 14px; height: 14px; border-radius: 3px; }
+.panel-x { margin-left: auto; width: 10px; height: 10px; background:
+  linear-gradient(45deg, transparent 45%, var(--muted) 45% 55%, transparent 55%),
+  linear-gradient(-45deg, transparent 45%, var(--muted) 45% 55%, transparent 55%); }
+
+/* Captions sit on the field as text: no boxes (the No-Card Rule). */
+.caption { left: 64px; top: 236px; width: 560px; }
+.kicker { font-size: 16px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.cap { margin-top: 14px; font-size: 40px; font-weight: 800; line-height: 1.08; letter-spacing: -0.02em; color: var(--text); }
+.sub { margin-top: 16px; font-size: 20px; line-height: 1.45; color: var(--muted); }
+.tag {
+  left: 64px; bottom: 36px; z-index: 7; padding: 5px 9px; border-radius: 6px;
+  font-size: 12px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); box-shadow: inset 0 0 0 1px var(--hairline);
+}
+
+/* OS-style notification: drawn as the system's, carrying the product's alert copy. */
+.notice {
+  /* Left of the docked panel, so it never covers the panel's controls. */
+  right: 500px; bottom: 24px; width: 392px; z-index: 6; padding: 12px 14px; border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  box-shadow: inset 0 0 0 1px var(--hairline), var(--shell-shadow);
+}
+.notice .app { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.notice .app img { width: 16px; height: 16px; border-radius: 4px; }
+.notice .title { margin-top: 8px; font-size: 14px; font-weight: 700; line-height: 1.35; color: var(--text); }
+.notice .msg { margin-top: 4px; font-size: 13px; line-height: 1.4; color: var(--muted); }
+
+/* Privacy: one glass pane in the product's own section format. */
+.privacy {
+  left: 300px; top: 146px; width: 600px; padding: 22px 26px 24px; z-index: 4;
+  border-radius: var(--radius); background: var(--glass); backdrop-filter: var(--glass-filter);
+  box-shadow: var(--shell-shadow), inset 0 0 0 1px var(--hairline), inset 0 1px 0 var(--control-active);
+}
+.privacy header { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 12px; }
+.privacy h2 { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.privacy .aside { font-size: 14px; color: var(--muted); }
+.privacy li { list-style: none; padding: 13px 0; border-top: 1px solid var(--hairline-soft); font-size: 18px; line-height: 1.4; }
+.privacy li:first-child { border-top: 1px solid var(--hairline-soft); }
+.privacy .fine { margin-top: 12px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+
+.cursor { left: 0; top: 0; width: 22px; height: 30px; z-index: 9; transform-origin: 3px 2px; }

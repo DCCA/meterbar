@@ -42,6 +42,7 @@ async function recompute(): Promise<void> {
   const badge = calculateBadgeState(flattenSnapshots(cards), settings.badgeTarget);
   await chrome.action.setBadgeText({ text: badge.text });
   await chrome.action.setBadgeBackgroundColor({ color: badge.color });
+  await chrome.action.setBadgeTextColor({ color: badge.textColor });
   await renderIcon(iconBars(cards));
   await chrome.action.setTitle({ title: buildTooltip(cards) });
   await syncCompanion(cards);

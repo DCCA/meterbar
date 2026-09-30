@@ -31,6 +31,8 @@ export interface AlertCopyInput {
   kind: 'threshold' | 'reset';
   label: string;
   window: UsageWindow;
+  /** A per-model cap's limit name; shown instead of the generic window name. */
+  workspaceLabel?: string;
   usedPercent: number;
   resetsAt?: string;
   confidence?: Confidence;
@@ -38,7 +40,7 @@ export interface AlertCopyInput {
 
 /** Human notification copy: provider label + plain window name, never raw enums. */
 export function alertCopy(alert: AlertCopyInput, now: Date = new Date()): { title: string; message: string } {
-  const window = windowLongLabel(alert.window);
+  const window = alert.workspaceLabel ?? windowLongLabel(alert.window);
   const confidence = confidenceSuffix(alert.confidence ?? 'exact');
   if (alert.kind === 'reset') {
     return { title: `${alert.label}: ${window} reset${confidence}`, message: `Fresh window - back to ${alert.usedPercent}% used.` };
@@ -62,7 +64,7 @@ export function buildTooltip(cards: ProviderCardState[]): string {
     const fresh = card.snapshots.filter((s) => !s.stale && s.confidence !== 'unavailable');
     if (fresh.length === 0) continue;
     lines.push(`${card.label}: ${fresh.map((s) =>
-      `${windowShortLabel(s.window)} ${s.usedPercent}%${confidenceSuffix(s.confidence)}`
+      `${s.workspaceLabel ?? windowShortLabel(s.window)} ${s.usedPercent}%${confidenceSuffix(s.confidence)}`
     ).join(' · ')}`);
   }
   return lines.length ? `MeterBar · % of limit used\n${lines.join('\n')}` : 'MeterBar · no usage data yet';

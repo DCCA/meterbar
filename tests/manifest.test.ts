@@ -19,4 +19,8 @@ describe('manifest security', () => {
     expect(manifest.permissions).not.toEqual(expect.arrayContaining(['tabs', 'cookies', 'webRequest']));
     expect(manifest.host_permissions).not.toContain('<all_urls>');
   });
+
+  it('declares the Chrome version its APIs need (sidePanel: 114, setBadgeTextColor: 110)', () => {
+    expect((manifest as { minimum_chrome_version?: string }).minimum_chrome_version).toBe('114');
+  });
 });

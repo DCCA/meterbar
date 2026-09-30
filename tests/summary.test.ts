@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildTooltip, windowShortLabel } from '../src/shared/summary';
+import { alertCopy, buildTooltip, windowShortLabel } from '../src/shared/summary';
 import type { Confidence, ProviderCardState } from '../src/shared/types';
 
 function card(
@@ -28,6 +28,17 @@ describe('buildTooltip', () => {
       .toBe('MeterBar · % of limit used\nClaude: 5h 62% (unofficial source)');
   });
 
+  it('names a per-model cap by its limit name, as the cards do', () => {
+    const openai: ProviderCardState = {
+      provider: 'chatgpt', label: 'OpenAI', status: 'connected',
+      snapshots: [{
+        provider: 'chatgpt', window: 'custom', workspaceLabel: 'GPT-5.3-Codex-Spark', usedRatio: 0.22, usedPercent: 22,
+        capturedAt: '2026-06-20T12:00:00Z', source: 't', confidence: 'exact', stale: false
+      }]
+    };
+    expect(buildTooltip([openai])).toBe('MeterBar · % of limit used\nOpenAI: GPT-5.3-Codex-Spark 22%');
+  });
+
   it('falls back when there is no fresh data', () => {
     expect(buildTooltip([])).toBe('MeterBar · no usage data yet');
     expect(buildTooltip([card('Claude', [['five_hour', 62]], true)])).toBe('MeterBar · no usage data yet');
@@ -35,5 +46,12 @@ describe('buildTooltip', () => {
 
   it('shortens window labels', () => {
     expect(windowShortLabel('seven_day')).toBe('7d');
+  });
+});
+
+describe('alertCopy', () => {
+  it('names a per-model cap by its limit name instead of a generic window', () => {
+    expect(alertCopy({ kind: 'threshold', label: 'OpenAI', window: 'custom', workspaceLabel: 'GPT-5.3-Codex-Spark', usedPercent: 91 }).title)
+      .toBe('OpenAI: GPT-5.3-Codex-Spark at 91% used');
   });
 });
