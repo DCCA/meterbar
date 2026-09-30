@@ -249,8 +249,7 @@ stack are committed identity, not defects. Recorded as durable constraints in PR
       it's added, README/CLAUDE.md won't auto-sync; after adding, re-run via
       workflow_dispatch or sync docs manually (they're incomplete, not wrong: no mention
       yet of fixed order, pace tick, PRODUCT.md).
-- [ ] Portfolio bookkeeping: meterbar is missing from the project index at
-      `/home/dcca/projects/CLAUDE.md` and (unverified) the keikaku registry.
+- [ ] Portfolio bookkeeping: add meterbar to the maintainer's local project index.
 - [ ] Repo nesting quirk: the repo lives at `meterbar/meterbar/` inside a wrapper dir;
       sessions started in the wrapper don't load the project CLAUDE.md. Flatten or
       always start inside the inner dir.
