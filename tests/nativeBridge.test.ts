@@ -27,6 +27,9 @@ const cards: ProviderCardState[] = [
   }
 ];
 
+// The companion permission is optional; these tests run with it granted.
+const GRANTED = { contains: vi.fn(async () => true) };
+
 describe('native companion bridge', () => {
   afterEach(() => vi.unstubAllGlobals());
 
@@ -119,7 +122,7 @@ describe('native companion bridge', () => {
 
   it('sends the sanitized contract to the single allowlisted host', async () => {
     const sendNativeMessage = vi.fn().mockResolvedValue({ ok: true });
-    vi.stubGlobal('chrome', { runtime: { sendNativeMessage } });
+    vi.stubGlobal('chrome', { runtime: { sendNativeMessage }, permissions: GRANTED });
 
     await expect(syncCompanion(cards)).resolves.toBe(true);
     expect(sendNativeMessage).toHaveBeenCalledWith(
@@ -131,7 +134,7 @@ describe('native companion bridge', () => {
 
   it('asks the host to remove its local snapshot when MeterBar data is cleared', async () => {
     const sendNativeMessage = vi.fn().mockResolvedValue({ ok: true });
-    vi.stubGlobal('chrome', { runtime: { sendNativeMessage } });
+    vi.stubGlobal('chrome', { runtime: { sendNativeMessage }, permissions: GRANTED });
 
     await expect(clearCompanion()).resolves.toBe(true);
     expect(sendNativeMessage).toHaveBeenCalledWith(COMPANION_HOST, {
@@ -140,9 +143,19 @@ describe('native companion bridge', () => {
     });
   });
 
+  it('never touches the host while the companion permission is not granted', async () => {
+    const sendNativeMessage = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('chrome', { runtime: { sendNativeMessage }, permissions: { contains: vi.fn(async () => false) } });
+
+    await expect(syncCompanion([])).resolves.toBe(false);
+    await expect(clearCompanion()).resolves.toBe(false);
+    expect(sendNativeMessage).not.toHaveBeenCalled();
+  });
+
   it('keeps the extension functional when the optional host is absent', async () => {
     vi.stubGlobal('chrome', {
-      runtime: { sendNativeMessage: vi.fn().mockRejectedValue(new Error('host not found')) }
+      runtime: { sendNativeMessage: vi.fn().mockRejectedValue(new Error('host not found')) },
+      permissions: GRANTED
     });
 
     await expect(syncCompanion(cards)).resolves.toBe(false);

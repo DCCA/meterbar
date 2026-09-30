@@ -71,7 +71,7 @@ This optional display-only preview is not a stable product surface, is not part 
 ./scripts/install-omarchy-companion.sh
 ```
 
-Reload the unpacked extension after installation, then open MeterBar once to publish the first local snapshot. See [companion/README.md](companion/README.md) for architecture, privacy guarantees, and removal instructions.
+Reload the unpacked extension after installation, then turn on **Settings → Companion** (Chrome asks for native messaging permission) to publish the first local snapshot. See [companion/README.md](companion/README.md) for architecture, privacy guarantees, and removal instructions.
 
 ## Permissions and privacy
 
@@ -83,7 +83,7 @@ MeterBar is local-first: there is no backend, no cloud sync, and no analytics. I
 | `alarms` | Refresh usage on a periodic schedule. |
 | `notifications` | Warn at 70% / 90% and when a window resets. |
 | `sidePanel` | Keep the usage instrument docked while you browse. |
-| `nativeMessaging` | Send a sanitized usage snapshot to the optional experimental Omarchy preview. No credential or chat data is included. |
+| `nativeMessaging` (optional) | Requested only when you turn on **Settings → Companion**, to send a sanitized usage snapshot to the experimental Omarchy preview. No credential or chat data is included. Turning the switch off removes the snapshot and the permission. |
 | `host_permissions: https://claude.ai/*` | Read your Claude usage from your logged-in session. MeterBar first looks up your organization id, which is used in memory only for the usage request and never stored. |
 | `host_permissions: https://chatgpt.com/*` | Read OpenAI usage (ChatGPT and Codex share one subscription). Your chatgpt.com session mints an access token that is used, in memory only, for the account and `wham/usage` requests and never stored. |
 | `host_permissions: https://gemini.google.com/*` | Detect that you are signed in to Gemini by checking the page's scripts for a sign-in marker. Nothing from the page is copied, sent, or stored, and MeterBar makes no Gemini requests. Status only: no Gemini usage number. |

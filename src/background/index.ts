@@ -2,7 +2,7 @@ import { calculateBadgeState } from './badge';
 import { clearMeterbarData } from './clearData';
 import { iconBars } from './iconModel';
 import { renderIcon } from './icon';
-import { syncCompanion } from './nativeBridge';
+import { COMPANION_PERMISSION, syncCompanion } from './nativeBridge';
 import { createCoalescedRefresh } from './refreshRunner';
 import { createMutationGate } from './mutationGate';
 import { aggregateCards, flattenSnapshots } from './aggregate';
@@ -64,6 +64,10 @@ const refreshAll = createCoalescedRefresh(async () => {
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create('meterbar-refresh', { periodInMinutes: 10 });
   void refreshAll();
+});
+// Publish the first companion snapshot as soon as the user grants the optional permission.
+chrome.permissions.onAdded.addListener((p) => {
+  if (p.permissions?.some((name) => COMPANION_PERMISSION.permissions?.includes(name))) void recompute();
 });
 chrome.alarms.onAlarm.addListener((a) => { if (a.name === 'meterbar-refresh') void refreshAll(); });
 
