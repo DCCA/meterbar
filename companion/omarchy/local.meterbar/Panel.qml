@@ -17,7 +17,7 @@ Panel {
 
   // The shell paints the panel with the theme's popup color; pick the palette that reads on it.
   readonly property color panelBackground: Color.popups.background
-  readonly property bool lightTheme: (panelBackground.r * 0.299 + panelBackground.g * 0.587 + panelBackground.b * 0.114) > 0.6
+  readonly property bool lightTheme: luma(panelBackground) > 0.6
   readonly property var tone: lightTheme ? palette.light : palette.dark
   readonly property color text: tone.text
   readonly property color muted: tone.muted
@@ -28,8 +28,13 @@ Panel {
   readonly property color crit: tone.crit
   readonly property color hairline: alpha(tone.line, 0.14)
   readonly property color hairlineSoft: alpha(tone.line, 0.10)
-  readonly property color track: alpha(tone.sunken, 0.44)
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
+
+  // The bar widget sits on the bar, or on the wallpaper when the bar is transparent. The shell's
+  // barForeground already contrasts with whichever it is, so dark text means a light backdrop.
+  readonly property var barTone: luma(barForeground) < 0.5 ? palette.light : palette.dark
+  // Faint enough to read as empty, strong enough to show on the bar or any wallpaper.
+  readonly property color barTrack: alpha(barForeground, 0.25)
 
   property double nowMs: Date.now()
   readonly property real staleAfterMs: Math.max(1, Number(setting("staleAfterMinutes", 10))) * 60000
@@ -38,6 +43,7 @@ Panel {
   readonly property bool alarming: peak >= 90
   readonly property real dayMs: 24 * 60 * 60 * 1000
 
+  function luma(color) { return color.r * 0.299 + color.g * 0.587 + color.b * 0.114 }
   function alpha(color, amount) { var c = Qt.color(color); return Qt.rgba(c.r, c.g, c.b, amount) }
   function clamp(value, minimum, maximum) { return Math.max(minimum, Math.min(maximum, value)) }
 
@@ -87,11 +93,13 @@ Panel {
     return result
   }
 
-  function riskColor(percent, fresh) {
-    if (!fresh || percent < 0) return muted
-    if (percent >= 90) return crit
-    if (percent >= 70) return warn
-    return ok
+  // Defaults to the panel palette; the bar widget passes its own backdrop palette.
+  function riskColor(percent, fresh, scheme, unknown) {
+    var t = scheme || tone
+    if (!fresh || percent < 0) return unknown !== undefined ? unknown : t.muted
+    if (percent >= 90) return t.crit
+    if (percent >= 70) return t.warn
+    return t.ok
   }
 
   function seriesColor(provider) {
@@ -236,7 +244,7 @@ Panel {
                 width: 12
                 height: 4
                 radius: 2
-                color: root.track
+                color: root.barTrack
 
                 Rectangle {
                   anchors.left: parent.left
@@ -244,7 +252,7 @@ Panel {
                   anchors.bottom: parent.bottom
                   width: parent.width * root.clamp(parent.percent / 100, 0, 1)
                   radius: 2
-                  color: root.riskColor(parent.percent, parent.percent >= 0)
+                  color: root.riskColor(parent.percent, parent.percent >= 0, root.barTone, root.barTrack)
                 }
               }
             }
@@ -253,8 +261,8 @@ Panel {
           Text {
             anchors.verticalCenter: parent.verticalCenter
             text: root.peak >= 0 ? Math.round(root.peak) + "%" : "--"
-            // Risk lives in the pills; the number keeps the bar's own foreground so it stays legible on any theme.
-            color: root.bar ? root.bar.foreground : root.text
+            // Risk lives in the pills; the number uses the bar's transparency-aware foreground like built-in widgets.
+            color: root.barForeground
             font.family: root.fontFamily
             font.pixelSize: Style.font.bodySmall
             font.bold: true
