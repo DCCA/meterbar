@@ -118,7 +118,7 @@ These guard the PRD's non-negotiables - verify on every release.
       requests use `cache: no-store`.
 - [ ] `chrome://extensions` lists host access only for `claude.ai`, `chatgpt.com`, and
       `gemini.google.com`; there is no broad or unused `chat.openai.com` access. The
-      the optional `nativeMessaging` permission is granted only after turning on Settings → Companion.
+      optional `nativeMessaging` permission is granted only after turning on Settings → Companion.
 - [ ] `chrome://extensions` → MeterBar → **Inspect service worker** → Application →
       Storage: stored keys are `latest:*`, `history:*`, `alertState`, `refreshState:*` (last attempt and 429 wait times), and settings -
       containing only metrics/timestamps. No tokens, cookies, account ids, or chat content.
