@@ -3,6 +3,7 @@ import { readAllHistory } from '../storage/historyStore';
 import { historyToCsv, historyToJson } from '../shared/exporters';
 import { renderBadgeTargets, wireBadgeTargets } from '../ui/badgeTargetControl';
 import type { ExtensionMessage } from '../shared/messages';
+import { clearCompanion, COMPANION_PERMISSION, hasCompanionPermission } from '../background/nativeBridge';
 
 // Only the boolean settings drive the toggle switches.
 type BoolSettingKey = { [K in keyof Settings]: Settings[K] extends boolean ? K : never }[keyof Settings];
@@ -41,6 +42,8 @@ async function render(): Promise<void> {
     if (el) el.checked = settings[key];
   }
   if (badgeGroup) await renderBadgeTargets(badgeGroup, settings, { previews: true });
+  const companion = document.querySelector<HTMLInputElement>('#companion');
+  if (companion) companion.checked = await hasCompanionPermission();
 }
 
 async function wire(): Promise<void> {
@@ -53,6 +56,20 @@ async function wire(): Promise<void> {
   }
 
   if (badgeGroup) wireBadgeTargets(badgeGroup, { previews: true });
+
+  // The switch state is the granted permission itself; there is no separate setting.
+  const companion = document.querySelector<HTMLInputElement>('#companion');
+  companion?.addEventListener('change', async () => {
+    if (companion.checked) {
+      companion.checked = await chrome.permissions.request(COMPANION_PERMISSION).catch(() => false);
+      if (!companion.checked) setStatus('Companion stays off - native messaging was not granted.');
+      return;
+    }
+    const cleared = await clearCompanion();
+    await chrome.permissions.remove(COMPANION_PERMISSION).catch(() => false);
+    companion.checked = await hasCompanionPermission();
+    setStatus(cleared ? 'Companion off. Its snapshot was removed.' : 'Companion off. Its snapshot may remain.');
+  });
 
   const date = new Date().toISOString().slice(0, 10);
   document.querySelector('#export-json')?.addEventListener('click', async () => {

@@ -10,8 +10,9 @@ describe('manifest security', () => {
     ]);
   });
 
-  it('requests native messaging only for the local Omarchy companion bridge', () => {
-    expect(manifest.permissions).toContain('nativeMessaging');
+  it('asks for native messaging only when the user turns on the Omarchy companion', () => {
+    expect(manifest.permissions).not.toContain('nativeMessaging');
+    expect((manifest as { optional_permissions?: string[] }).optional_permissions).toEqual(['nativeMessaging']);
     expect((manifest as { key?: string }).key).toMatch(/^[A-Za-z0-9+/]+=*$/);
   });
 
