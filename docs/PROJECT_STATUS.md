@@ -3,6 +3,45 @@
 Session logbook, newest first. Each entry: where the project was, what the session
 changed (with evidence), and what is still open.
 
+## 2026-09-30 - Repo public; refresh policy, consent gate, optional companion permission
+
+**Where we were:** private repo with six open PRs (#41-#45, #55; #43 conflicting) and stale
+branches; issues #46-#51 and #53 untouched.
+
+**What we did:**
+- Rebased #43 onto main (README conflict; restored its Contributing section), merged #41, #43,
+  #44, #45, #55; closed #42 (contained in #55). Deleted all stale local and remote branches.
+- Made the repo **public**; enabled private vulnerability reporting, secret scanning + push
+  protection, Dependabot alerts/security fixes, and `main` branch protection (PR required,
+  strict `check` CI, no force-push/deletion, admin bypass kept).
+- #56 (#47): 429 `Retry-After` honored with persisted per-provider `backoffUntil`; every
+  trigger, manual included, waits; card names the retry time.
+- #57 (#53): `nativeMessaging` moved to `optional_permissions` behind a Settings **Companion**
+  switch (the switch state is the grant itself).
+- #59 (#46, #48, #49, #50): reads only on presence (surface open, provider tab, manual,
+  settings change), 5-min throttle via `shouldFetch` in `src/shared/refreshPolicy.ts`;
+  background polling alarm opt-in (default off); per-provider acknowledgement gate, zero
+  requests until OK'd; design **option A** (notice + Allow in Settings, cards say Needs your
+  OK). #58: PRD sections 6.8, 11, 13.
+- Multi-agent review of #56-#59: 13/15 findings confirmed, 7 fixes (alarm re-checks the
+  setting and Clear runs `alarms.clearAll()`, unexpired 429 wait survives Clear, no startup
+  read without background refresh, repaint-only `meterbar-stale` alarm so the idle badge
+  clears, Allow/Revoke focus, event-driven wording). Main: 207 tests pass, build OK.
+
+**Decisions:** design option A (consent lives in Settings). Startup reads only with background
+refresh on (a read on every worker wake-up would be unattended polling). Author email stays in
+git history. Chrome Web Store (#51) deferred.
+
+**Pending / next:**
+- [ ] Review and merge #60 (docs-sync bot PR after #56; more may follow for #57/#59).
+- [ ] Run `docs/manual-qa.md` section 5b in a real Chrome profile: 30 min idle with no
+      provider requests, provider-tab trigger, alarm on/off, 429 copy, Clear keeps the wait.
+- [ ] Test the Companion switch against the Omarchy host (grant, snapshot, off removes file).
+- [ ] After updating, allow Claude and OpenAI once in Settings (installs start unacknowledged).
+- [ ] `src/background/index.ts` wiring (alarm guard, startup, tab triggers) has no unit test;
+      covered only by manual QA.
+- [ ] #51 Chrome Web Store go/no-go, when ready.
+
 ## 2026-09-27 - Open-source readiness and provider terms-of-service risk
 
 **Where we were:** private repo; PRs #41 (Omarchy bar fix) and #42 (2026-09-26 recap) open.
