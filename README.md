@@ -81,7 +81,7 @@ Reload the unpacked extension after installation, then turn on **Settings → Co
 
 ## Permissions and privacy
 
-MeterBar is local-first: there is no backend, no cloud sync, and no analytics. It stores **only** usage metrics (percentages, reset timestamps, provider names, provider limit names such as a model cap, connection status, alert history, and your settings) in `chrome.storage.local`. It never reads or stores prompts, responses, uploaded files, or chat content.
+MeterBar is local-first: there is no backend, no cloud sync, and no analytics. It stores **only** usage metrics (percentages, reset timestamps, provider names, provider limit names such as a model cap, connection status, alert history, per-provider refresh backoff state, and your settings) in `chrome.storage.local`. It never reads or stores prompts, responses, uploaded files, or chat content.
 
 | Permission | Why |
 |---|---|
