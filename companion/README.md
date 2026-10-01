@@ -13,7 +13,7 @@ npm run build
 ./scripts/install-omarchy-companion.sh
 ```
 
-Then reload MeterBar from `chrome://extensions`, open it once, and refresh usage. The extension has a stable development ID so the native host accepts only this MeterBar build.
+Then reload MeterBar from `chrome://extensions`, turn on **Settings → Companion**, and grant the native messaging permission Chrome asks for. MeterBar publishes the first snapshot right away. The extension has a stable development ID so the native host accepts only this MeterBar build.
 
 The installer creates only user-owned files:
 
@@ -33,6 +33,8 @@ Cookies, bearer tokens, account hashes, provider endpoint details, prompts, resp
 **Settings → Clear local MeterBar data** clears browser storage and asks the installed native host to delete this state file. If the host is unavailable, the removal commands below delete it manually.
 
 ## Remove
+
+Turn off **Settings → Companion** first: MeterBar asks the host to delete its state file and drops the native messaging permission. Then remove the files:
 
 ```bash
 omarchy plugin disable local.meterbar

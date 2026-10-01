@@ -1,4 +1,4 @@
-import { loadView, renderCardsInto, wireRefresh, wireViewSwitcher, type DashboardView } from '../ui/cardsView';
+import { loadView, renderCardsInto, requestSurfaceRefresh, wireRefresh, wireViewSwitcher, type DashboardView } from '../ui/cardsView';
 import { renderBadgeTargets, wireBadgeTargets } from '../ui/badgeTargetControl';
 import { loadSettings } from '../storage/usageStore';
 
@@ -26,3 +26,5 @@ chrome.storage.onChanged.addListener((_changes, area) => {
 });
 
 void render();
+// The storage listener above re-renders when the refresh lands.
+void requestSurfaceRefresh();

@@ -1,5 +1,6 @@
-import type { ProviderCardState, ProviderId, UsageSnapshot } from '../shared/types';
-import { getCard, putCard } from '../storage/usageStore';
+import type { FetchProviderId, ProviderCardState, ProviderId, UsageSnapshot } from '../shared/types';
+import { getCard, loadRefreshState, putCard, updateRefreshState, type Settings } from '../storage/usageStore';
+import { parseRetryAfter, shouldFetch, type RefreshReason } from '../shared/refreshPolicy';
 import { recordPoint } from '../storage/historyStore';
 import { claudeAdapter, claudeOrgsUrl, claudeUsageUrl, pickClaudeOrgUuid } from '../providers/claude/claudeAdapter';
 import { chatgptAdapter, chatgptSessionUrl, chatgptAccountsUrl, chatgptUsageUrl, pickChatgptAccountId } from '../providers/chatgpt/chatgptAdapter';
@@ -90,31 +91,61 @@ const SIGNED_OUT = 'Signed out - sign in and MeterBar will pick up automatically
  * names the problem and what happens next (heuristic 9).
  */
 export function fetchFailureMessage(label: string, status?: number): string {
-  if (status === 429) return `${label} is rate-limiting MeterBar - retrying automatically.`;
   if (status !== undefined && status >= 500) return `${label} didn't respond - keeping your last reading.`;
   if (status !== undefined) return `Couldn't read ${label} usage - keeping your last reading.`;
   return `Couldn't reach ${label} - keeping your last reading.`;
 }
 
+export function rateLimitMessage(label: string, retryAt: number): string {
+  const time = new Date(retryAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return `${label} asked MeterBar to wait - next try at ${time}.`;
+}
+
+/** Card copy for a failed response; a 429 also persists the provider's backoff first. */
+async function failureMessage(provider: ProviderId, label: string, res: Response): Promise<string> {
+  if (res.status !== 429) return fetchFailureMessage(label, res.status);
+  const retryAt = parseRetryAfter(res.headers.get('retry-after'), new Date());
+  await updateRefreshState(provider, { backoffUntil: new Date(retryAt).toISOString() });
+  return rateLimitMessage(label, retryAt);
+}
+
+const ENABLED: Record<FetchProviderId, 'claudeEnabled' | 'chatgptEnabled'> = { claude: 'claudeEnabled', chatgpt: 'chatgptEnabled' };
+
 /**
- * Background refresh for Claude: discover the account's org from the same endpoint the
- * logged-in UI uses, then read that org's usage - both with the session cookie, nothing
- * stored. All network I/O and HTTP→status mapping live here; the adapter contributes
- * only the pure `pickClaudeOrgUuid`, URL builders, and `parse`.
+ * The single entry point for reading a fetch provider: applies the enabled, consent,
+ * backoff, and min-interval gate (`shouldFetch`), records the attempt, then reads.
+ */
+export async function refreshProvider(provider: FetchProviderId, reason: RefreshReason, settings: Settings): Promise<void> {
+  const gate = {
+    enabled: settings[ENABLED[provider]],
+    acknowledged: !!settings.acknowledged[provider],
+    ...(await loadRefreshState(provider))
+  };
+  if (!shouldFetch(gate, reason, Date.now())) return;
+  await updateRefreshState(provider, { lastAttemptAt: new Date().toISOString() });
+  await (provider === 'claude' ? refreshClaude() : refreshChatgpt());
+}
+
+/**
+ * Ungated read for Claude (the worker calls it only through `refreshProvider`): discover
+ * the account's org from the same endpoint the logged-in UI uses, then read that org's
+ * usage - both with the session cookie, nothing stored. All network I/O and HTTP→status
+ * mapping live here; the adapter contributes only the pure `pickClaudeOrgUuid`, URL
+ * builders, and `parse`.
  */
 export async function refreshClaude(): Promise<void> {
   const { provider, label } = claudeAdapter;
   try {
     const orgsRes = await sessionFetch(claudeOrgsUrl());
     if (isAuthFailure(orgsRes)) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
-    if (!orgsRes.ok) return storeStatus(provider, label, 'stale', fetchFailureMessage(label, orgsRes.status));
+    if (!orgsRes.ok) return storeStatus(provider, label, 'stale', await failureMessage(provider, label, orgsRes));
 
     const uuid = pickClaudeOrgUuid(await orgsRes.json());
     if (!uuid) return storeStatus(provider, label, 'not_connected', 'No Claude organization found.');
 
     const usageRes = await sessionFetch(claudeUsageUrl(uuid));
     if (isAuthFailure(usageRes)) return storeStatus(provider, label, 'not_connected', SIGNED_OUT);
-    if (!usageRes.ok) return storeStatus(provider, label, 'stale', fetchFailureMessage(label, usageRes.status));
+    if (!usageRes.ok) return storeStatus(provider, label, 'stale', await failureMessage(provider, label, usageRes));
 
     await storeSnapshots(provider, label, claudeAdapter.parse(await usageRes.json()));
   } catch {
@@ -123,17 +154,18 @@ export async function refreshClaude(): Promise<void> {
 }
 
 /**
- * Background refresh for ChatGPT/Codex. Mints a Bearer access token from the session
- * cookie (`/api/auth/session`), resolves the account id, then reads `wham/usage`. The
- * token and account id are used only for the requests and never stored. All network
- * I/O and HTTP->status mapping live here; the adapter contributes only pure helpers.
+ * Ungated read for ChatGPT/Codex (the worker calls it only through `refreshProvider`).
+ * Mints a Bearer access token from the session cookie (`/api/auth/session`), resolves
+ * the account id, then reads `wham/usage`. The token and account id are used only for
+ * the requests and never stored. All network I/O and HTTP->status mapping live here;
+ * the adapter contributes only pure helpers.
  */
 export async function refreshChatgpt(): Promise<void> {
-  const { label } = chatgptAdapter;
+  const { provider, label } = chatgptAdapter;
   try {
     const sessionRes = await sessionFetch(chatgptSessionUrl());
     if (isAuthFailure(sessionRes)) return storeOpenAiStatus('not_connected', SIGNED_OUT);
-    if (!sessionRes.ok) return storeOpenAiStatus('stale', fetchFailureMessage(label, sessionRes.status));
+    if (!sessionRes.ok) return storeOpenAiStatus('stale', await failureMessage(provider, label, sessionRes));
     const token = ((await sessionRes.json()) as { accessToken?: string })?.accessToken;
     if (!token) return storeOpenAiStatus('not_connected', SIGNED_OUT);
 
@@ -142,13 +174,14 @@ export async function refreshChatgpt(): Promise<void> {
       headers: { accept: 'application/json', authorization: `Bearer ${token}` }
     };
     const acctRes = await sessionFetch(chatgptAccountsUrl(), authInit);
+    if (acctRes.status === 429) return storeOpenAiStatus('stale', await failureMessage(provider, label, acctRes));
     const accountId = acctRes.ok ? pickChatgptAccountId(await acctRes.json()) : null;
 
     const usageHeaders: Record<string, string> = { accept: 'application/json', authorization: `Bearer ${token}` };
     if (accountId) usageHeaders['ChatGPT-Account-Id'] = accountId;
     const usageRes = await sessionFetch(chatgptUsageUrl(), { ...SESSION_FETCH, headers: usageHeaders });
     if (isAuthFailure(usageRes)) return storeOpenAiStatus('not_connected', SIGNED_OUT);
-    if (!usageRes.ok) return storeOpenAiStatus('stale', fetchFailureMessage(label, usageRes.status));
+    if (!usageRes.ok) return storeOpenAiStatus('stale', await failureMessage(provider, label, usageRes));
 
     await storeOpenAiSnapshots(chatgptAdapter.parse(await usageRes.json()));
   } catch {

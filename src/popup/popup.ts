@@ -1,4 +1,4 @@
-import { loadView, renderCardsInto, wireRefresh, wireViewSwitcher, type DashboardView } from '../ui/cardsView';
+import { loadView, renderCardsInto, requestSurfaceRefresh, wireRefresh, wireViewSwitcher, type DashboardView } from '../ui/cardsView';
 import { renderBadgeTargets, wireBadgeTargets } from '../ui/badgeTargetControl';
 import { loadSettings } from '../storage/usageStore';
 
@@ -28,3 +28,4 @@ document.querySelector('#open-sidepanel')?.addEventListener('click', async () =>
 });
 
 void render();
+void requestSurfaceRefresh().then(() => render());

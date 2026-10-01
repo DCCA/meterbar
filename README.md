@@ -17,9 +17,15 @@ AI power users increasingly juggle Claude, ChatGPT/Codex, Gemini, and other AI s
 
 ## Status
 
-The Chrome MVP and Phase 2 browser tracking are implemented. The glass dashboard spans the toolbar, popup, side panel, and settings. The popup shows a hero readout of the tightest limit, a multi-provider 24-hour trend chart, and per-provider detail cards with two switchable views (home and limits). The toolbar icon draws a risk-colored bar per provider in a fixed three-slot casing (Claude, OpenAI, Gemini) plus a badge number you can pin to a group (Auto, Claude, or OpenAI). ChatGPT and Codex share one OpenAI card reading from the same endpoint. Claude, ChatGPT, and Codex read live usage via background fetches of your logged-in sessions; Gemini reports connected-status via a content script. All numeric readings are labeled "inferred" - the endpoints are undocumented, so MeterBar never presents them as exact.
+The Chrome MVP and Phase 2 browser tracking are implemented. The glass dashboard spans the toolbar, popup, side panel, and settings. The popup shows a hero readout of the tightest limit, a multi-provider 24-hour trend chart, and per-provider detail cards with two switchable views (home and limits). The toolbar icon draws a risk-colored bar per provider in a fixed three-slot casing (Claude, OpenAI, Gemini) plus a badge number you can pin to a group (Auto, Claude, or OpenAI). ChatGPT and Codex share one OpenAI card reading from the same endpoint. Claude, ChatGPT, and Codex read live usage from your logged-in browser sessions, only after you OK each provider's notice in Settings; Gemini reports connected-status via a content script. All numeric readings are labeled "inferred" - the endpoints are undocumented, so MeterBar never presents them as exact.
 
 An optional experimental Omarchy preview adds the same three-channel indicator and a click-open desktop panel using a sanitized local snapshot. It is display-only and not a stable product surface: the Chrome extension remains the only collector, and no CLI tracking, local proxy, routing, or failover is included.
+
+### When MeterBar reads
+
+MeterBar reads a provider only while you are plausibly there: when you open the popup or side panel, when a `claude.ai` or `chatgpt.com` tab comes into view, when you click **Refresh**, or when you change its settings. Automatic reads are limited to one per provider every 5 minutes. **Background refresh** (Settings, off by default) adds a read every 10 minutes even when you are away; without it the badge number clears after 10 idle minutes, because a stale number is not shown as current.
+
+Before the first read of Claude or OpenAI, Settings shows what MeterBar reads, from where, and the terms risk, and waits for your OK. If a provider answers "too many requests", MeterBar leaves it alone - manual refresh included - until the time the provider named, and the card shows that time.
 
 ### Viewing your usage without clicking
 
@@ -71,7 +77,7 @@ This optional display-only preview is not a stable product surface, is not part 
 ./scripts/install-omarchy-companion.sh
 ```
 
-Reload the unpacked extension after installation, then open MeterBar once to publish the first local snapshot. See [companion/README.md](companion/README.md) for architecture, privacy guarantees, and removal instructions.
+Reload the unpacked extension after installation, then turn on **Settings → Companion** (Chrome asks for native messaging permission) to publish the first local snapshot. See [companion/README.md](companion/README.md) for architecture, privacy guarantees, and removal instructions.
 
 ## Permissions and privacy
 
@@ -80,10 +86,10 @@ MeterBar is local-first: there is no backend, no cloud sync, and no analytics. I
 | Permission | Why |
 |---|---|
 | `storage` | Save usage snapshots, history, and settings locally. |
-| `alarms` | Refresh usage on a periodic schedule. |
+| `alarms` | Run the 10-minute read, only while **Background refresh** is on (off by default). |
 | `notifications` | Warn at 70% / 90% and when a window resets. |
 | `sidePanel` | Keep the usage instrument docked while you browse. |
-| `nativeMessaging` | Send a sanitized usage snapshot to the optional experimental Omarchy preview. No credential or chat data is included. |
+| `nativeMessaging` (optional) | Requested only when you turn on **Settings → Companion**, to send a sanitized usage snapshot to the experimental Omarchy preview. No credential or chat data is included. Turning the switch off removes the snapshot and the permission. |
 | `host_permissions: https://claude.ai/*` | Read your Claude usage from your logged-in session. MeterBar first looks up your organization id, which is used in memory only for the usage request and never stored. |
 | `host_permissions: https://chatgpt.com/*` | Read OpenAI usage (ChatGPT and Codex share one subscription). Your chatgpt.com session mints an access token that is used, in memory only, for the account and `wham/usage` requests and never stored. |
 | `host_permissions: https://gemini.google.com/*` | Detect that you are signed in to Gemini by checking the page's scripts for a sign-in marker. Nothing from the page is copied, sent, or stored, and MeterBar makes no Gemini requests. Status only: no Gemini usage number. |
