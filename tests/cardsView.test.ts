@@ -127,3 +127,27 @@ describe('limits view', () => {
     expect(html).toContain('class="meter stale"');
   });
 });
+
+describe('provider notice state', () => {
+  const gated: ProviderCardState = {
+    provider: 'claude', label: 'Claude', status: 'not_connected', snapshots: [],
+    message: 'Needs your OK before MeterBar reads your usage.', needsAcknowledgement: true
+  };
+
+  it('asks for an OK in Settings instead of sending the user to sign in', async () => {
+    const html = await render([gated], 'limits');
+    expect(html).toContain('Needs your OK');
+    expect(html).toContain('MeterBar reads nothing from claude.ai until you allow it in Settings.');
+    expect(html).toContain('href="../options/options.html#providers"');
+    expect(html).not.toContain('Open claude.ai');
+    expect(await render([gated], 'home')).toContain('Needs your OK');
+  });
+
+  it('keeps last readings visible with the notice and link', async () => {
+    const html = await render([{ ...claude, message: gated.message, needsAcknowledgement: true }], 'limits');
+    expect(html).toContain('72% used');
+    expect(html).toContain('Needs your OK before MeterBar reads your usage.');
+    expect(html).toContain('Review in Settings');
+  });
+});
+

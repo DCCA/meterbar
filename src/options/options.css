@@ -43,6 +43,18 @@ body { width: auto; min-height: 100vh; padding: 40px 16px 48px; }
 .seg-value.crit { color: var(--crit); }
 .seg-value.none { color: var(--muted); }
 
+/* Provider notice: shown under an enabled provider until the user gives it an OK. */
+.ack:empty { display: none; }
+.ack { margin: 0 0 8px; }
+.consent { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--hairline); border-radius: var(--radius-control); background: color-mix(in srgb, var(--warn) 7%, transparent); }
+.consent p { margin: 0; color: var(--text); font-size: 12px; line-height: 1.5; }
+.consent .btn { justify-self: start; height: 30px; font-size: 12px; }
+.btn-primary { border-color: transparent; background: var(--accent); color: var(--bg-deep); font-weight: 600; }
+.btn-primary:hover { border-color: transparent; background: color-mix(in srgb, var(--accent) 85%, var(--text)); }
+.ack-meta { margin: -4px 0 0; color: var(--muted); font-size: 11px; }
+.ack-meta b { color: var(--ok); font-weight: 600; }
+.linkish { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
 /* Local record */
 .privacy { margin: 2px 0 10px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .privacy b { color: var(--text); font-weight: 600; }

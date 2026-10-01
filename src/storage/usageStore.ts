@@ -1,4 +1,4 @@
-import type { ProviderCardState, ProviderId } from '../shared/types';
+import type { FetchProviderId, ProviderCardState, ProviderId } from '../shared/types';
 import { parseBadgeTarget, type BadgeTargetId } from '../shared/badgeTarget';
 
 export interface Settings {
@@ -7,10 +7,14 @@ export interface Settings {
   chatgptEnabled: boolean;
   geminiEnabled: boolean;
   badgeTarget: BadgeTargetId;
+  /** Off by default: without it MeterBar reads only while a provider tab or MeterBar surface is open. */
+  backgroundRefresh: boolean;
+  /** ISO time the user OK'd each fetch provider's notice; no requests before it. */
+  acknowledged: Partial<Record<FetchProviderId, string>>;
 }
 export const DEFAULT_SETTINGS: Settings = {
   notificationsEnabled: true, claudeEnabled: true, chatgptEnabled: true, geminiEnabled: true,
-  badgeTarget: 'riskiest'
+  badgeTarget: 'riskiest', backgroundRefresh: false, acknowledged: {}
 };
 
 export interface AlertState { seen: string[]; lastReset: Record<string, string>; }
@@ -35,7 +39,7 @@ export async function saveSettings(s: Settings): Promise<void> {
   await chrome.storage.local.set(s);
 }
 /** Per-provider refresh bookkeeping; persisted because the service worker is ephemeral. */
-export interface RefreshState { backoffUntil?: string; }
+export interface RefreshState { backoffUntil?: string; lastAttemptAt?: string; }
 
 export async function loadRefreshState(provider: ProviderId): Promise<RefreshState> {
   const k = `refreshState:${provider}`;

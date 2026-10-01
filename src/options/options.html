@@ -58,6 +58,18 @@
       </section>
 
       <section class="sec">
+        <div class="sec-head"><h2>Refresh</h2><span>When MeterBar reads</span></div>
+        <label class="row switch">
+          <span class="row-text">
+            <span class="row-title">Background refresh</span>
+            <span class="row-desc">Off: MeterBar reads usage when a claude.ai or chatgpt.com tab comes into view or when you open the popup or side panel, so the badge number clears after 10 minutes without one. On: reads every 10 minutes, even when you are away.</span>
+          </span>
+          <input id="backgroundRefresh" type="checkbox" />
+          <span class="track" aria-hidden="true"></span>
+        </label>
+      </section>
+
+      <section class="sec" id="providers">
         <div class="sec-head"><h2>Providers</h2><span>Signed-in sessions</span></div>
         <label class="row switch">
           <span class="row-text">
@@ -67,6 +79,7 @@
           <input id="claude" type="checkbox" />
           <span class="track" aria-hidden="true"></span>
         </label>
+        <div class="ack" data-provider="claude"></div>
         <label class="row switch">
           <span class="row-text">
             <span class="row-title">OpenAI (ChatGPT and Codex)</span>
@@ -75,6 +88,7 @@
           <input id="chatgpt" type="checkbox" />
           <span class="track" aria-hidden="true"></span>
         </label>
+        <div class="ack" data-provider="chatgpt"></div>
         <label class="row switch">
           <span class="row-text">
             <span class="row-title">Gemini</span>

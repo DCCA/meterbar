@@ -27,9 +27,29 @@ describe('aggregateCards', () => {
     expect(result.snapshots[0].stale).toBe(true);
   });
 
+  it('gates an enabled, unacknowledged fetch provider even before it has a card', () => {
+    const now = new Date('2026-06-20T12:00:10Z');
+    const cards = aggregateCards([], { ...DEFAULT_SETTINGS, acknowledged: { chatgpt: '2026-06-20T11:00:00Z' } }, now);
+    expect(cards).toEqual([expect.objectContaining({
+      provider: 'claude', label: 'Claude', status: 'not_connected', snapshots: [], needsAcknowledgement: true
+    })]);
+  });
+
+  it('keeps last readings of an unacknowledged provider visible, flagged, and aging normally', () => {
+    const now = new Date('2026-06-20T12:00:10Z');
+    const [c] = aggregateCards([card('claude', 50, '2026-06-20T12:00:00Z')], { ...DEFAULT_SETTINGS, chatgptEnabled: false }, now);
+    expect(c).toMatchObject({ status: 'connected', needsAcknowledgement: true, snapshots: [expect.objectContaining({ usedPercent: 50 })] });
+  });
+
+  it('does not gate acknowledged, disabled, or status-only providers', () => {
+    const now = new Date('2026-06-20T12:00:10Z');
+    const settings = { ...DEFAULT_SETTINGS, chatgptEnabled: false, acknowledged: { claude: '2026-06-20T11:00:00Z' } };
+    expect(aggregateCards([], settings, now)).toEqual([]);
+  });
+
   it('drops providers disabled in settings', () => {
     const now = new Date('2026-06-20T12:00:10Z');
-    const cards = aggregateCards([card('gemini', 20, '2026-06-20T12:00:00Z')], { ...DEFAULT_SETTINGS, geminiEnabled: false }, now);
+    const cards = aggregateCards([card('gemini', 20, '2026-06-20T12:00:00Z')], { ...DEFAULT_SETTINGS, geminiEnabled: false, claudeEnabled: false, chatgptEnabled: false }, now);
     expect(cards).toHaveLength(0);
   });
 });

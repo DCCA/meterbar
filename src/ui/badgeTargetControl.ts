@@ -4,7 +4,6 @@ import { aggregateCards, flattenSnapshots } from '../background/aggregate';
 import { calculateBadgeState } from '../background/badge';
 import { riskLevel } from '../popup/render';
 import { BADGE_TARGETS, parseBadgeTarget, type BadgeTargetId } from '../shared/badgeTarget';
-import type { ExtensionMessage } from '../shared/messages';
 import { getAllCards, loadSettings, saveSettings, type Settings } from '../storage/usageStore';
 
 export interface BadgeTargetControlOptions {
@@ -45,8 +44,7 @@ export function wireBadgeTargets(group: HTMLElement, opts: BadgeTargetControlOpt
     const current = await loadSettings();
     const next = { ...current, badgeTarget: btn.dataset.target as BadgeTargetId };
     await saveSettings(next);
-    await renderBadgeTargets(group, next, opts);
-    void chrome.runtime.sendMessage({ type: 'usage:refresh' } as ExtensionMessage);
+    await renderBadgeTargets(group, next, opts); // the worker repaints the toolbar on the storage write
   });
 
   group.addEventListener('keydown', (event) => {
