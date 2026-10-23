@@ -19,7 +19,7 @@
     "@types/chrome": "^0.0.268",
     "@types/node": "^22.5.0",
     "typescript": "^5.5.4",
-    "vite": "^7.3.6",
+    "vite": "^7.3.7",
     "vitest": "^4.1.10"
   }
 }
